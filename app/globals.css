@@ -1,0 +1,178 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * MMSS Brand Theme Variables
+ * ============================
+ * Update these CSS custom properties with the official MMSS brand colors.
+ * This is the single source of truth for all theme colors.
+ */
+
+:root {
+  /* Primary Brand Color - Professional Navy */
+  --mmss-primary: #1e3a5f;
+  --mmss-primary-foreground: #ffffff;
+  --mmss-primary-50: #f0f4f8;
+  --mmss-primary-100: #d9e2ec;
+  --mmss-primary-200: #bcccdc;
+  --mmss-primary-300: #9fb3c8;
+  --mmss-primary-400: #829ab1;
+  --mmss-primary-500: #627d98;
+  --mmss-primary-600: #486581;
+  --mmss-primary-700: #334e68;
+  --mmss-primary-800: #243b53;
+  --mmss-primary-900: #102a43;
+
+  /* Secondary Brand Color */
+  --mmss-secondary: #475569;
+  --mmss-secondary-foreground: #ffffff;
+
+  /* Accent Color */
+  --mmss-accent: #0369a1;
+  --mmss-accent-foreground: #ffffff;
+
+  /* Base Colors */
+  --mmss-background: #ffffff;
+  --mmss-foreground: #0f172a;
+
+  /* Muted Colors */
+  --mmss-muted: #f1f5f9;
+  --mmss-muted-foreground: #64748b;
+
+  /* Border & Ring */
+  --mmss-border: #e2e8f0;
+  --mmss-ring: #2563eb;
+
+  /* Status Colors */
+  --mmss-destructive: #dc2626;
+  --mmss-destructive-foreground: #ffffff;
+  --mmss-success: #059669;
+  --mmss-success-foreground: #ffffff;
+
+  /* Border Radius - Subtle */
+  --radius: 0.375rem;
+}
+
+/* Dark mode support (optional - uncomment to enable) */
+/*
+@media (prefers-color-scheme: dark) {
+  :root {
+    --mmss-background: #0f172a;
+    --mmss-foreground: #f8fafc;
+    --mmss-muted: #1e293b;
+    --mmss-muted-foreground: #94a3b8;
+    --mmss-border: #334155;
+  }
+}
+*/
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Focus styles for accessibility */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer components {
+  /* Container utility */
+  .container-page {
+    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Card base styles */
+  .card {
+    @apply rounded-lg border border-border bg-background shadow-sm;
+  }
+
+  /* Form input base styles */
+  .input-base {
+    @apply flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm
+           placeholder:text-muted-foreground
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* Button variants */
+  .btn {
+    @apply inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium
+           transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+           focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary text-primary-foreground hover:bg-primary-700;
+  }
+
+  .btn-secondary {
+    @apply btn bg-secondary text-secondary-foreground hover:bg-secondary/80;
+  }
+
+  .btn-outline {
+    @apply btn border border-border bg-background hover:bg-muted hover:text-foreground;
+  }
+
+  .btn-ghost {
+    @apply btn hover:bg-muted hover:text-foreground;
+  }
+
+  .btn-destructive {
+    @apply btn bg-destructive text-destructive-foreground hover:bg-destructive/90;
+  }
+
+  /* Size variants */
+  .btn-sm {
+    @apply h-9 px-3;
+  }
+
+  .btn-md {
+    @apply h-10 px-4 py-2;
+  }
+
+  .btn-lg {
+    @apply h-11 px-8;
+  }
+
+  .btn-icon {
+    @apply h-10 w-10;
+  }
+}
+
+@layer utilities {
+  /* Text balance for headings */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Custom scrollbar styles */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+  }
+}

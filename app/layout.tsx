@@ -1,0 +1,34 @@
+import type { Metadata } from 'next'
+import { Inter, Outfit } from 'next/font/google'
+import { Navbar } from '@/components/navbar'
+import './globals.css'
+
+const inter = Inter({ subsets: ['latin'] })
+const outfit = Outfit({
+  subsets: ['latin'],
+  variable: '--font-outfit',
+  display: 'swap',
+})
+
+export const metadata: Metadata = {
+  title: 'MMSS Job Board | Monash Marketing Students\' Society',
+  description: 'Find marketing internships, graduate roles, and career opportunities curated for Monash marketing students.',
+  keywords: ['marketing jobs', 'internships', 'graduate roles', 'Monash', 'MMSS', 'career opportunities'],
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body className={`${inter.className} ${outfit.variable}`}>
+        <Navbar />
+        <main className="min-h-screen pt-20">
+          {children}
+        </main>
+      </body>
+    </html>
+  )
+}
