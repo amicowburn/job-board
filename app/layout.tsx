@@ -1,6 +1,9 @@
 import type { Metadata } from 'next'
 import { Inter, Outfit } from 'next/font/google'
 import { Navbar } from '@/components/navbar'
+import { Footer } from '@/components/footer'
+import { SmoothScroll } from '@/components/smooth-scroll'
+import { BottomBlur } from '@/components/bottom-blur'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -24,10 +27,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} ${outfit.variable}`}>
+        <SmoothScroll />
         <Navbar />
         <main className="min-h-screen pt-20">
           {children}
         </main>
+        <Footer />
+        <BottomBlur />
       </body>
     </html>
   )

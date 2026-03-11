@@ -5,23 +5,22 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 
 const navItems = [
-  { href: 'https://monashmmss.com/events', label: 'EVENTS' },
-  { href: 'https://monashmmss.com/committee', label: 'COMMITTEE' },
-  { href: 'https://monashmmss.com/recruitment', label: 'RECRUITMENT' },
-  { href: '/', label: 'JOB BOARD', isActive: true },
-  { href: 'https://monashmmss.com/join-us', label: 'JOIN THE MMSS' },
+  { href: 'https://monashmss.com/events', label: 'EVENTS' },
+  { href: 'https://monashmss.com/committee', label: 'COMMITTEE' },
+  { href: 'https://monashmss.com/publications', label: 'PUBLICATIONS' },
+  { href: 'https://monashmss.com/join-us', label: 'JOIN THE MMSS' },
 ]
 
 export function Navbar() {
   const pathname = usePathname()
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 p-[15px] bg-white">
+    <header className="fixed top-0 left-0 right-0 z-50 p-[15px]">
       <nav className="max-w-[1200px] mx-auto">
-        <div className="bg-white backdrop-blur-[10px] rounded-[15px] px-[15px] flex items-center justify-between h-[50px] border border-slate-200">
+        <div className="bg-white rounded-[15px] px-[15px] flex items-center justify-between h-[50px] shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
           {/* Logo */}
           <Link
-            href="https://monashmmss.com"
+            href="https://monashmss.com"
             className="flex items-center shrink-0 px-[5px] h-[50px]"
           >
             <Image
@@ -37,7 +36,7 @@ export function Navbar() {
           {/* Navigation Links */}
           <div className="hidden md:flex items-center justify-end flex-1 gap-[5px]">
             {navItems.map((item) => {
-              const isCurrentPage = item.isActive || pathname === item.href
+              const isCurrentPage = pathname === item.href
               const isExternal = item.href.startsWith('http')
 
               return (

@@ -10,8 +10,8 @@
  */
 
 :root {
-  /* Primary Brand Color - Professional Navy */
-  --mmss-primary: #1e3a5f;
+  /* Primary Brand Color - MMSS Purple */
+  --mmss-primary: #6B4D8A;
   --mmss-primary-foreground: #ffffff;
   --mmss-primary-50: #f0f4f8;
   --mmss-primary-100: #d9e2ec;
@@ -33,7 +33,7 @@
   --mmss-accent-foreground: #ffffff;
 
   /* Base Colors */
-  --mmss-background: #ffffff;
+  --mmss-background: #e8e8e8;
   --mmss-foreground: #0f172a;
 
   /* Muted Colors */
@@ -72,9 +72,17 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-overflow-scrolling: touch;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 256px 256px;
   }
 
   /* Focus styles for accessibility */
@@ -156,11 +164,17 @@
   /* Custom scrollbar styles */
   .custom-scrollbar {
     scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .custom-scrollbar:hover {
     scrollbar-color: #cbd5e1 transparent;
   }
 
   .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
+    width: 5px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
@@ -168,8 +182,13 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 10px;
+    transition: background-color 0.3s ease;
+  }
+
+  .custom-scrollbar:hover::-webkit-scrollbar-thumb {
     background-color: #cbd5e1;
-    border-radius: 3px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {

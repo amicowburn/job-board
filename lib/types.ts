@@ -18,6 +18,7 @@ export interface Job {
   job_type: JobType | null
   url: string
   description: string | null
+  company_logo_url: string | null
   tags: string[] | null
   posted_at: string | null
   closing_at: string | null
@@ -55,6 +56,7 @@ export interface JobInsert {
   job_type?: JobType | null
   url: string
   description?: string | null
+  company_logo_url?: string | null
   tags?: string[] | null
   posted_at?: string | null
   closing_at?: string | null
@@ -82,6 +84,7 @@ export interface JobUpdate {
   job_type?: JobType | null
   url?: string
   description?: string | null
+  company_logo_url?: string | null
   tags?: string[] | null
   posted_at?: string | null
   closing_at?: string | null

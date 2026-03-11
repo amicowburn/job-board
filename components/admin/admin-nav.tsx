@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 const navItems = [
   { href: '/admin/jobs', label: 'Jobs' },
   { href: '/admin/feedback', label: 'Feedback' },
+  { href: '/admin/users', label: 'Admins' },
 ]
 
 export function AdminNav() {

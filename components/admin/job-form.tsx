@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button, Input, Textarea, Select, Label, Alert, AlertDescription, type SelectOption } from '@/components/ui'
+import { Button, Input, Select, Label, Alert, AlertDescription, type SelectOption } from '@/components/ui'
+import { RichTextEditor } from './rich-text-editor'
 import { createClient } from '@/lib/supabase/client'
 import type { Job, JobInsert, JobUpdate } from '@/lib/types'
 
@@ -36,6 +37,7 @@ export function JobForm({ job, isEditing = false }: JobFormProps) {
   const [formData, setFormData] = useState({
     title: job?.title || '',
     company: job?.company || '',
+    company_logo_url: job?.company_logo_url || '',
     location: job?.location || '',
     work_mode: job?.work_mode || '',
     job_type: job?.job_type || '',
@@ -74,6 +76,7 @@ export function JobForm({ job, isEditing = false }: JobFormProps) {
       const jobData: JobInsert | JobUpdate = {
         title: formData.title,
         company: formData.company,
+        company_logo_url: formData.company_logo_url || null,
         location: formData.location || null,
         work_mode: (formData.work_mode as Job['work_mode']) || null,
         job_type: (formData.job_type as Job['job_type']) || null,
@@ -147,6 +150,30 @@ export function JobForm({ job, isEditing = false }: JobFormProps) {
         </div>
 
         <div>
+          <Label htmlFor="company_logo_url">Company Logo URL</Label>
+          <Input
+            id="company_logo_url"
+            name="company_logo_url"
+            type="url"
+            value={formData.company_logo_url}
+            onChange={handleChange}
+            placeholder="https://company.com/logo.png"
+            className="mt-1.5"
+          />
+          {formData.company_logo_url && (
+            <div className="mt-2 flex items-center gap-2">
+              <img
+                src={formData.company_logo_url}
+                alt="Logo preview"
+                className="w-10 h-10 rounded-lg object-contain border border-border bg-white"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+              />
+              <span className="text-xs text-muted-foreground">Preview</span>
+            </div>
+          )}
+        </div>
+
+        <div>
           <Label htmlFor="location">Location</Label>
           <Input
             id="location"
@@ -197,16 +224,16 @@ export function JobForm({ job, isEditing = false }: JobFormProps) {
         </div>
 
         <div className="md:col-span-2">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            placeholder="Job description..."
-            rows={6}
-            className="mt-1.5"
-          />
+          <Label>Description</Label>
+          <div className="mt-1.5">
+            <RichTextEditor
+              content={formData.description}
+              onChange={(html) => setFormData((prev) => ({ ...prev, description: html }))}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Use the toolbar to format text, add links, and insert images by URL.
+          </p>
         </div>
 
         <div className="md:col-span-2">
