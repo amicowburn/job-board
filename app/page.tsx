@@ -16,6 +16,7 @@ export default function HomePage() {
   const [totalJobs, setTotalJobs] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
   const [isLoading, setIsLoading] = useState(true)
+  const [showDetail, setShowDetail] = useState(false)
   const [filters, setFilters] = useState({
     search: '',
     job_type: '',
@@ -80,6 +81,11 @@ export default function HomePage() {
 
   const handleJobSelect = (job: Job) => {
     setSelectedJob(job)
+    setShowDetail(true)
+  }
+
+  const handleBack = () => {
+    setShowDetail(false)
   }
 
   const handlePageChange = (page: number) => {
@@ -97,9 +103,9 @@ export default function HomePage() {
       />
 
       {/* Two-panel layout fills remaining height */}
-      <div className="flex-1 flex px-8 lg:px-12 pb-4 pt-2 gap-5 max-w-[1200px] mx-auto w-full min-h-0">
+      <div className="flex-1 flex px-4 sm:px-6 md:px-8 lg:px-12 pb-4 pt-2 gap-5 max-w-[1200px] mx-auto w-full min-h-0">
         {/* Left Panel - Job list with fixed pagination */}
-        <div className="w-[380px] shrink-0 flex flex-col min-h-0">
+        <div className={`w-full md:w-[380px] md:shrink-0 flex flex-col min-h-0 ${showDetail ? 'hidden md:flex' : 'flex'}`}>
           {/* Scrollable job cards */}
           <div data-lenis-prevent className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1 min-h-0">
             {isLoading ? (
@@ -158,7 +164,7 @@ export default function HomePage() {
         </div>
 
         {/* Right Panel - Job detail with internal scroll */}
-        <div className="flex-1 min-w-0 min-h-0">
+        <div className={`flex-1 min-w-0 min-h-0 ${showDetail ? 'flex flex-col' : 'hidden md:block'}`}>
           <AnimatePresence mode="wait">
             {selectedJob ? (
               <motion.div
@@ -173,7 +179,7 @@ export default function HomePage() {
                   damping: 35
                 }}
               >
-                <JobDetailPanel job={selectedJob} isMainView />
+                <JobDetailPanel job={selectedJob} isMainView onBack={handleBack} />
               </motion.div>
             ) : (
               <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400 h-full flex items-center justify-center">

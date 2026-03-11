@@ -9,9 +9,10 @@ import type { Job } from '@/lib/types'
 interface JobDetailPanelProps {
   job: Job
   isMainView?: boolean
+  onBack?: () => void
 }
 
-export function JobDetailPanel({ job, isMainView = false }: JobDetailPanelProps) {
+export function JobDetailPanel({ job, isMainView = false, onBack }: JobDetailPanelProps) {
   const [showFeedback, setShowFeedback] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -28,10 +29,22 @@ export function JobDetailPanel({ job, isMainView = false }: JobDetailPanelProps)
     return (
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col h-full">
         {/* Header */}
-        <div className="p-6 pb-4">
+        <div className="p-4 sm:p-6 pb-4">
+          {/* Mobile back button */}
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="md:hidden flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 mb-3 -ml-0.5 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to jobs
+            </button>
+          )}
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold text-slate-900 leading-tight">
+              <h1 className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">
                 {job.title}
               </h1>
               <p className="text-sm text-slate-500 mt-1">
@@ -42,10 +55,10 @@ export function JobDetailPanel({ job, isMainView = false }: JobDetailPanelProps)
               <img
                 src={job.company_logo_url}
                 alt={job.company}
-                className="w-12 h-12 rounded-xl object-contain shrink-0 border border-slate-200 bg-white"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-contain shrink-0 border border-slate-200 bg-white"
               />
             ) : (
-              <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center text-sm font-semibold text-purple-700 shrink-0 border border-purple-200">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-purple-100 flex items-center justify-center text-xs sm:text-sm font-semibold text-purple-700 shrink-0 border border-purple-200">
                 {getInitials(job.company)}
               </div>
             )}
@@ -84,7 +97,7 @@ export function JobDetailPanel({ job, isMainView = false }: JobDetailPanelProps)
         </div>
 
         {/* Description - scrollable */}
-        <div className="px-6 pb-6 flex-1 overflow-y-auto custom-scrollbar min-h-0">
+        <div data-lenis-prevent className="px-4 sm:px-6 pb-6 flex-1 overflow-y-auto custom-scrollbar min-h-0">
           {job.description ? (
             <div>
               <h2 className="text-sm font-semibold text-slate-800 mb-2">Job Description</h2>
@@ -137,7 +150,7 @@ export function JobDetailPanel({ job, isMainView = false }: JobDetailPanelProps)
         </div>
 
         {/* Sticky Apply Button */}
-        <div className="p-4 border-t border-slate-200 bg-white flex gap-3">
+        <div className="p-3 sm:p-4 border-t border-slate-200 bg-white flex gap-3">
           <a
             href={job.url}
             target="_blank"
@@ -170,7 +183,7 @@ export function JobDetailPanel({ job, isMainView = false }: JobDetailPanelProps)
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
               </svg>
             )}
-            {copied ? 'Copied!' : 'Copy Link'}
+            <span className="hidden sm:inline">{copied ? 'Copied!' : 'Copy Link'}</span>
           </button>
         </div>
       </div>

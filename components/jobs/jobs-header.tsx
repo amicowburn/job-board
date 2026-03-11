@@ -16,14 +16,14 @@ interface JobsHeaderProps {
 
 export function JobsHeader({ totalJobs, lastUpdated, filters, onFilterChange }: JobsHeaderProps) {
   return (
-    <header className="px-8 lg:px-12 pt-4 pb-2 max-w-[1200px] mx-auto w-full">
-      {/* Title + Search + Last updated in one row */}
-      <div className="flex items-center gap-4 mb-3">
-        <h1 className="text-xl font-semibold text-slate-800 tracking-tight shrink-0" style={{ fontFamily: 'var(--font-outfit)' }}>
+    <header className="px-4 sm:px-6 md:px-8 lg:px-12 pt-4 pb-2 max-w-[1200px] mx-auto w-full">
+      {/* Title + Search + Last updated */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3">
+        <h1 className="text-lg sm:text-xl font-semibold text-slate-800 tracking-tight shrink-0" style={{ fontFamily: 'var(--font-outfit)' }}>
           MMSS Job Board
         </h1>
         <div className="flex-1 flex items-center bg-white rounded-full border border-slate-200 overflow-hidden focus-within:border-slate-300 focus-within:ring-1 focus-within:ring-slate-200 transition-all shadow-sm">
-          <div className="pl-4 text-slate-400">
+          <div className="pl-3 sm:pl-4 text-slate-400">
             <SearchIcon className="w-4 h-4" />
           </div>
           <input
@@ -35,22 +35,22 @@ export function JobsHeader({ totalJobs, lastUpdated, filters, onFilterChange }: 
           />
         </div>
         {lastUpdated && (
-          <span className="text-xs text-slate-400 shrink-0">
+          <span className="text-xs text-slate-400 shrink-0 hidden sm:block">
             Last updated {formatDate(lastUpdated)}
           </span>
         )}
       </div>
 
       {/* Result count + Filters row */}
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-slate-600">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm font-medium text-slate-600 shrink-0">
           {totalJobs.toLocaleString()} {totalJobs === 1 ? 'Result' : 'Results'}
         </span>
         <div className="flex items-center gap-2">
           <select
             value={filters.job_type}
             onChange={(e) => onFilterChange('job_type', e.target.value)}
-            className="h-8 px-3 text-xs text-slate-600 bg-white border border-slate-200 rounded-full focus:ring-1 focus:ring-slate-200 focus:border-slate-300 cursor-pointer"
+            className="h-8 px-2 sm:px-3 text-xs text-slate-600 bg-white border border-slate-200 rounded-full focus:ring-1 focus:ring-slate-200 focus:border-slate-300 cursor-pointer"
           >
             <option value="">All Types</option>
             <option value="internship">Internship</option>
@@ -63,7 +63,7 @@ export function JobsHeader({ totalJobs, lastUpdated, filters, onFilterChange }: 
           <select
             value={filters.work_mode}
             onChange={(e) => onFilterChange('work_mode', e.target.value)}
-            className="h-8 px-3 text-xs text-slate-600 bg-white border border-slate-200 rounded-full focus:ring-1 focus:ring-slate-200 focus:border-slate-300 cursor-pointer"
+            className="h-8 px-2 sm:px-3 text-xs text-slate-600 bg-white border border-slate-200 rounded-full focus:ring-1 focus:ring-slate-200 focus:border-slate-300 cursor-pointer"
           >
             <option value="">All Locations</option>
             <option value="remote">Remote</option>

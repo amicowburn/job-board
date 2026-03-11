@@ -11,8 +11,8 @@ const footerNavItems = [
 export function Footer() {
   return (
     <footer className="bg-[#e8e8e8] border-t border-[#d5d5d5] mt-auto">
-      <div className="max-w-[1200px] mx-auto px-8 lg:px-12 py-12">
-        <div className="flex flex-col md:flex-row justify-between gap-10">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-8 sm:py-12">
+        <div className="flex flex-col md:flex-row justify-between gap-8 md:gap-10">
           {/* Left Side */}
           <div className="space-y-4">
             <p className="text-sm font-semibold text-slate-700 tracking-wide uppercase">
