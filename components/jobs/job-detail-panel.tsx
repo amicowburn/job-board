@@ -12,6 +12,11 @@ interface JobDetailPanelProps {
   onBack?: () => void
 }
 
+const pillVariants = {
+  initial: { opacity: 0, y: 8, scale: 0.9 },
+  animate: { opacity: 1, y: 0, scale: 1 },
+}
+
 export function JobDetailPanel({ job, isMainView = false, onBack }: JobDetailPanelProps) {
   const [showFeedback, setShowFeedback] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -25,6 +30,13 @@ export function JobDetailPanel({ job, isMainView = false, onBack }: JobDetailPan
       .toUpperCase()
   }
 
+  const pills = [
+    job.location ? { key: 'location', icon: 'location', label: job.location } : null,
+    job.job_type ? { key: 'type', label: job.job_type.charAt(0).toUpperCase() + job.job_type.slice(1).replace('-', ' ') } : null,
+    job.work_mode ? { key: 'mode', icon: job.work_mode, label: job.work_mode.charAt(0).toUpperCase() + job.work_mode.slice(1) } : null,
+    ...(job.tags || []).map(tag => ({ key: `tag-${tag}`, label: tag })),
+  ].filter(Boolean) as { key: string; icon?: string; label: string }[]
+
   if (isMainView) {
     return (
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col h-full">
@@ -32,66 +44,80 @@ export function JobDetailPanel({ job, isMainView = false, onBack }: JobDetailPan
         <div className="p-4 sm:p-6 pb-4">
           {/* Mobile back button */}
           {onBack && (
-            <button
+            <motion.button
               onClick={onBack}
+              whileTap={{ x: -4 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 20 }}
               className="md:hidden flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 mb-3 -ml-0.5 transition-colors"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <motion.svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                animate={{ x: [0, -3, 0] }}
+                transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut', repeatDelay: 2 }}
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+              </motion.svg>
               Back to jobs
-            </button>
+            </motion.button>
           )}
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <h1 className="text-lg sm:text-xl font-bold text-slate-900 leading-tight">
+              <motion.h1
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                className="text-lg sm:text-xl font-bold text-slate-900 leading-tight"
+              >
                 {job.title}
-              </h1>
-              <p className="text-sm text-slate-500 mt-1">
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.05 }}
+                className="text-sm text-slate-500 mt-1"
+              >
                 {job.company}
-              </p>
+              </motion.p>
             </div>
-            {job.company_logo_url ? (
-              <img
-                src={job.company_logo_url}
-                alt={job.company}
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-contain shrink-0 border border-slate-200 bg-white"
-              />
-            ) : (
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-purple-100 flex items-center justify-center text-xs sm:text-sm font-semibold text-purple-700 shrink-0 border border-purple-200">
-                {getInitials(job.company)}
-              </div>
-            )}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.1 }}
+            >
+              {job.company_logo_url ? (
+                <img
+                  src={job.company_logo_url}
+                  alt={job.company}
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-contain shrink-0 border border-slate-200 bg-white"
+                />
+              ) : (
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-purple-100 flex items-center justify-center text-xs sm:text-sm font-semibold text-purple-700 shrink-0 border border-purple-200">
+                  {getInitials(job.company)}
+                </div>
+              )}
+            </motion.div>
           </div>
 
-          {/* Info pills row */}
+          {/* Info pills row - staggered */}
           <div className="flex items-center gap-2 mt-3 flex-wrap">
-            {job.location && (
-              <span className="inline-flex items-center text-xs px-3 py-1 rounded-full border border-slate-200 bg-slate-50 text-slate-600">
-                <LocationIcon className="w-3 h-3 mr-1.5" />
-                {job.location}
-              </span>
-            )}
-            {job.job_type && (
-              <span className="inline-flex items-center text-xs px-3 py-1 rounded-full border border-slate-200 bg-slate-50 text-slate-600">
-                {job.job_type.charAt(0).toUpperCase() + job.job_type.slice(1).replace('-', ' ')}
-              </span>
-            )}
-            {job.work_mode && (
-              <span className="inline-flex items-center text-xs px-3 py-1 rounded-full border border-slate-200 bg-slate-50 text-slate-600">
-                {job.work_mode === 'remote' && <RemoteIcon className="w-3 h-3 mr-1.5" />}
-                {job.work_mode === 'hybrid' && <HybridIcon className="w-3 h-3 mr-1.5" />}
-                {job.work_mode === 'onsite' && <OnsiteIcon className="w-3 h-3 mr-1.5" />}
-                {job.work_mode.charAt(0).toUpperCase() + job.work_mode.slice(1)}
-              </span>
-            )}
-            {job.tags && job.tags.map((tag) => (
-              <span
-                key={tag}
-                className="text-xs px-3 py-1 rounded-full border border-slate-200 bg-slate-50 text-slate-600"
+            {pills.map((pill, i) => (
+              <motion.span
+                key={pill.key}
+                variants={pillVariants}
+                initial="initial"
+                animate="animate"
+                transition={{ delay: 0.1 + i * 0.05, type: 'spring', stiffness: 400, damping: 22 }}
+                className="inline-flex items-center text-xs px-3 py-1 rounded-full border border-slate-200 bg-slate-50 text-slate-600"
               >
-                {tag}
-              </span>
+                {pill.icon === 'location' && <LocationIcon className="w-3 h-3 mr-1.5" />}
+                {pill.icon === 'remote' && <RemoteIcon className="w-3 h-3 mr-1.5" />}
+                {pill.icon === 'hybrid' && <HybridIcon className="w-3 h-3 mr-1.5" />}
+                {pill.icon === 'onsite' && <OnsiteIcon className="w-3 h-3 mr-1.5" />}
+                {pill.label}
+              </motion.span>
             ))}
           </div>
         </div>
@@ -99,13 +125,17 @@ export function JobDetailPanel({ job, isMainView = false, onBack }: JobDetailPan
         {/* Description - scrollable */}
         <div data-lenis-prevent className="px-4 sm:px-6 pb-6 flex-1 overflow-y-auto custom-scrollbar min-h-0">
           {job.description ? (
-            <div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.15 }}
+            >
               <h2 className="text-sm font-semibold text-slate-800 mb-2">Job Description</h2>
               <div
                 className="prose prose-sm max-w-none text-slate-600 prose-headings:text-slate-800 prose-a:text-primary prose-img:rounded-lg"
                 dangerouslySetInnerHTML={{ __html: job.description }}
               />
-            </div>
+            </motion.div>
           ) : (
             <div className="text-center py-8">
               <p className="text-slate-500 text-sm">
@@ -137,13 +167,15 @@ export function JobDetailPanel({ job, isMainView = false, onBack }: JobDetailPan
                   <FeedbackForm jobId={job.id} />
                 </motion.div>
               ) : (
-                <button
+                <motion.button
                   onClick={() => setShowFeedback(true)}
+                  whileHover={{ x: 2 }}
+                  whileTap={{ scale: 0.97 }}
                   className="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1.5 transition-colors"
                 >
                   <FlagIcon className="w-3.5 h-3.5" />
                   Report an issue with this listing
-                </button>
+                </motion.button>
               )}
             </AnimatePresence>
           </div>
@@ -151,18 +183,24 @@ export function JobDetailPanel({ job, isMainView = false, onBack }: JobDetailPan
 
         {/* Sticky Apply Button */}
         <div className="p-3 sm:p-4 border-t border-slate-200 bg-white flex gap-3">
-          <a
+          <motion.a
             href={job.url}
             target="_blank"
             rel="noopener noreferrer"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 25 }}
             className="flex-1 bg-primary hover:bg-primary/90 text-white font-medium py-2.5 px-6 rounded-xl text-center transition-colors text-sm inline-flex items-center justify-center gap-2"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
             Apply Now
-          </a>
-          <button
+          </motion.a>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.93 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 25 }}
             onClick={() => {
               navigator.clipboard.writeText(job.url)
               setCopied(true)
@@ -174,17 +212,39 @@ export function JobDetailPanel({ job, isMainView = false, onBack }: JobDetailPan
                 : 'border-slate-200 text-slate-600 hover:bg-slate-50'
             }`}
           >
-            {copied ? (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            ) : (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-              </svg>
-            )}
+            <AnimatePresence mode="wait">
+              {copied ? (
+                <motion.svg
+                  key="check"
+                  initial={{ scale: 0, rotate: -90 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  exit={{ scale: 0 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </motion.svg>
+              ) : (
+                <motion.svg
+                  key="copy"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                </motion.svg>
+              )}
+            </AnimatePresence>
             <span className="hidden sm:inline">{copied ? 'Copied!' : 'Copy Link'}</span>
-          </button>
+          </motion.button>
         </div>
       </div>
     )

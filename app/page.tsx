@@ -104,9 +104,86 @@ export default function HomePage() {
 
       {/* Two-panel layout fills remaining height */}
       <div className="flex-1 flex px-4 sm:px-6 md:px-8 lg:px-12 pb-4 pt-2 gap-5 max-w-[1200px] mx-auto w-full min-h-0">
-        {/* Left Panel - Job list with fixed pagination */}
-        <div className={`w-full md:w-[380px] md:shrink-0 flex flex-col min-h-0 ${showDetail ? 'hidden md:flex' : 'flex'}`}>
-          {/* Scrollable job cards */}
+        {/* Mobile: animated view switching */}
+        <div className="flex-1 flex md:hidden min-h-0 relative">
+          <AnimatePresence mode="wait" initial={false}>
+            {!showDetail ? (
+              <motion.div
+                key="mobile-list"
+                className="w-full flex flex-col min-h-0 absolute inset-0"
+                initial={{ opacity: 0, x: -40 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -40 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+              >
+                <div data-lenis-prevent className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1 min-h-0">
+                  {isLoading ? (
+                    <div className="bg-white rounded-xl p-8 text-center text-slate-500">
+                      <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-3 animate-spin" />
+                      Loading jobs...
+                    </div>
+                  ) : jobs.length === 0 ? (
+                    <div className="bg-white rounded-xl p-8 text-center text-slate-500">
+                      No jobs found
+                    </div>
+                  ) : (
+                    jobs.map((job) => (
+                      <JobCard
+                        key={job.id}
+                        job={job}
+                        isSelected={selectedJob?.id === job.id}
+                        onClick={() => handleJobSelect(job)}
+                      />
+                    ))
+                  )}
+                </div>
+                <div className="shrink-0 py-3 text-center">
+                  <p className="text-xs text-slate-400">
+                    Want to post a job?{' '}
+                    <a href="mailto:enquires@monashmss.com" className="text-primary font-medium hover:underline">
+                      enquires@monashmss.com
+                    </a>
+                  </p>
+                </div>
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 py-3 shrink-0 border-t border-slate-200/50">
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1.5 text-xs text-slate-600 bg-white border border-slate-200 rounded-full hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Prev
+                    </button>
+                    <span className="text-xs text-slate-500">
+                      {currentPage} / {totalPages}
+                    </span>
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1.5 text-xs text-slate-600 bg-white border border-slate-200 rounded-full hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </motion.div>
+            ) : selectedJob ? (
+              <motion.div
+                key="mobile-detail"
+                className="w-full flex flex-col min-h-0 absolute inset-0"
+                initial={{ opacity: 0, x: 40 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 40 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+              >
+                <JobDetailPanel job={selectedJob} isMainView onBack={handleBack} />
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </div>
+
+        {/* Desktop: side-by-side panels */}
+        <div className="hidden md:flex md:w-[380px] md:shrink-0 flex-col min-h-0">
           <div data-lenis-prevent className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1 min-h-0">
             {isLoading ? (
               <div className="bg-white rounded-xl p-8 text-center text-slate-500">
@@ -128,8 +205,6 @@ export default function HomePage() {
               ))
             )}
           </div>
-
-          {/* Post a job CTA */}
           <div className="shrink-0 py-3 text-center">
             <p className="text-xs text-slate-400">
               Want to post a job?{' '}
@@ -138,8 +213,6 @@ export default function HomePage() {
               </a>
             </p>
           </div>
-
-          {/* Pagination - pinned at bottom */}
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2 py-3 shrink-0 border-t border-slate-200/50">
               <button
@@ -163,8 +236,8 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* Right Panel - Job detail with internal scroll */}
-        <div className={`flex-1 min-w-0 min-h-0 ${showDetail ? 'flex flex-col' : 'hidden md:block'}`}>
+        {/* Desktop: Right Panel */}
+        <div className="hidden md:block flex-1 min-w-0 min-h-0">
           <AnimatePresence mode="wait">
             {selectedJob ? (
               <motion.div
@@ -179,7 +252,7 @@ export default function HomePage() {
                   damping: 35
                 }}
               >
-                <JobDetailPanel job={selectedJob} isMainView onBack={handleBack} />
+                <JobDetailPanel job={selectedJob} isMainView />
               </motion.div>
             ) : (
               <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400 h-full flex items-center justify-center">

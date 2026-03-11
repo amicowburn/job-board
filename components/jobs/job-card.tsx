@@ -1,5 +1,6 @@
 'use client'
 
+import { motion } from 'framer-motion'
 import { formatRelativeTime } from '@/lib/utils'
 import type { Job } from '@/lib/types'
 
@@ -41,9 +42,18 @@ export function JobCard({ job, isSelected, onClick }: JobCardProps) {
     ? formatRelativeTime(job.created_at)
     : null
 
+  const tags = [
+    job.job_type ? formatJobType(job.job_type) : null,
+    job.work_mode ? job.work_mode.charAt(0).toUpperCase() + job.work_mode.slice(1) : null,
+    job.location ? (job.location.length > 20 ? job.location.substring(0, 20) + '...' : job.location) : null,
+  ].filter(Boolean)
+
   return (
-    <button
+    <motion.button
       onClick={onClick}
+      whileTap={{ scale: 0.98 }}
+      whileHover={{ scale: 1.01 }}
+      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
       className={`w-full text-left p-4 rounded-xl transition-all border ${
         isSelected
           ? 'bg-white border-slate-300 shadow-sm'
@@ -89,26 +99,22 @@ export function JobCard({ job, isSelected, onClick }: JobCardProps) {
             </p>
           )}
 
-          {/* Tags */}
+          {/* Tags with stagger */}
           <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-            {job.job_type && (
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
-                {formatJobType(job.job_type)}
-              </span>
-            )}
-            {job.work_mode && (
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
-                {job.work_mode.charAt(0).toUpperCase() + job.work_mode.slice(1)}
-              </span>
-            )}
-            {job.location && (
-              <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
-                {job.location.length > 20 ? job.location.substring(0, 20) + '...' : job.location}
-              </span>
-            )}
+            {tags.map((tag, i) => (
+              <motion.span
+                key={tag}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: i * 0.05, type: 'spring', stiffness: 500, damping: 25 }}
+                className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200"
+              >
+                {tag}
+              </motion.span>
+            ))}
           </div>
         </div>
       </div>
-    </button>
+    </motion.button>
   )
 }
