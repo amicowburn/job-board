@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Button, Badge, Input, Alert, AlertDescription } from '@/components/ui'
 import { createClient } from '@/lib/supabase/client'
 import { formatDate } from '@/lib/utils'
+import { BulkImport } from './bulk-import'
 import type { Job } from '@/lib/types'
 
 interface JobTableProps {
@@ -200,6 +201,14 @@ export function JobTable({ jobs, totalJobs }: JobTableProps) {
                 Deactivate Selected ({selectedJobs.size})
               </Button>
             )}
+          </div>
+
+          <div className="border-t pt-4">
+            <h4 className="font-medium mb-3">Bulk Import from Excel</h4>
+            <p className="text-sm text-muted-foreground mb-3">
+              Download the template, fill in your job postings, then upload to import them all at once.
+            </p>
+            <BulkImport />
           </div>
         </div>
       )}
