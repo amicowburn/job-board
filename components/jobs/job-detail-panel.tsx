@@ -202,7 +202,7 @@ export function JobDetailPanel({ job, isMainView = false, onBack }: JobDetailPan
             whileTap={{ scale: 0.93 }}
             transition={{ type: 'spring', stiffness: 500, damping: 25 }}
             onClick={() => {
-              navigator.clipboard.writeText(job.url)
+              navigator.clipboard.writeText(`${window.location.origin}/jobs/${job.id}`)
               setCopied(true)
               setTimeout(() => setCopied(false), 2000)
             }}
@@ -243,7 +243,7 @@ export function JobDetailPanel({ job, isMainView = false, onBack }: JobDetailPan
                 </motion.svg>
               )}
             </AnimatePresence>
-            <span className="hidden sm:inline">{copied ? 'Copied!' : 'Copy Link'}</span>
+            <span className="hidden sm:inline">{copied ? 'Copied!' : 'Share'}</span>
           </motion.button>
         </div>
       </div>

@@ -22,6 +22,7 @@ export default function HomePage() {
     job_type: '',
     work_mode: '',
     location: '',
+    sponsored: false,
   })
 
   const totalPages = Math.ceil(totalJobs / JOBS_PER_PAGE)
@@ -30,40 +31,54 @@ export default function HomePage() {
     setIsLoading(true)
     const supabase = createClient()
 
-    const from = (currentPage - 1) * JOBS_PER_PAGE
-    const to = from + JOBS_PER_PAGE - 1
-
-    let query = supabase
-      .from('jobs')
-      .select('*', { count: 'exact' })
-      .eq('is_active', true)
-      .order('posted_at', { ascending: false, nullsFirst: false })
-      .order('created_at', { ascending: false })
-      .range(from, to)
-
-    if (filters.search) {
-      query = query.or(`title.ilike.%${filters.search}%,company.ilike.%${filters.search}%`)
+    const applySearchFilters = (q: any) => { // eslint-disable-line
+      if (filters.search) q = q.or(`title.ilike.%${filters.search}%,company.ilike.%${filters.search}%`)
+      if (filters.job_type) q = q.eq('job_type', filters.job_type)
+      if (filters.work_mode) q = q.eq('work_mode', filters.work_mode)
+      return q
     }
 
-    if (filters.job_type) {
-      query = query.eq('job_type', filters.job_type)
-    }
-
-    if (filters.work_mode) {
-      query = query.eq('work_mode', filters.work_mode)
-    }
-
-    const { data, count } = await query
-
-    if (data) {
-      setJobs(data as Job[])
-      setTotalJobs(count || 0)
-      if (data.length > 0) {
-        setSelectedJob(data[0] as Job)
-      } else {
-        setSelectedJob(null)
+    if (filters.sponsored) {
+      const from = (currentPage - 1) * JOBS_PER_PAGE
+      const to = from + JOBS_PER_PAGE - 1
+      const { data, count } = await applySearchFilters(
+        supabase.from('jobs').select('*', { count: 'exact' })
+          .eq('is_sponsored', true)
+          .order('posted_at', { ascending: false, nullsFirst: false })
+          .order('created_at', { ascending: false })
+          .range(from, to)
+      )
+      if (data) {
+        setJobs(data as Job[])
+        setTotalJobs(count || 0)
+        setSelectedJob(data.length > 0 ? data[0] as Job : null)
       }
+    } else {
+      // Sponsored jobs pinned to top, then paginated active non-sponsored jobs
+      const from = (currentPage - 1) * JOBS_PER_PAGE
+      const to = from + JOBS_PER_PAGE - 1
+      const [{ data: sponsored }, { data: regular, count }] = await Promise.all([
+        applySearchFilters(
+          supabase.from('jobs').select('*')
+            .eq('is_sponsored', true)
+            .order('posted_at', { ascending: false, nullsFirst: false })
+            .order('created_at', { ascending: false })
+        ),
+        applySearchFilters(
+          supabase.from('jobs').select('*', { count: 'exact' })
+            .eq('is_active', true)
+            .eq('is_sponsored', false)
+            .order('posted_at', { ascending: false, nullsFirst: false })
+            .order('created_at', { ascending: false })
+            .range(from, to)
+        ),
+      ])
+      const combined = [...(sponsored as Job[] ?? []), ...(regular as Job[] ?? [])]
+      setJobs(combined)
+      setTotalJobs((sponsored?.length ?? 0) + (count ?? 0))
+      setSelectedJob(combined.length > 0 ? combined[0] : null)
     }
+
     setIsLoading(false)
   }, [filters, currentPage])
 
@@ -100,6 +115,7 @@ export default function HomePage() {
         lastUpdated={jobs[0]?.posted_at || jobs[0]?.created_at || null}
         filters={filters}
         onFilterChange={handleFilterChange}
+        onSponsoredToggle={() => setFilters(prev => ({ ...prev, sponsored: !prev.sponsored }))}
       />
 
       {/* Two-panel layout fills remaining height */}
@@ -136,14 +152,6 @@ export default function HomePage() {
                       />
                     ))
                   )}
-                </div>
-                <div className="shrink-0 py-3 text-center">
-                  <p className="text-xs text-slate-400">
-                    Want to post a job?{' '}
-                    <a href="mailto:enquires@monashmss.com" className="text-primary font-medium hover:underline">
-                      enquires@monashmss.com
-                    </a>
-                  </p>
                 </div>
                 {totalPages > 1 && (
                   <div className="flex items-center justify-center gap-2 py-3 shrink-0 border-t border-slate-200/50">
@@ -204,14 +212,6 @@ export default function HomePage() {
                 />
               ))
             )}
-          </div>
-          <div className="shrink-0 py-3 text-center">
-            <p className="text-xs text-slate-400">
-              Want to post a job?{' '}
-              <a href="mailto:enquires@monashmss.com" className="text-primary font-medium hover:underline">
-                enquires@monashmss.com
-              </a>
-            </p>
           </div>
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2 py-3 shrink-0 border-t border-slate-200/50">

@@ -6,22 +6,28 @@ const footerNavItems = [
   { href: 'https://monashmss.com/committee', label: 'COMMITTEE' },
   { href: 'https://monashmss.com/publications', label: 'PUBLICATIONS' },
   { href: 'https://monashmss.com/join-us', label: 'JOIN THE MMSS' },
+  { href: '/', label: 'JOBS BOARD' },
 ]
 
 export function Footer() {
   return (
     <footer className="bg-[#e8e8e8] border-t border-[#d5d5d5] mt-auto">
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-8 sm:py-12">
-        <div className="flex flex-col md:flex-row justify-between gap-8 md:gap-10">
-          {/* Left Side */}
-          <div className="space-y-4">
-            <p className="text-sm font-semibold text-slate-700 tracking-wide uppercase">
-              ENQUIRES@MONASHMSS.COM
-            </p>
-            <p className="text-sm font-semibold text-slate-700 tracking-wide uppercase leading-tight">
-              MONASH UNIVERSITY CAULFIELD<br />AND CLAYTON CAMPUS
-            </p>
-            <div className="pt-2">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 py-10 sm:py-14">
+
+        {/* Main columns */}
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-10 md:gap-16">
+
+          {/* Column 1 — Brand */}
+          <div className="flex flex-col gap-4">
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-slate-700 tracking-wide uppercase">
+                ENQUIRES@MONASHMSS.COM
+              </p>
+              <p className="text-sm font-semibold text-slate-700 tracking-wide uppercase leading-snug">
+                MONASH UNIVERSITY CAULFIELD<br />AND CLAYTON CAMPUS
+              </p>
+            </div>
+            <div className="pt-1">
               <Image
                 src="/mmss-logo.png"
                 alt="MMSS"
@@ -32,9 +38,35 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Right Side */}
-          <div className="flex flex-col items-start md:items-end gap-3">
-            <nav className="flex flex-col items-start md:items-end gap-2">
+          {/* Column 2 — For Employers */}
+          <div className="flex flex-col gap-3">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">
+              FOR EMPLOYERS
+            </p>
+            <p className="text-sm font-semibold text-slate-700 uppercase tracking-wide leading-snug max-w-[180px]">
+              REACH AUSTRALIA&apos;S NEXT GENERATION OF MARKETING TALENT.
+            </p>
+            <p className="text-xs text-slate-500 leading-relaxed max-w-[200px]">
+              Post a listing and connect with motivated marketing students from Monash University.
+            </p>
+            <Link
+              href="/submit"
+              className="inline-flex items-center gap-2 self-start mt-1 px-5 py-2.5 text-sm font-medium bg-slate-300 text-slate-700 hover:bg-slate-400/60 transition-colors rounded-md"
+            >
+              Post a Job
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12,5 19,12 12,19" />
+              </svg>
+            </Link>
+          </div>
+
+          {/* Column 3 — Navigation */}
+          <div className="flex flex-col items-start gap-3">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">
+              NAVIGATION
+            </p>
+            <nav className="flex flex-col items-start gap-2.5">
               {footerNavItems.map((item) => (
                 <Link
                   key={item.href}
@@ -45,12 +77,11 @@ export function Footer() {
                 </Link>
               ))}
             </nav>
-            <p className="text-xs text-slate-400 uppercase tracking-wide mt-1">NAVIGATION</p>
           </div>
         </div>
 
         {/* Bottom Row */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mt-12 pt-6 border-t border-[#d0d0d0] gap-4">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mt-10 pt-6 border-t border-[#d0d0d0] gap-4">
           <div className="space-y-1">
             <p className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
               &copy; {new Date().getFullYear()}, MONASH MARKETING STUDENTS&apos; SOCIETY

@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { formatRelativeTime } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
 import type { Job } from '@/lib/types'
 
 interface JobCardProps {
@@ -36,11 +36,15 @@ export function JobCard({ job, isSelected, onClick }: JobCardProps) {
     return plain.substring(0, maxLength).trim() + '...'
   }
 
-  const timeAgo = job.posted_at
-    ? formatRelativeTime(job.posted_at)
-    : job.created_at
-    ? formatRelativeTime(job.created_at)
-    : null
+  const expiryDate = (() => {
+    if (!job.closing_at) return null
+    const closing = new Date(job.closing_at)
+    const daysUntil = Math.ceil((closing.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    if (daysUntil <= 7 && daysUntil >= 0) {
+      return daysUntil === 0 ? 'Closes today' : `Closing in ${daysUntil} day${daysUntil === 1 ? '' : 's'}`
+    }
+    return `Closes ${closing.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}`
+  })()
 
   const tags = [
     job.job_type ? formatJobType(job.job_type) : null,
@@ -85,9 +89,9 @@ export function JobCard({ job, isSelected, onClick }: JobCardProps) {
                 {job.company}
               </p>
             </div>
-            {timeAgo && (
+            {expiryDate && (
               <span className="text-[11px] text-slate-400 shrink-0 mt-0.5">
-                {timeAgo}
+                {expiryDate}
               </span>
             )}
           </div>
@@ -101,6 +105,16 @@ export function JobCard({ job, isSelected, onClick }: JobCardProps) {
 
           {/* Tags with stagger */}
           <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+            {job.is_sponsored && (
+              <motion.span
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                className="text-[11px] px-2 py-0.5 rounded-full bg-primary text-white font-semibold"
+              >
+                Sponsored
+              </motion.span>
+            )}
             {tags.map((tag, i) => (
               <motion.span
                 key={tag}
