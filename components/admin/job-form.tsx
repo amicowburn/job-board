@@ -48,6 +48,7 @@ export function JobForm({ job, isEditing = false }: JobFormProps) {
     closing_at: job?.closing_at ? job.closing_at.split('T')[0] : '',
     is_featured: job?.is_featured || false,
     is_active: job?.is_active ?? true,
+    is_sponsored: job?.is_sponsored || false,
   })
 
   const handleChange = (
@@ -87,6 +88,7 @@ export function JobForm({ job, isEditing = false }: JobFormProps) {
         closing_at: formData.closing_at ? new Date(formData.closing_at).toISOString() : null,
         is_featured: formData.is_featured,
         is_active: formData.is_active,
+        is_sponsored: formData.is_sponsored,
       }
 
       if (isEditing && job) {
@@ -297,6 +299,17 @@ export function JobForm({ job, isEditing = false }: JobFormProps) {
             className="rounded border-border"
           />
           <span className="text-sm">Active (visible to public)</span>
+        </label>
+
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            name="is_sponsored"
+            checked={formData.is_sponsored}
+            onChange={handleChange}
+            className="rounded border-border accent-primary"
+          />
+          <span className="text-sm font-medium text-primary">Sponsored (always shown, pinned to top)</span>
         </label>
       </div>
 

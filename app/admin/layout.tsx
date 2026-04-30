@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { getUser, isCurrentUserAdmin } from '@/lib/supabase/server'
+import { getUser, isCurrentUserAdmin, createServerClient } from '@/lib/supabase/server'
 import { AdminNav } from '@/components/admin/admin-nav'
 
 export const metadata = {
@@ -18,11 +18,20 @@ export default async function AdminLayout({
   // The middleware handles the redirect for non-login pages
 
   // If user is logged in, check admin status for non-login pages
+  let pendingSubmissions = 0
+
   if (user) {
     const isAdmin = await isCurrentUserAdmin()
     if (!isAdmin) {
       redirect('/admin/login?error=unauthorized')
     }
+
+    const supabase = await createServerClient()
+    const { count } = await supabase
+      .from('job_submissions')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending')
+    pendingSubmissions = count ?? 0
   }
 
   // If not logged in, the middleware will redirect to login
@@ -38,7 +47,7 @@ export default async function AdminLayout({
               <Link href="/admin/jobs" className="font-bold text-lg">
                 MMSS Admin
               </Link>
-              <AdminNav />
+              <AdminNav pendingSubmissions={pendingSubmissions} />
             </div>
             <div className="flex items-center gap-4">
               <span className="text-sm text-background/70">{user.email}</span>

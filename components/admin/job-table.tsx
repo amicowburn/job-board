@@ -262,6 +262,7 @@ export function JobTable({ jobs, totalJobs }: JobTableProps) {
                         {job.is_active ? 'Active' : 'Inactive'}
                       </Badge>
                       {job.is_featured && <Badge variant="warning">Featured</Badge>}
+                      {job.is_sponsored && <Badge variant="default">Sponsored</Badge>}
                     </div>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">

@@ -10,6 +10,7 @@ const navItems = [
   { href: 'https://monashmss.com/committee', label: 'COMMITTEE' },
   { href: 'https://monashmss.com/publications', label: 'PUBLICATIONS' },
   { href: 'https://monashmss.com/join-us', label: 'JOIN THE MMSS' },
+  { href: '/', label: 'JOBS BOARD' },
 ]
 
 export function Navbar() {

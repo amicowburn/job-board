@@ -24,6 +24,7 @@ export interface Job {
   closing_at: string | null
   is_active: boolean
   is_featured: boolean
+  is_sponsored: boolean
   created_at: string
   updated_at: string
 }
@@ -62,6 +63,7 @@ export interface JobInsert {
   closing_at?: string | null
   is_active?: boolean
   is_featured?: boolean
+  is_sponsored?: boolean
 }
 
 export interface JobFeedbackInsert {
@@ -90,6 +92,7 @@ export interface JobUpdate {
   closing_at?: string | null
   is_active?: boolean
   is_featured?: boolean
+  is_sponsored?: boolean
 }
 
 export interface JobFeedbackUpdate {
@@ -97,6 +100,55 @@ export interface JobFeedbackUpdate {
   message?: string | null
   email?: string | null
   status?: FeedbackStatus
+}
+
+// =====================
+// Job Submission types
+// =====================
+
+export type SubmissionStatus = 'pending' | 'approved' | 'rejected'
+
+export interface JobSubmission {
+  id: string
+  submitter_name: string
+  submitter_email: string
+  submitter_company_name: string
+  title: string
+  company: string
+  location: string | null
+  work_mode: WorkMode | null
+  job_type: JobType | null
+  url: string
+  description: string | null
+  company_logo_url: string | null
+  tags: string[] | null
+  closing_at: string | null
+  status: SubmissionStatus
+  admin_note: string | null
+  edit_token: string
+  created_at: string
+  updated_at: string
+}
+
+export interface JobSubmissionInsert {
+  submitter_name: string
+  submitter_email: string
+  submitter_company_name: string
+  title: string
+  company: string
+  location?: string | null
+  work_mode?: WorkMode | null
+  job_type?: JobType | null
+  url: string
+  description?: string | null
+  company_logo_url?: string | null
+  tags?: string[] | null
+  closing_at?: string | null
+}
+
+export interface JobSubmissionUpdate {
+  status?: SubmissionStatus
+  admin_note?: string | null
 }
 
 // Query filter types
@@ -108,6 +160,7 @@ export interface JobFilters {
   tags?: string[]
   is_active?: boolean
   is_featured?: boolean
+  is_sponsored?: boolean
 }
 
 export interface PaginationParams {
@@ -163,6 +216,12 @@ export type Database = {
             referencedColumns: ['id']
           }
         ]
+      }
+      job_submissions: {
+        Row: JobSubmission
+        Insert: JobSubmissionInsert
+        Update: JobSubmissionUpdate
+        Relationships: []
       }
       admin_users: {
         Row: AdminUser

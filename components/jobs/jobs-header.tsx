@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { formatDate } from '@/lib/utils'
 
 interface JobsHeaderProps {
@@ -10,11 +11,13 @@ interface JobsHeaderProps {
     job_type: string
     work_mode: string
     location: string
+    sponsored: boolean
   }
   onFilterChange: (key: string, value: string) => void
+  onSponsoredToggle: () => void
 }
 
-export function JobsHeader({ totalJobs, lastUpdated, filters, onFilterChange }: JobsHeaderProps) {
+export function JobsHeader({ totalJobs, lastUpdated, filters, onFilterChange, onSponsoredToggle }: JobsHeaderProps) {
   return (
     <header className="px-4 sm:px-6 md:px-8 lg:px-12 pt-4 pb-2 max-w-[1200px] mx-auto w-full">
       {/* Title + Search + Last updated */}

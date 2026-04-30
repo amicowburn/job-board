@@ -21,6 +21,7 @@ export default function JobsPage() {
     job_type: '',
     work_mode: '',
     location: '',
+    sponsored: false,
   })
 
   const totalPages = Math.ceil(totalJobs / JOBS_PER_PAGE)
@@ -29,40 +30,62 @@ export default function JobsPage() {
     setIsLoading(true)
     const supabase = createClient()
 
-    const from = (currentPage - 1) * JOBS_PER_PAGE
-    const to = from + JOBS_PER_PAGE - 1
-
-    let query = supabase
-      .from('jobs')
-      .select('*', { count: 'exact' })
-      .eq('is_active', true)
-      .order('posted_at', { ascending: false, nullsFirst: false })
-      .order('created_at', { ascending: false })
-      .range(from, to)
-
-    if (filters.search) {
-      query = query.or(`title.ilike.%${filters.search}%,company.ilike.%${filters.search}%`)
+    const applySearchFilters = (q: any) => { // eslint-disable-line
+      if (filters.search) q = q.or(`title.ilike.%${filters.search}%,company.ilike.%${filters.search}%`)
+      if (filters.job_type) q = q.eq('job_type', filters.job_type)
+      if (filters.work_mode) q = q.eq('work_mode', filters.work_mode)
+      return q
     }
 
-    if (filters.job_type) {
-      query = query.eq('job_type', filters.job_type)
-    }
-
-    if (filters.work_mode) {
-      query = query.eq('work_mode', filters.work_mode)
-    }
-
-    const { data, count } = await query
-
-    if (data) {
-      setJobs(data as Job[])
-      setTotalJobs(count || 0)
-      if (data.length > 0) {
-        setSelectedJob(data[0] as Job)
-      } else {
-        setSelectedJob(null)
+    if (filters.sponsored) {
+      // Sponsored-only view
+      const from = (currentPage - 1) * JOBS_PER_PAGE
+      const to = from + JOBS_PER_PAGE - 1
+      const query = applySearchFilters(
+        supabase.from('jobs').select('*', { count: 'exact' })
+          .eq('is_sponsored', true)
+          .order('posted_at', { ascending: false, nullsFirst: false })
+          .order('created_at', { ascending: false })
+          .range(from, to)
+      )
+      const { data, count } = await query
+      if (data) {
+        setJobs(data as Job[])
+        setTotalJobs(count || 0)
+        setSelectedJob(data.length > 0 ? data[0] as Job : null)
       }
+    } else {
+      // Fetch sponsored jobs separately — always pinned to top
+      const sponsoredQuery = applySearchFilters(
+        supabase.from('jobs').select('*')
+          .eq('is_sponsored', true)
+          .order('posted_at', { ascending: false, nullsFirst: false })
+          .order('created_at', { ascending: false })
+      )
+
+      // Paginated non-sponsored active jobs
+      const from = (currentPage - 1) * JOBS_PER_PAGE
+      const to = from + JOBS_PER_PAGE - 1
+      const regularQuery = applySearchFilters(
+        supabase.from('jobs').select('*', { count: 'exact' })
+          .eq('is_active', true)
+          .eq('is_sponsored', false)
+          .order('posted_at', { ascending: false, nullsFirst: false })
+          .order('created_at', { ascending: false })
+          .range(from, to)
+      )
+
+      const [{ data: sponsored }, { data: regular, count }] = await Promise.all([
+        sponsoredQuery,
+        regularQuery,
+      ])
+
+      const combined = [...(sponsored as Job[] ?? []), ...(regular as Job[] ?? [])]
+      setJobs(combined)
+      setTotalJobs((sponsored?.length ?? 0) + (count ?? 0))
+      setSelectedJob(combined.length > 0 ? combined[0] : null)
     }
+
     setIsLoading(false)
   }, [filters, currentPage])
 
@@ -72,7 +95,11 @@ export default function JobsPage() {
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [filters.search, filters.job_type, filters.work_mode])
+  }, [filters.search, filters.job_type, filters.work_mode, filters.sponsored])
+
+  const handleSponsoredToggle = () => {
+    setFilters(prev => ({ ...prev, sponsored: !prev.sponsored }))
+  }
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }))
@@ -94,6 +121,7 @@ export default function JobsPage() {
           totalJobs={totalJobs}
           filters={filters}
           onFilterChange={handleFilterChange}
+          onSponsoredToggle={handleSponsoredToggle}
         />
 
         <div className="flex-1 flex px-8 lg:px-12 pb-6 pt-4 gap-6 max-w-[1600px] mx-auto w-full items-start">
@@ -123,6 +151,16 @@ export default function JobsPage() {
                 <option value="hybrid">Hybrid</option>
                 <option value="onsite">On-site</option>
               </select>
+              <button
+                onClick={handleSponsoredToggle}
+                className={`h-9 px-4 text-sm font-medium rounded-lg transition-all ${
+                  filters.sponsored
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'bg-primary/10 text-primary hover:bg-primary/20'
+                }`}
+              >
+                Sponsored
+              </button>
             </div>
 
             <div className="space-y-3">
