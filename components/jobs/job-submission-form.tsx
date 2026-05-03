@@ -117,7 +117,12 @@ export function JobSubmissionForm({ existingSubmission, editToken }: JobSubmissi
       setFormData(prev => {
         const next = { ...prev }
         for (const field of PREFILLABLE_FIELDS) {
-          if (data[field]) { next[field] = data[field]; filled++ }
+          let value = data[field]
+          // Only accept absolute URLs for the logo field to avoid browser URL validation errors
+          if (field === 'company_logo_url' && value && !/^https?:\/\//i.test(value)) {
+            value = ''
+          }
+          if (value) { next[field] = value; filled++ }
         }
         if (data.description) { next.description = data.description; filled++ }
         return next
