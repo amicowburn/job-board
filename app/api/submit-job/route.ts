@@ -29,12 +29,11 @@ export async function POST(request: Request) {
   }
 
   // Send emails — failures are non-blocking
-  try {
+  if (process.env.RESEND_API_KEY) {
     const resend = new Resend(process.env.RESEND_API_KEY)
     const editLink = `${APP_URL}/submit/edit?token=${data.edit_token}`
 
-    await Promise.all([
-      // Branded confirmation to HR submitter
+    const [confirmResult, adminResult] = await Promise.allSettled([
       resend.emails.send({
         from: 'MMSS Job Board <noreply@monashmss.com>',
         to: data.submitter_email,
@@ -58,7 +57,6 @@ export async function POST(request: Request) {
           `Questions? Email ${ADMIN_EMAIL}`,
         ].filter(Boolean).join('\n'),
       }),
-      // Internal notification to admin (plain text is fine here)
       resend.emails.send({
         from: 'MMSS Job Board <noreply@monashmss.com>',
         to: ADMIN_EMAIL,
@@ -75,9 +73,21 @@ export async function POST(request: Request) {
         ].join('\n'),
       }),
     ])
-  } catch (emailError) {
-    console.error('Failed to send notification emails:', emailError)
-    // Do not fail the request — the submission is already saved
+
+    if (confirmResult.status === 'fulfilled' && confirmResult.value.error) {
+      console.error('Failed to send confirmation email to submitter:', confirmResult.value.error)
+    }
+    if (adminResult.status === 'fulfilled' && adminResult.value.error) {
+      console.error('Failed to send admin notification email:', adminResult.value.error)
+    }
+    if (confirmResult.status === 'rejected') {
+      console.error('Confirmation email threw:', confirmResult.reason)
+    }
+    if (adminResult.status === 'rejected') {
+      console.error('Admin notification email threw:', adminResult.reason)
+    }
+  } else {
+    console.warn('RESEND_API_KEY not set — skipping submission emails')
   }
 
   return NextResponse.json({ success: true })
