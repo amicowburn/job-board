@@ -51,7 +51,7 @@ export function Footer() {
             </p>
             <Link
               href="/submit"
-              className="inline-flex items-center gap-2 self-start mt-1 px-5 py-2.5 text-sm font-medium bg-slate-300 text-slate-700 hover:bg-slate-400/60 transition-colors rounded-md"
+              className="inline-flex items-center gap-2 self-start mt-1 px-5 py-2.5 text-sm font-semibold transition-colors rounded-md" style={{ backgroundColor: 'rgba(166, 166, 166, 0.5)', color: '#4a4a4a' }}
             >
               Post a Job
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -81,7 +81,7 @@ export function Footer() {
         </div>
 
         {/* Bottom Row */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mt-10 pt-6 border-t border-[#d0d0d0] gap-4">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mt-10 pt-6 gap-4">
           <div className="space-y-1">
             <p className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
               &copy; {new Date().getFullYear()}, MONASH MARKETING STUDENTS&apos; SOCIETY

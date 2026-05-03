@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
+import { Resend } from 'resend'
 import { isCurrentUserAdmin } from '@/lib/supabase/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { approvalEmail } from '@/lib/email-templates'
 
 export async function POST(
   _request: Request,
@@ -57,6 +59,29 @@ export async function POST(
     .from('job_submissions')
     .update({ status: 'approved' })
     .eq('id', id)
+
+  // Notify the HR submitter their listing is live (non-blocking)
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    await resend.emails.send({
+      from: 'MMSS Job Board <noreply@monashmss.com>',
+      to: submission.submitter_email,
+      subject: `Your listing "${submission.title}" is now live on the MMSS Job Board!`,
+      html: approvalEmail(submission),
+      text: [
+        `Hi ${submission.submitter_name},`,
+        '',
+        `Great news — your listing "${submission.title}" at ${submission.company} has been approved and is now live on the MMSS Job Board.`,
+        '',
+        `View the board: ${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}`,
+        '',
+        'Thank you for connecting with Monash marketing students.',
+        'MMSS Job Board Team',
+      ].join('\n'),
+    })
+  } catch (emailError) {
+    console.error('Failed to send approval email:', emailError)
+  }
 
   return NextResponse.json({ success: true })
 }

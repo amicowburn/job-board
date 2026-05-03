@@ -4,14 +4,19 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
 import Link from '@tiptap/extension-link'
-import { useCallback } from 'react'
+import { useCallback, useImperativeHandle, forwardRef } from 'react'
 
 interface RichTextEditorProps {
   content: string
   onChange: (html: string) => void
 }
 
-export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
+export interface RichTextEditorRef {
+  setContent: (html: string) => void
+}
+
+export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>(
+  function RichTextEditor({ content, onChange }, ref) {
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -29,6 +34,16 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
       },
     },
   })
+
+  useImperativeHandle(ref, () => ({
+    setContent: (html: string) => {
+      if (editor) {
+        editor.commands.setContent(html)
+        // Manually fire onChange so formData stays in sync
+        onChange(editor.getHTML())
+      }
+    },
+  }))
 
   const addImage = useCallback(() => {
     const url = window.prompt('Image URL')
@@ -128,7 +143,8 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
       <EditorContent editor={editor} />
     </div>
   )
-}
+  }
+)
 
 function ToolbarButton({
   onClick,

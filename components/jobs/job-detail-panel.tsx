@@ -202,7 +202,7 @@ export function JobDetailPanel({ job, isMainView = false, onBack }: JobDetailPan
             whileTap={{ scale: 0.93 }}
             transition={{ type: 'spring', stiffness: 500, damping: 25 }}
             onClick={() => {
-              navigator.clipboard.writeText(`${window.location.origin}/jobs/${job.id}`)
+              navigator.clipboard.writeText(`${window.location.origin}/?job=${job.id}`)
               setCopied(true)
               setTimeout(() => setCopied(false), 2000)
             }}

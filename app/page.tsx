@@ -17,6 +17,7 @@ export default function HomePage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [isLoading, setIsLoading] = useState(true)
   const [showDetail, setShowDetail] = useState(false)
+  const [linkedJobId, setLinkedJobId] = useState<string | null>(null)
   const [filters, setFilters] = useState({
     search: '',
     job_type: '',
@@ -89,6 +90,34 @@ export default function HomePage() {
   useEffect(() => {
     setCurrentPage(1)
   }, [filters.search, filters.job_type, filters.work_mode])
+
+  // Read ?job=<id> from URL on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const jobId = params.get('job')
+    if (jobId) setLinkedJobId(jobId)
+  }, [])
+
+  // Once jobs load, pre-select the linked job
+  useEffect(() => {
+    if (!linkedJobId || isLoading) return
+    const found = jobs.find(j => j.id === linkedJobId)
+    if (found) {
+      setSelectedJob(found)
+      setShowDetail(true)
+      setLinkedJobId(null)
+    } else {
+      // Job not in current page — fetch it directly and show in the panel
+      const supabase = createClient()
+      supabase.from('jobs').select('*').eq('id', linkedJobId).single().then(({ data }) => {
+        if (data) {
+          setSelectedJob(data as Job)
+          setShowDetail(true)
+        }
+        setLinkedJobId(null)
+      })
+    }
+  }, [jobs, linkedJobId, isLoading])
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }))

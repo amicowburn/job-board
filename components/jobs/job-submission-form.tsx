@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Button, Input, Select, Label, Alert, AlertDescription, type SelectOption } from '@/components/ui'
-import { RichTextEditor } from '@/components/admin/rich-text-editor'
+import { RichTextEditor, type RichTextEditorRef } from '@/components/admin/rich-text-editor'
 import { isValidEmail } from '@/lib/utils'
 import type { JobSubmissionInsert, WorkMode, JobType } from '@/lib/types'
 
@@ -66,12 +66,72 @@ export function JobSubmissionForm({ existingSubmission, editToken }: JobSubmissi
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
+  const [isPrefilling, setIsPrefilling] = useState(false)
+  const [prefillStatus, setPrefillStatus] = useState<'idle' | 'success'>('idle')
+  const [descriptionKey, setDescriptionKey] = useState(0)
+
+  const editorRef = useRef<RichTextEditorRef>(null)
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+    // If the user manually edits a field, clear the prefill badge
+    if (prefillStatus === 'success') setPrefillStatus('idle')
+  }
+
+  const handleUrlBlur = async () => {
+    const url = formData.url.trim()
+    if (!url || isPrefilling || isEditing) return
+    try { new URL(url) } catch { return }
+
+    const PREFILLABLE_FIELDS = [
+      'title', 'company', 'company_logo_url',
+      'location', 'job_type', 'closing_at', 'tags',
+    ] as const
+
+    setIsPrefilling(true)
+    setPrefillStatus('idle')
+
+    // Clear all prefillable fields immediately so stale data from the
+    // previous URL never lingers while the new one is loading.
+    setFormData(prev => {
+      const next = { ...prev }
+      for (const field of PREFILLABLE_FIELDS) next[field] = ''
+      next.description = ''
+      return next
+    })
+    // Remount the editor so it visually clears too
+    setDescriptionKey(k => k + 1)
+
+    try {
+      const res = await fetch(`/api/prefill-job?url=${encodeURIComponent(url)}`)
+      if (!res.ok) return
+
+      const body = await res.json()
+      const data: Record<string, string> = body.data ?? {}
+
+      let filled = 0
+
+      setFormData(prev => {
+        const next = { ...prev }
+        for (const field of PREFILLABLE_FIELDS) {
+          if (data[field]) { next[field] = data[field]; filled++ }
+        }
+        if (data.description) { next.description = data.description; filled++ }
+        return next
+      })
+
+      // If a description came back, remount editor again with the new content
+      if (data.description) setDescriptionKey(k => k + 1)
+
+      if (filled > 0) setPrefillStatus('success')
+    } catch {
+      // Fail silently — user fills manually
+    } finally {
+      setIsPrefilling(false)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -234,19 +294,44 @@ export function JobSubmissionForm({ existingSubmission, editToken }: JobSubmissi
               className="mt-1.5"
             />
           </div>
+
+          {/* Application URL — triggers prefill on blur */}
           <div className="sm:col-span-2">
             <Label htmlFor="url" required>Application URL</Label>
-            <Input
-              id="url"
-              name="url"
-              type="url"
-              value={formData.url}
-              onChange={handleChange}
-              placeholder="https://company.com/apply"
-              required
-              className="mt-1.5"
-            />
+            <p className="text-xs text-slate-400 mt-0.5 mb-1.5">
+              Paste the link and tab away — we&apos;ll try to fill in the details automatically.
+            </p>
+            <div className="relative">
+              <Input
+                id="url"
+                name="url"
+                type="url"
+                value={formData.url}
+                onChange={handleChange}
+                onBlur={handleUrlBlur}
+                placeholder="https://company.com/apply"
+                required
+                className={isPrefilling ? 'pr-10' : ''}
+              />
+              {isPrefilling && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <svg className="h-4 w-4 animate-spin text-slate-400" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                </div>
+              )}
+            </div>
+            {prefillStatus === 'success' && (
+              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-green-600">
+                <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                Details prefilled — review and adjust as needed
+              </p>
+            )}
           </div>
+
           <div>
             <Label htmlFor="location">Location</Label>
             <Input
@@ -318,6 +403,8 @@ export function JobSubmissionForm({ existingSubmission, editToken }: JobSubmissi
             <Label>Job description</Label>
             <div className="mt-1.5">
               <RichTextEditor
+                key={descriptionKey}
+                ref={editorRef}
                 content={formData.description}
                 onChange={html => setFormData(prev => ({ ...prev, description: html }))}
               />
