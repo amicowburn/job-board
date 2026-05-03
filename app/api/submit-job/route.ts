@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { submissionConfirmationEmail } from '@/lib/email-templates'
 import type { JobSubmissionInsert, JobSubmission } from '@/lib/types'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
@@ -33,39 +34,44 @@ export async function POST(request: Request) {
     const editLink = `${APP_URL}/submit/edit?token=${data.edit_token}`
 
     await Promise.all([
-      // Confirmation to HR submitter
+      // Branded confirmation to HR submitter
       resend.emails.send({
-        from: `MMSS Job Board <noreply@monashmss.com>`,
+        from: 'MMSS Job Board <noreply@monashmss.com>',
         to: data.submitter_email,
-        subject: `Your job listing "${data.title}" has been submitted`,
+        subject: `Submission received: "${data.title}" at ${data.company}`,
+        html: submissionConfirmationEmail(data),
         text: [
           `Hi ${data.submitter_name},`,
           '',
           `Thank you for submitting "${data.title}" at ${data.company} to the MMSS Job Board.`,
           'Our team will review your listing within 2–3 business days.',
           '',
-          'Need to make changes before we review it?',
-          `Edit your submission here: ${editLink}`,
-          '(This link is valid while your submission is still pending review.)',
+          `Job title:  ${data.title}`,
+          `Company:    ${data.company}`,
+          data.location   ? `Location:   ${data.location}`   : null,
+          data.job_type   ? `Job type:   ${data.job_type}`   : null,
+          data.work_mode  ? `Work mode:  ${data.work_mode}`  : null,
+          data.closing_at ? `Closes:     ${data.closing_at}` : null,
+          `Apply URL:  ${data.url}`,
           '',
-          'Questions? Reply to this email or contact enquires@monashmss.com',
-          '',
-          'MMSS Job Board Team',
-        ].join('\n'),
+          `Edit your submission: ${editLink}`,
+          `Questions? Email ${ADMIN_EMAIL}`,
+        ].filter(Boolean).join('\n'),
       }),
-      // Notification to admin
+      // Internal notification to admin (plain text is fine here)
       resend.emails.send({
-        from: `MMSS Job Board <noreply@monashmss.com>`,
+        from: 'MMSS Job Board <noreply@monashmss.com>',
         to: ADMIN_EMAIL,
-        subject: `New job submission: ${data.title} at ${data.company}`,
+        subject: `New submission: ${data.title} at ${data.company}`,
         text: [
           'A new job submission is waiting for review.',
           '',
-          `Job: ${data.title} at ${data.company}`,
+          `Job:          ${data.title} at ${data.company}`,
           `Submitted by: ${data.submitter_name} (${data.submitter_email})`,
-          `Application URL: ${data.url}`,
+          `Company:      ${data.submitter_company_name}`,
+          `Apply URL:    ${data.url}`,
           '',
-          `Review it here: ${APP_URL}/admin/submissions`,
+          `Review: ${APP_URL}/admin/submissions`,
         ].join('\n'),
       }),
     ])
