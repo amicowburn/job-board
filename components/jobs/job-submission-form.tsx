@@ -209,7 +209,7 @@ export function JobSubmissionForm({ existingSubmission, editToken }: JobSubmissi
         <AlertDescription>
           {isEditing
             ? 'Your submission has been updated. Our team will review it shortly.'
-            : 'Your listing has been submitted for review. Questions? Email enquires@monashmss.com'}
+            : <>Your listing has been submitted for review. If you have any questions, email <a href="mailto:enquiries@monashmss.com" className="underline font-medium">enquiries@monashmss.com</a>.</>}
         </AlertDescription>
       </Alert>
     )
