@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { getUser, isCurrentUserAdmin, createServerClient } from '@/lib/supabase/server'
@@ -14,10 +15,6 @@ export default async function AdminLayout({
 }) {
   const user = await getUser()
 
-  // Allow access to login page without auth
-  // The middleware handles the redirect for non-login pages
-
-  // If user is logged in, check admin status for non-login pages
   let pendingSubmissions = 0
 
   if (user) {
@@ -34,38 +31,51 @@ export default async function AdminLayout({
     pendingSubmissions = count ?? 0
   }
 
-  // If not logged in, the middleware will redirect to login
-  // For the login page itself, we just render children
-
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Admin Header */}
+    <div className="min-h-screen flex flex-col bg-[#e8e8e8]">
       {user && (
-        <header className="bg-foreground text-background border-b">
-          <div className="container-page flex items-center justify-between h-16">
-            <div className="flex items-center gap-6">
-              <Link href="/admin/jobs" className="font-bold text-lg">
-                MMSS Admin
-              </Link>
-              <AdminNav pendingSubmissions={pendingSubmissions} />
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-background/70">{user.email}</span>
-              <form action="/api/auth/signout" method="POST">
-                <button
-                  type="submit"
-                  className="text-sm text-background/70 hover:text-background"
-                >
-                  Sign Out
-                </button>
-              </form>
+        <header className="sticky top-0 z-50 px-[15px] py-[10px]">
+          <div className="max-w-[1200px] mx-auto">
+            <div className="bg-white rounded-[15px] px-4 sm:px-[15px] flex items-center justify-between h-[50px] shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+              {/* Left: logo + Admin label + nav */}
+              <div className="flex items-center gap-4">
+                <Link href="/admin/jobs" className="flex items-center gap-2 shrink-0">
+                  <Image
+                    src="/mmss-logo.png"
+                    alt="MMSS"
+                    width={80}
+                    height={33}
+                    className="h-[28px] w-auto object-contain"
+                  />
+                  <span
+                    className="text-[11px] uppercase tracking-widest text-slate-400 font-medium hidden sm:block"
+                    style={{ fontFamily: 'var(--font-outfit)' }}
+                  >
+                    Admin
+                  </span>
+                </Link>
+                <AdminNav pendingSubmissions={pendingSubmissions} />
+              </div>
+              {/* Right: email + sign out */}
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-slate-400 hidden md:block truncate max-w-[180px]">
+                  {user.email}
+                </span>
+                <form action="/api/auth/signout" method="POST">
+                  <button
+                    type="submit"
+                    className="text-xs text-slate-500 hover:text-slate-800 px-2 py-1 rounded-md hover:bg-slate-100 transition-colors whitespace-nowrap"
+                  >
+                    Sign out
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
         </header>
       )}
 
-      {/* Main Content */}
-      <main className="flex-1 bg-muted/30">
+      <main className="flex-1 px-4 sm:px-[15px] py-6 w-full max-w-[1200px] mx-auto">
         {children}
       </main>
     </div>

@@ -100,12 +100,22 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="container-page py-8">
-      <h1 className="text-2xl font-bold mb-6">Admin Users</h1>
+    <div>
+      <div className="mb-6">
+        <h1
+          className="text-[22px] font-bold text-slate-800"
+          style={{ fontFamily: 'var(--font-outfit)' }}
+        >
+          Admin Users
+        </h1>
+        <p className="text-sm text-slate-500 mt-1">Manage admin access to the dashboard</p>
+      </div>
 
       {/* Create new admin */}
-      <div className="bg-background rounded-lg border border-border p-6 mb-8 max-w-md">
-        <h2 className="text-lg font-semibold mb-4">Create Admin User</h2>
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-6 max-w-md">
+        <h2 className="text-base font-semibold text-slate-700 mb-4" style={{ fontFamily: 'var(--font-outfit)' }}>
+          Create Admin User
+        </h2>
 
         {message && (
           <Alert variant={message.type === 'success' ? 'success' : 'destructive'} className="mb-4">
@@ -146,36 +156,36 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Admin list */}
-      <div className="bg-background rounded-lg border border-border overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-border bg-muted/30">
-              <th className="text-left px-4 py-3 font-medium">User ID</th>
-              <th className="text-left px-4 py-3 font-medium">Created</th>
-              <th className="text-right px-4 py-3 font-medium">Actions</th>
+            <tr className="bg-slate-50 border-b border-slate-100">
+              <th className="text-left px-5 py-3 text-[11px] uppercase tracking-wide text-slate-500 font-medium">User ID</th>
+              <th className="text-left px-5 py-3 text-[11px] uppercase tracking-wide text-slate-500 font-medium">Created</th>
+              <th className="text-right px-5 py-3 text-[11px] uppercase tracking-wide text-slate-500 font-medium">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-slate-50">
             {isLoading ? (
               <tr>
-                <td colSpan={3} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={3} className="px-5 py-8 text-center text-slate-400 text-sm">
                   Loading...
                 </td>
               </tr>
             ) : admins.length === 0 ? (
               <tr>
-                <td colSpan={3} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={3} className="px-5 py-8 text-center text-slate-400 text-sm">
                   No admin users found
                 </td>
               </tr>
             ) : (
               admins.map((admin) => (
-                <tr key={admin.id} className="border-b border-border last:border-0">
-                  <td className="px-4 py-3 font-mono text-xs">{admin.id}</td>
-                  <td className="px-4 py-3 text-muted-foreground">
+                <tr key={admin.id} className="hover:bg-slate-50/60 transition-colors">
+                  <td className="px-5 py-4 font-mono text-xs text-slate-500">{admin.id}</td>
+                  <td className="px-5 py-4 text-xs text-slate-400">
                     {new Date(admin.created_at).toLocaleDateString('en-AU')}
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-5 py-4 text-right">
                     <button
                       onClick={() => handleRemoveAdmin(admin.id)}
                       className="text-xs text-destructive hover:underline"

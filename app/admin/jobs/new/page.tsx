@@ -6,15 +6,20 @@ export const metadata = {
 
 export default function AdminNewJobPage() {
   return (
-    <div className="container-page py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold">Add New Job</h1>
-        <p className="text-muted-foreground">
-          Create a new job listing
-        </p>
+    <div>
+      <div className="mb-6">
+        <h1
+          className="text-[22px] font-bold text-slate-800"
+          style={{ fontFamily: 'var(--font-outfit)' }}
+        >
+          Add New Job
+        </h1>
+        <p className="text-sm text-slate-500 mt-1">Create a new job listing</p>
       </div>
 
-      <JobForm />
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8">
+        <JobForm />
+      </div>
     </div>
   )
 }
