@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { Resend } from 'resend'
+import { sendEmail } from '@/lib/email'
 import { isCurrentUserAdmin } from '@/lib/supabase/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { rejectionEmail } from '@/lib/email-templates'
@@ -38,10 +38,9 @@ export async function POST(
     return NextResponse.json({ error: 'Failed to reject submission' }, { status: 500 })
   }
 
-  // Notify the HR submitter their listing wasn't approved (non-blocking)
-  try {
-    const resend = new Resend(process.env.RESEND_API_KEY)
-    await resend.emails.send({
+  // Notify the HR submitter their listing wasn't approved (non-blocking, never silent)
+  const emailResult = await sendEmail(
+    {
       from: 'MMSS Job Board <noreply@monashmss.com>',
       to: submission.submitter_email,
       subject: `An update on your submission: "${submission.title}"`,
@@ -58,10 +57,15 @@ export async function POST(
         `Questions? Email enquiries@monashmss.com`,
         'MMSS Job Board Team',
       ].filter(l => l !== null).join('\n'),
-    })
-  } catch (emailError) {
-    console.error('Failed to send rejection email:', emailError)
-  }
+    },
+    'rejection notification'
+  )
 
-  return NextResponse.json({ success: true })
+  // The submission is rejected either way — but the admin needs to know if the
+  // submitter was never told, so they can follow up manually.
+  return NextResponse.json({
+    success: true,
+    email_sent: emailResult.ok,
+    email_error: emailResult.ok ? undefined : emailResult.error,
+  })
 }

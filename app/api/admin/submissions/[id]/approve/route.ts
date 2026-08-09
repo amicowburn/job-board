@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { Resend } from 'resend'
+import { sendEmail } from '@/lib/email'
 import { isCurrentUserAdmin } from '@/lib/supabase/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -60,10 +60,9 @@ export async function POST(
     .update({ status: 'approved' })
     .eq('id', id)
 
-  // Notify the HR submitter their listing is live (non-blocking)
-  try {
-    const resend = new Resend(process.env.RESEND_API_KEY)
-    await resend.emails.send({
+  // Notify the HR submitter their listing is live (non-blocking, never silent)
+  const emailResult = await sendEmail(
+    {
       from: 'MMSS Job Board <noreply@monashmss.com>',
       to: submission.submitter_email,
       subject: `Your listing "${submission.title}" is now live on the MMSS Job Board!`,
@@ -78,10 +77,15 @@ export async function POST(
         'Thank you for connecting with Monash marketing students.',
         'MMSS Job Board Team',
       ].join('\n'),
-    })
-  } catch (emailError) {
-    console.error('Failed to send approval email:', emailError)
-  }
+    },
+    'approval notification'
+  )
 
-  return NextResponse.json({ success: true })
+  // The job is published either way — but the admin needs to know if the
+  // submitter was never told, so they can follow up manually.
+  return NextResponse.json({
+    success: true,
+    email_sent: emailResult.ok,
+    email_error: emailResult.ok ? undefined : emailResult.error,
+  })
 }
