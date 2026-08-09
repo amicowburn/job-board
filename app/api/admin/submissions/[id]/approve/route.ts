@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { sendEmail } from '@/lib/email'
 import { isCurrentUserAdmin } from '@/lib/supabase/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { SUBMISSIONS_TAG } from '@/lib/admin-data'
 import { approvalEmail } from '@/lib/email-templates'
 
 export async function POST(
@@ -59,6 +61,10 @@ export async function POST(
     .from('job_submissions')
     .update({ status: 'approved' })
     .eq('id', id)
+
+  // The pending count in the admin nav is cached — drop it now that this
+  // submission has left the pending set.
+  revalidateTag(SUBMISSIONS_TAG)
 
   // Notify the HR submitter their listing is live (non-blocking, never silent)
   const emailResult = await sendEmail(

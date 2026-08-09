@@ -229,3 +229,22 @@ export type Database = {
     }
   }
 }
+
+/**
+ * The subset of `Job` the admin jobs table renders.
+ *
+ * The table never shows `description` (full job HTML), so the admin list query
+ * selects only these columns to keep the per-row payload small.
+ */
+export type AdminJobRow = Pick<
+  Job,
+  | 'id'
+  | 'title'
+  | 'company'
+  | 'source'
+  | 'is_active'
+  | 'is_featured'
+  | 'is_sponsored'
+  | 'posted_at'
+  | 'created_at'
+>
