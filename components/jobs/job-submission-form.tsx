@@ -189,17 +189,7 @@ export function JobSubmissionForm({ existingSubmission, editToken }: JobSubmissi
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
-        // TEMPORARY DIAGNOSTIC — surfaces the debug detail from the API
-        // response directly on-page. Revert alongside the server-side
-        // diagnostic in app/api/submit-job/route.ts once root-caused.
-        const debugText = body.debug
-          ? typeof body.debug === 'string'
-            ? body.debug
-            : JSON.stringify(body.debug)
-          : null
-        throw new Error(
-          [body.error || 'Failed to submit.', debugText].filter(Boolean).join(' — ')
-        )
+        throw new Error(body.error || 'Failed to submit.')
       }
 
       setStatus('success')
