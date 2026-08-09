@@ -42,3 +42,9 @@ next-env.d.ts
 
 # Supabase
 .supabase/
+supabase/.temp/
+supabase/.branches/
+
+# Claude Code local session state
+.claude/launch.json
+.claude/worktrees/

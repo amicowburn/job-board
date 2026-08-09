@@ -117,7 +117,12 @@ export function JobSubmissionForm({ existingSubmission, editToken }: JobSubmissi
       setFormData(prev => {
         const next = { ...prev }
         for (const field of PREFILLABLE_FIELDS) {
-          if (data[field]) { next[field] = data[field]; filled++ }
+          let value = data[field]
+          // Only accept absolute URLs for the logo field to avoid browser URL validation errors
+          if (field === 'company_logo_url' && value && !/^https?:\/\//i.test(value)) {
+            value = ''
+          }
+          if (value) { next[field] = value; filled++ }
         }
         if (data.description) { next.description = data.description; filled++ }
         return next
@@ -204,7 +209,7 @@ export function JobSubmissionForm({ existingSubmission, editToken }: JobSubmissi
         <AlertDescription>
           {isEditing
             ? 'Your submission has been updated. Our team will review it shortly.'
-            : 'Thank you! Your job listing has been submitted for review. Our team will get back to you within 2–3 business days. Questions? Email enquires@monashmss.com'}
+            : <>Your listing has been submitted for review. If you have any questions, email <a href="mailto:enquiries@monashmss.com" className="underline font-medium">enquiries@monashmss.com</a>.</>}
         </AlertDescription>
       </Alert>
     )

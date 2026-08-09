@@ -519,11 +519,15 @@ export async function GET(request: Request) {
     (description ? extractTagsFromDescriptionHtml(description) : null) ||
     undefined
 
+  const rawLogoUrl =
+    jsonLd.company_logo_url || embedded.company_logo_url || og.image || undefined
+  const company_logo_url =
+    rawLogoUrl && /^https?:\/\//i.test(rawLogoUrl) ? rawLogoUrl : undefined
+
   const result: PrefillData = {
     title: rawTitle || undefined,
     company,
-    company_logo_url:
-      jsonLd.company_logo_url || embedded.company_logo_url || og.image || undefined,
+    company_logo_url,
     description,
     location: jsonLd.location || embedded.location || undefined,
     job_type: jsonLd.job_type || embedded.job_type || undefined,

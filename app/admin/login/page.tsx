@@ -18,6 +18,8 @@ export default function AdminLoginPage() {
   const [error, setError] = useState(
     errorParam === 'unauthorized' ? 'You do not have admin access.' : ''
   )
+  const [isSendingReset, setIsSendingReset] = useState(false)
+  const [resetMessage, setResetMessage] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -62,6 +64,28 @@ export default function AdminLoginPage() {
     }
   }
 
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError('Enter your email above first, then click "Forgot password?"')
+      return
+    }
+    setIsSendingReset(true)
+    setError('')
+    setResetMessage('')
+    try {
+      const supabase = createClient()
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/admin/reset-password`,
+      })
+      if (resetError) throw resetError
+      setResetMessage('If an account exists for that email, a reset link has been sent.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send reset email')
+    } finally {
+      setIsSendingReset(false)
+    }
+  }
+
   return (
     <main className="min-h-screen flex items-center justify-center px-4 bg-muted">
       <div className="w-full max-w-md">
@@ -76,6 +100,12 @@ export default function AdminLoginPage() {
           {error && (
             <Alert variant="destructive" className="mb-6">
               <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {resetMessage && (
+            <Alert variant="success" className="mb-6">
+              <AlertDescription>{resetMessage}</AlertDescription>
             </Alert>
           )}
 
@@ -119,6 +149,17 @@ export default function AdminLoginPage() {
               Sign In
             </Button>
           </form>
+
+          <p className="text-center text-sm mt-4">
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              disabled={isSendingReset}
+              className="text-muted-foreground hover:text-foreground underline disabled:opacity-50"
+            >
+              {isSendingReset ? 'Sending…' : 'Forgot password?'}
+            </button>
+          </p>
         </div>
 
         <p className="text-center text-sm text-muted-foreground mt-4">

@@ -12,28 +12,29 @@ export function AdminNav({ pendingSubmissions = 0 }: AdminNavProps) {
   const pathname = usePathname()
 
   const navItems = [
-    { href: '/admin/jobs', label: 'Jobs', badge: 0 },
+    { href: '/admin/jobs', label: 'Jobs' },
     { href: '/admin/submissions', label: 'Submissions', badge: pendingSubmissions },
-    { href: '/admin/feedback', label: 'Feedback', badge: 0 },
-    { href: '/admin/users', label: 'Admins', badge: 0 },
+    { href: '/admin/feedback', label: 'Feedback' },
+    { href: '/admin/users', label: 'Admins' },
   ]
 
   return (
-    <nav className="flex items-center gap-4">
+    <nav className="flex items-center gap-1">
       {navItems.map((item) => (
         <Link
           key={item.href}
           href={item.href}
+          style={{ fontFamily: 'var(--font-outfit)' }}
           className={cn(
-            'text-sm transition-colors inline-flex items-center gap-1.5',
+            'px-3 py-[5px] rounded-full text-sm font-medium transition-colors inline-flex items-center gap-1.5 whitespace-nowrap',
             pathname.startsWith(item.href)
-              ? 'text-background font-medium'
-              : 'text-background/70 hover:text-background'
+              ? 'bg-primary text-primary-foreground'
+              : 'text-slate-600 hover:bg-slate-100'
           )}
         >
           {item.label}
-          {item.badge > 0 && (
-            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full bg-red-500 text-white leading-none">
+          {item.badge != null && item.badge > 0 && (
+            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full bg-white text-primary leading-none">
               {item.badge > 99 ? '99+' : item.badge}
             </span>
           )}
@@ -41,10 +42,11 @@ export function AdminNav({ pendingSubmissions = 0 }: AdminNavProps) {
       ))}
       <Link
         href="/"
-        className="text-sm text-background/70 hover:text-background"
         target="_blank"
+        style={{ fontFamily: 'var(--font-outfit)' }}
+        className="px-3 py-[5px] rounded-full text-sm text-slate-500 border border-slate-200 hover:bg-slate-50 transition-colors whitespace-nowrap ml-1"
       >
-        View Site
+        View Site ↗
       </Link>
     </nav>
   )
