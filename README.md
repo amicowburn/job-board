@@ -5,19 +5,20 @@ A modern job board built for the Monash Marketing Students' Society (MMSS) using
 ## Features
 
 - **Public Job Board**: Browse, search, and filter job listings
-- **Admin Dashboard**: Manage jobs, review feedback, bulk operations
-- **External Job Sync**: Automatically sync jobs from external APIs
+- **HR Self-Serve Submissions**: Employers submit listings for admin review without an account
+- **Admin Dashboard**: Manage jobs, review submissions/feedback, bulk import
+- **AI-Assisted Prefill**: Paste a job posting URL and auto-fill the listing form
 - **User Feedback**: Anonymous feedback system for job listings
 - **Modern UI**: Responsive design with customizable theme
 
 ## Tech Stack
 
-- **Framework**: Next.js 14 (App Router)
+- **Framework**: Next.js 15 (App Router)
 - **Language**: TypeScript
 - **Database**: Supabase (PostgreSQL)
 - **Auth**: Supabase Auth
 - **Styling**: Tailwind CSS
-- **Deployment**: Vercel (with Cron jobs)
+- **Deployment**: Vercel
 
 ## Getting Started
 
@@ -80,7 +81,6 @@ Required variables:
 - `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anon/public key
 - `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key
-- `SYNC_SECRET` - Secret token for sync endpoint
 
 For local development with Supabase Local:
 ```
@@ -139,8 +139,7 @@ Admin panel: [http://localhost:3000/admin](http://localhost:3000/admin)
 │   └── ui/                # Reusable UI components
 ├── lib/                   # Utilities and configurations
 │   ├── supabase/          # Supabase client configurations
-│   ├── externalJobsAdapter.ts  # External API adapter
-│   ├── sync.ts            # Job sync logic
+│   ├── email-templates.ts # Branded HTML email templates (Resend)
 │   ├── types.ts           # TypeScript types
 │   └── utils.ts           # Utility functions
 ├── supabase/              # Supabase configuration
@@ -161,43 +160,6 @@ Update the MMSS brand colors in `app/globals.css`:
 }
 ```
 
-## External Job Sync
-
-### Configuration
-
-1. Set the external API endpoint:
-   ```
-   EXTERNAL_JOBS_API_URL=https://api.example.com/jobs
-   EXTERNAL_JOBS_API_KEY=your-api-key
-   ```
-
-2. Update `lib/externalJobsAdapter.ts` to match your API's response format
-
-### Manual Sync
-
-```bash
-# Trigger sync manually
-curl -X POST http://localhost:3000/api/sync-jobs \
-  -H "Authorization: Bearer YOUR_SYNC_SECRET"
-```
-
-### Automated Sync (Vercel Cron)
-
-The `vercel.json` configures a cron job to run every 3 days at 3 AM UTC:
-
-```json
-{
-  "crons": [
-    {
-      "path": "/api/sync-jobs",
-      "schedule": "0 3 */3 * *"
-    }
-  ]
-}
-```
-
-**Note**: For Vercel Cron to authenticate, set `SYNC_SECRET` as an environment variable in your Vercel project, then configure Vercel to send it with cron requests.
-
 ## Deployment
 
 ### Deploy to Vercel
@@ -215,10 +177,8 @@ Set these in Vercel Dashboard > Settings > Environment Variables:
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `NEXT_PUBLIC_APP_URL` (your production URL)
-- `SYNC_SECRET`
-- `EXTERNAL_JOBS_API_URL` (if using external sync)
-- `EXTERNAL_JOBS_API_KEY` (if using external sync)
-- `MARK_MISSING_INACTIVE=true`
+- `RESEND_API_KEY` (for submission/notification emails)
+- `ANTHROPIC_API_KEY` (optional, improves AI-assisted job prefill)
 
 ## Database Schema
 
@@ -250,8 +210,11 @@ Set these in Vercel Dashboard > Settings > Environment Variables:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/sync-jobs` | Sync status info |
-| POST | `/api/sync-jobs` | Trigger job sync (requires auth) |
+| GET | `/api/prefill-job` | Extract job details from a posting URL |
+| POST | `/api/submit-job` | HR self-serve job submission |
+| PATCH | `/api/submit-job/[token]` | Edit a pending submission |
+| POST | `/api/admin/submissions/[id]/approve` | Publish a pending submission |
+| POST | `/api/admin/submissions/[id]/reject` | Reject a pending submission |
 | POST | `/api/auth/signout` | Sign out admin user |
 
 ## Scripts
@@ -268,11 +231,6 @@ npm run lint     # Run ESLint
 ### "Unauthorized" on admin pages
 - Ensure you've created an admin user and added them to `admin_users` table
 - Check that `is_admin` is set to `TRUE`
-
-### Jobs not syncing
-- Verify `SYNC_SECRET` is set correctly
-- Check `EXTERNAL_JOBS_API_URL` configuration
-- Review server logs for errors
 
 ### Supabase connection errors
 - Verify environment variables are set correctly
