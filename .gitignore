@@ -48,3 +48,4 @@ supabase/.branches/
 # Claude Code local session state
 .claude/launch.json
 .claude/worktrees/
+supabase/functions/.env
