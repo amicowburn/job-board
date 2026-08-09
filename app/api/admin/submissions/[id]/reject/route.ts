@@ -55,7 +55,7 @@ export async function POST(
         'Have another role? Submit again at:',
         `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/submit`,
         '',
-        `Questions? Email enquires@monashmss.com`,
+        `Questions? Email enquiries@monashmss.com`,
         'MMSS Job Board Team',
       ].filter(l => l !== null).join('\n'),
     })
