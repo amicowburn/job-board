@@ -26,18 +26,7 @@ export async function POST(request: Request) {
 
   if (error || !data) {
     console.error('Failed to insert submission:', error)
-    // TEMPORARY DIAGNOSTIC — exposes the raw Postgres error to the client to
-    // work around Vercel runtime logs not being reachable in this session.
-    // Revert this before merging back to the safe generic message.
-    return NextResponse.json(
-      {
-        error: 'Failed to save submission',
-        debug: error
-          ? { message: error.message, code: (error as { code?: string }).code, details: (error as { details?: string }).details, hint: (error as { hint?: string }).hint }
-          : 'insert returned no data and no error',
-      },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to save submission' }, { status: 500 })
   }
 
   // Send emails — failures are non-blocking
