@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import { Resend } from 'resend'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendEmail } from '@/lib/email'
 import { submissionConfirmationEmail } from '@/lib/email-templates'
 import type { JobSubmissionInsert, JobSubmission } from '@/lib/types'
 
@@ -29,13 +29,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Failed to save submission' }, { status: 500 })
   }
 
-  // Send emails — failures are non-blocking
-  if (process.env.RESEND_API_KEY) {
-    const resend = new Resend(process.env.RESEND_API_KEY)
-    const editLink = `${APP_URL}/submit/edit?token=${data.edit_token}`
+  // Send emails — failures are non-blocking, but never silent
+  const editLink = `${APP_URL}/submit/edit?token=${data.edit_token}`
 
-    const [confirmResult, adminResult] = await Promise.allSettled([
-      resend.emails.send({
+  const [confirmResult, adminResult] = await Promise.all([
+    sendEmail(
+      {
         from: 'MMSS Job Board <noreply@monashmss.com>',
         to: data.submitter_email,
         subject: `Submission received: "${data.title}" at ${data.company}`,
@@ -57,8 +56,11 @@ export async function POST(request: Request) {
           `Edit your submission: ${editLink}`,
           `Questions? Email ${ADMIN_EMAIL}`,
         ].filter(Boolean).join('\n'),
-      }),
-      resend.emails.send({
+      },
+      'submission confirmation'
+    ),
+    sendEmail(
+      {
         from: 'MMSS Job Board <noreply@monashmss.com>',
         to: ADMIN_EMAIL,
         bcc: ADMIN_BCC,
@@ -73,24 +75,16 @@ export async function POST(request: Request) {
           '',
           `Review: ${APP_URL}/admin/submissions`,
         ].join('\n'),
-      }),
-    ])
+      },
+      'admin notification'
+    ),
+  ])
 
-    if (confirmResult.status === 'fulfilled' && confirmResult.value.error) {
-      console.error('Failed to send confirmation email to submitter:', confirmResult.value.error)
-    }
-    if (adminResult.status === 'fulfilled' && adminResult.value.error) {
-      console.error('Failed to send admin notification email:', adminResult.value.error)
-    }
-    if (confirmResult.status === 'rejected') {
-      console.error('Confirmation email threw:', confirmResult.reason)
-    }
-    if (adminResult.status === 'rejected') {
-      console.error('Admin notification email threw:', adminResult.reason)
-    }
-  } else {
-    console.warn('RESEND_API_KEY not set — skipping submission emails')
-  }
-
-  return NextResponse.json({ success: true })
+  // The submission is saved either way — but tell the submitter if we could not
+  // email them, so a missing confirmation does not look like a lost submission.
+  return NextResponse.json({
+    success: true,
+    confirmation_email_sent: confirmResult.ok,
+    admin_email_sent: adminResult.ok,
+  })
 }
