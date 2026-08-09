@@ -41,8 +41,17 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Routes reachable while signed out: the login page itself, and the
+  // password-reset page (its recovery token arrives as a URL fragment,
+  // which the server never sees — the client-side Supabase SDK exchanges
+  // it for a session after the page loads, so this request looks
+  // unauthenticated even on a valid recovery link).
+  const isPublicAdminRoute =
+    request.nextUrl.pathname.startsWith('/admin/login') ||
+    request.nextUrl.pathname.startsWith('/admin/reset-password')
+
   // Protect admin routes - redirect to login if not authenticated
-  if (request.nextUrl.pathname.startsWith('/admin') && !request.nextUrl.pathname.startsWith('/admin/login')) {
+  if (request.nextUrl.pathname.startsWith('/admin') && !isPublicAdminRoute) {
     if (!user) {
       const url = request.nextUrl.clone()
       url.pathname = '/admin/login'
