@@ -2,13 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Button, Input, Label, Alert, AlertDescription } from '@/components/ui'
-import { createClient } from '@/lib/supabase/client'
 
 interface AdminUserRow {
   id: string
   is_admin: boolean
   created_at: string
-  email?: string
+  email: string | null
 }
 
 export default function AdminUsersPage() {
@@ -20,21 +19,11 @@ export default function AdminUsersPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const fetchAdmins = useCallback(async () => {
-    const supabase = createClient()
-    const { data } = await supabase
-      .from('admin_users')
-      .select('*')
-      .order('created_at', { ascending: true })
-
-    if (data) {
-      // Fetch emails for each admin from auth
-      const adminsWithEmail = await Promise.all(
-        data.map(async (admin) => {
-          // We can't query auth.users from client, so just show the ID
-          return { ...admin } as AdminUserRow
-        })
-      )
-      setAdmins(adminsWithEmail)
+    setIsLoading(true)
+    const res = await fetch('/api/admin/users')
+    if (res.ok) {
+      const { data } = await res.json()
+      setAdmins(data)
     }
     setIsLoading(false)
   }, [])
@@ -49,23 +38,14 @@ export default function AdminUsersPage() {
     setMessage(null)
 
     try {
-      const supabase = createClient()
-
-      // Create the auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
       })
+      const body = await res.json()
 
-      if (authError) throw authError
-      if (!authData.user) throw new Error('Failed to create user')
-
-      // Add to admin_users table
-      const { error: adminError } = await supabase
-        .from('admin_users')
-        .insert({ id: authData.user.id, is_admin: true })
-
-      if (adminError) throw adminError
+      if (!res.ok) throw new Error(body.error || 'Failed to create admin user')
 
       setMessage({ type: 'success', text: `Admin user created: ${email}` })
       setEmail('')
@@ -85,14 +65,11 @@ export default function AdminUsersPage() {
   const handleRemoveAdmin = async (adminId: string) => {
     if (!confirm('Are you sure you want to remove this admin?')) return
 
-    const supabase = createClient()
-    const { error } = await supabase
-      .from('admin_users')
-      .delete()
-      .eq('id', adminId)
+    const res = await fetch(`/api/admin/users/${adminId}`, { method: 'DELETE' })
+    const body = await res.json().catch(() => ({}))
 
-    if (error) {
-      setMessage({ type: 'error', text: 'Failed to remove admin' })
+    if (!res.ok) {
+      setMessage({ type: 'error', text: body.error || 'Failed to remove admin' })
     } else {
       setMessage({ type: 'success', text: 'Admin removed' })
       fetchAdmins()
@@ -160,7 +137,7 @@ export default function AdminUsersPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-100">
-              <th className="text-left px-5 py-3 text-[11px] uppercase tracking-wide text-slate-500 font-medium">User ID</th>
+              <th className="text-left px-5 py-3 text-[11px] uppercase tracking-wide text-slate-500 font-medium">Email</th>
               <th className="text-left px-5 py-3 text-[11px] uppercase tracking-wide text-slate-500 font-medium">Created</th>
               <th className="text-right px-5 py-3 text-[11px] uppercase tracking-wide text-slate-500 font-medium">Actions</th>
             </tr>
@@ -181,7 +158,9 @@ export default function AdminUsersPage() {
             ) : (
               admins.map((admin) => (
                 <tr key={admin.id} className="hover:bg-slate-50/60 transition-colors">
-                  <td className="px-5 py-4 font-mono text-xs text-slate-500">{admin.id}</td>
+                  <td className="px-5 py-4 text-slate-700">
+                    {admin.email || <span className="font-mono text-xs text-slate-400">{admin.id}</span>}
+                  </td>
                   <td className="px-5 py-4 text-xs text-slate-400">
                     {new Date(admin.created_at).toLocaleDateString('en-AU')}
                   </td>
