@@ -24,7 +24,7 @@ Last reviewed: 2026-08-09.
 | Admin bulk Excel import | ✅ Working | `components/admin/bulk-import.tsx` |
 | Admin auth + route protection | ✅ Working | `middleware.ts` → `lib/supabase/middleware.ts` |
 | Admin password reset | ✅ Working | `app/admin/reset-password/` |
-| Admin user management | ✅ Working (fixed 2026-08-09) | `app/api/admin/users/`, `app/api/admin/users/[id]/` |
+| Admin user management | ✅ Working (fixed 2026-08-09). A second admin account was granted access via direct SQL the same day rather than through this UI — not because the UI didn't work, but because doing it via `/admin/users` requires an already-authenticated admin driving a browser, which wasn't available in that session. Prefer `/admin/users` for granting access going forward; it's the audited path (server-side, logged, self-removal-guarded). | `app/api/admin/users/`, `app/api/admin/users/[id]/` |
 | AI-assisted job prefill | ✅ Working (switched to Gemini 2.5 Flash 2026-08-09); AI tier fires if `GEMINI_API_KEY` is set | `app/api/prefill-job/route.ts` |
 | External job sync (cron) | ❌ Removed 2026-08-09 — was never functional | — |
 
