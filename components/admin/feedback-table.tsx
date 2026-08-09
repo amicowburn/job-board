@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useOptimistic, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Button, Badge, Alert, AlertDescription } from '@/components/ui'
+import { toast } from 'sonner'
+import { Button, Badge, useConfirmDialog } from '@/components/ui'
 import { Pagination } from '@/components/ui/pagination'
 import { createClient } from '@/lib/supabase/client'
 import { formatDate } from '@/lib/utils'
-import type { JobFeedback, Job } from '@/lib/types'
+import type { JobFeedback, FeedbackStatus, Job } from '@/lib/types'
 
 interface FeedbackWithJob extends JobFeedback {
   jobs: Pick<Job, 'id' | 'title' | 'company'> | null
@@ -36,35 +37,65 @@ const STATUS_VARIANTS: Record<string, 'default' | 'secondary' | 'destructive'> =
 
 export function FeedbackTable({ feedback, totalCount, currentPage, totalPages }: FeedbackTableProps) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const [, startTransition] = useTransition()
+  const { confirm, dialog } = useConfirmDialog()
 
-  const handleUpdateStatus = async (id: string, status: string) => {
-    const supabase = createClient()
-    const { error } = await supabase.from('job_feedback').update({ status } as { status: string }).eq('id', id)
-    if (error) setError('Failed to update status')
-    else { setSuccess('Status updated'); startTransition(() => router.refresh()) }
+  const [optimisticFeedback, applyOptimistic] = useOptimistic(
+    feedback,
+    (rows: FeedbackWithJob[], action: { type: 'status'; id: string; status: FeedbackStatus } | { type: 'delete'; id: string }) =>
+      action.type === 'delete'
+        ? rows.filter((row) => row.id !== action.id)
+        : rows.map((row) => (row.id === action.id ? { ...row, status: action.status } : row))
+  )
+
+  const handleUpdateStatus = (id: string, status: FeedbackStatus) => {
+    startTransition(async () => {
+      applyOptimistic({ type: 'status', id, status })
+
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('job_feedback')
+        .update({ status } as { status: FeedbackStatus })
+        .eq('id', id)
+
+      if (error) {
+        toast.error('Failed to update status', { description: error.message })
+        return
+      }
+
+      toast.success('Status updated')
+      router.refresh()
+    })
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this feedback?')) return
-    const supabase = createClient()
-    const { error } = await supabase.from('job_feedback').delete().eq('id', id)
-    if (error) setError('Failed to delete feedback')
-    else { setSuccess('Feedback deleted'); startTransition(() => router.refresh()) }
+    const { confirmed } = await confirm({
+      title: 'Delete this report?',
+      description: 'The report is removed from the database entirely.',
+      warning: 'This cannot be undone. Mark it as reviewed instead if you only want it out of the way.',
+      confirmLabel: 'Delete permanently',
+      destructive: true,
+    })
+    if (!confirmed) return
+
+    startTransition(async () => {
+      applyOptimistic({ type: 'delete', id })
+
+      const supabase = createClient()
+      const { error } = await supabase.from('job_feedback').delete().eq('id', id)
+
+      if (error) {
+        toast.error('Failed to delete feedback', { description: error.message })
+        return
+      }
+
+      toast.success('Feedback deleted')
+      router.refresh()
+    })
   }
 
   return (
     <>
-      {/* Alerts */}
-      {(error || success) && (
-        <div className="px-5 py-3 border-b border-slate-100">
-          {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
-          {success && <Alert variant="success"><AlertDescription>{success}</AlertDescription></Alert>}
-        </div>
-      )}
-
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -80,8 +111,8 @@ export function FeedbackTable({ feedback, totalCount, currentPage, totalPages }:
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
-            {feedback.map((item) => (
-              <tr key={item.id} className={`hover:bg-slate-50/60 transition-colors ${isPending ? 'opacity-50' : ''}`}>
+            {optimisticFeedback.map((item) => (
+              <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
                 <td className="px-5 py-4">
                   {item.jobs ? (
                     <Link href={`/admin/jobs/${item.jobs.id}/edit`} className="hover:underline">
@@ -135,7 +166,7 @@ export function FeedbackTable({ feedback, totalCount, currentPage, totalPages }:
         </table>
       </div>
 
-      {feedback.length === 0 && (
+      {optimisticFeedback.length === 0 && (
         <div className="text-center py-12 text-slate-400 text-sm">
           No feedback submitted yet
         </div>
@@ -144,10 +175,12 @@ export function FeedbackTable({ feedback, totalCount, currentPage, totalPages }:
       {/* Footer */}
       <div className="px-5 py-4 flex items-center justify-between border-t border-slate-100">
         <p className="text-xs text-slate-400">
-          Showing {feedback.length} of {totalCount} items
+          Showing {optimisticFeedback.length} of {totalCount} items
         </p>
         <Pagination currentPage={currentPage} totalPages={totalPages} baseUrl="/admin/feedback" />
       </div>
+
+      {dialog}
     </>
   )
 }

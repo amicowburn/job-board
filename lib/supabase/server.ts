@@ -1,5 +1,6 @@
 import { createServerClient as createSupabaseServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { cache } from 'react'
 
 type CookieToSet = { name: string; value: string; options: CookieOptions }
 
@@ -10,7 +11,7 @@ type CookieToSet = { name: string; value: string; options: CookieOptions }
  *
  * Note: Type assertions should be used at query sites for type safety.
  */
-export async function createServerClient() {
+export const createServerClient = cache(async () => {
   const cookieStore = await cookies()
 
   return createSupabaseServerClient(
@@ -35,26 +36,34 @@ export async function createServerClient() {
       },
     }
   )
-}
+})
 
 /**
- * Get the current authenticated user (if any)
+ * Get the current authenticated user (if any).
+ *
+ * Wrapped in React `cache` so the round trip to Supabase Auth happens at most
+ * once per request, no matter how many callers ask. The admin layout and the
+ * page it renders both need the user, and `isCurrentUserAdmin` needs it again —
+ * without this that is three separate network calls to validate one JWT.
  */
-export async function getUser() {
+export const getUser = cache(async () => {
   const supabase = await createServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   return user
-}
+})
 
 /**
- * Check if the current user is an admin
+ * Check if the current user is an admin.
+ *
+ * Also request-cached — the layout calls this on every admin page render, and
+ * middleware has already performed the same check for the same request.
  */
-export async function isCurrentUserAdmin(): Promise<boolean> {
-  const supabase = await createServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
+export const isCurrentUserAdmin = cache(async (): Promise<boolean> => {
+  const user = await getUser()
 
   if (!user) return false
 
+  const supabase = await createServerClient()
   const { data: adminUser } = await supabase
     .from('admin_users')
     .select('is_admin')
@@ -62,7 +71,7 @@ export async function isCurrentUserAdmin(): Promise<boolean> {
     .single() as { data: { is_admin: boolean } | null }
 
   return adminUser?.is_admin ?? false
-}
+})
 
 /**
  * Get the current session

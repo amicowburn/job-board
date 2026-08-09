@@ -5,6 +5,7 @@ import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
 import Link from '@tiptap/extension-link'
 import { useCallback, useImperativeHandle, forwardRef } from 'react'
+import { useConfirmDialog } from '@/components/ui'
 
 interface RichTextEditorProps {
   content: string
@@ -45,19 +46,29 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
     },
   }))
 
-  const addImage = useCallback(() => {
-    const url = window.prompt('Image URL')
-    if (url && editor) {
+  const { confirm, dialog } = useConfirmDialog()
+
+  const addImage = useCallback(async () => {
+    const { confirmed, note: url } = await confirm({
+      title: 'Insert an image',
+      confirmLabel: 'Insert',
+      note: { label: 'Image URL', placeholder: 'https://example.com/image.png' },
+    })
+    if (confirmed && url && editor) {
       editor.chain().focus().setImage({ src: url }).run()
     }
-  }, [editor])
+  }, [confirm, editor])
 
-  const addLink = useCallback(() => {
-    const url = window.prompt('Link URL')
-    if (url && editor) {
+  const addLink = useCallback(async () => {
+    const { confirmed, note: url } = await confirm({
+      title: 'Add a link',
+      confirmLabel: 'Add link',
+      note: { label: 'Link URL', placeholder: 'https://example.com' },
+    })
+    if (confirmed && url && editor) {
       editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
     }
-  }, [editor])
+  }, [confirm, editor])
 
   if (!editor) return null
 
@@ -141,6 +152,8 @@ export const RichTextEditor = forwardRef<RichTextEditorRef, RichTextEditorProps>
 
       {/* Editor */}
       <EditorContent editor={editor} />
+
+      {dialog}
     </div>
   )
   }

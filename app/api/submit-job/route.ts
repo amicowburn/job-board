@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { SUBMISSIONS_TAG } from '@/lib/admin-data'
 import { sendEmail } from '@/lib/email'
 import { submissionConfirmationEmail } from '@/lib/email-templates'
 import type { JobSubmissionInsert, JobSubmission } from '@/lib/types'
@@ -28,6 +30,9 @@ export async function POST(request: Request) {
     console.error('Failed to insert submission:', error)
     return NextResponse.json({ error: 'Failed to save submission' }, { status: 500 })
   }
+
+  // A new submission joins the pending set — drop the cached admin nav count.
+  revalidateTag(SUBMISSIONS_TAG)
 
   // Send emails — failures are non-blocking, but never silent
   const editLink = `${APP_URL}/submit/edit?token=${data.edit_token}`

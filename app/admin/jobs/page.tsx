@@ -17,10 +17,16 @@ export default async function AdminJobsPage({ searchParams }: PageProps) {
   const from = (currentPage - 1) * PAGE_SIZE
   const to = from + PAGE_SIZE - 1
 
+  // Only the columns the table renders — `description` holds full job HTML and
+  // is never shown here, so selecting it moved a large payload per row for
+  // nothing. The edit page fetches the full record when it needs it.
   const supabase = await createServerClient()
   const { data: jobs, count } = await supabase
     .from('jobs')
-    .select('*', { count: 'exact' })
+    .select(
+      'id, title, company, source, is_active, is_featured, is_sponsored, posted_at, created_at',
+      { count: 'exact' }
+    )
     .order('created_at', { ascending: false })
     .range(from, to)
 
