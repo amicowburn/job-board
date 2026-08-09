@@ -176,24 +176,6 @@ export interface PaginatedResult<T> {
   totalPages: number
 }
 
-// External API types (adapter pattern)
-export interface ExternalJob {
-  // These are placeholder fields - modify when actual API schema is known
-  id?: string
-  external_id?: string
-  title: string
-  company: string
-  location?: string
-  work_mode?: string
-  job_type?: string
-  url: string
-  description?: string
-  tags?: string[]
-  posted_at?: string
-  closing_at?: string
-  [key: string]: unknown // Allow additional unknown fields
-}
-
 // Supabase Database type helper - matches Supabase codegen format
 export type Database = {
   public: {
