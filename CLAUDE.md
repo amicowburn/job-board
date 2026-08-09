@@ -53,7 +53,7 @@ Middleware (`middleware.ts` → `lib/supabase/middleware.ts`) refreshes auth tok
 
 ## AI Prefill (`/api/prefill-job`)
 
-4-tier extraction: JSON-LD → embedded JS state → OG/meta tags → Claude 3.5 Haiku (fallback only if tier 1 didn't find title + company). SSRF-protected (DNS + private IP blocklist). Only runs if `ANTHROPIC_API_KEY` is set — gracefully skips if missing.
+4-tier extraction: JSON-LD → embedded JS state → OG/meta tags → Gemini 2.5 Flash (fallback only if tier 1 didn't find title + company). SSRF-protected (DNS + private IP blocklist). Only runs if `GEMINI_API_KEY` is set — gracefully skips if missing.
 
 ## Database Schema
 
@@ -73,7 +73,7 @@ GIN index on `tags[]`. Unique constraint on `(source, external_id)` for deduplic
 
 Required: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_APP_URL`
 
-Optional (graceful fallback if missing): `ANTHROPIC_API_KEY`, `RESEND_API_KEY`
+Optional (graceful fallback if missing): `GEMINI_API_KEY`, `RESEND_API_KEY`
 
 ## Styling
 

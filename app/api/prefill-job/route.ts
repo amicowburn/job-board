@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import dns from 'dns/promises'
-import Anthropic from '@anthropic-ai/sdk'
 import { normalizeJobType } from '@/lib/utils'
 
 interface PrefillData {
@@ -300,7 +299,7 @@ function extractEmbeddedState(html: string): Partial<PrefillData> {
   return {}
 }
 
-// ─── Tier 2: AI extraction (Claude 3.5 Haiku) ───────────────────────────────
+// ─── Tier 2: AI extraction (Gemini 2.5 Flash) ───────────────────────────────
 
 /** Strip HTML noise to get clean text suitable for AI extraction */
 function prepareTextForAI(html: string): string {
@@ -317,7 +316,7 @@ function prepareTextForAI(html: string): string {
     .replace(/&#39;/g, "'")
     .replace(/\s+/g, ' ')
     .trim()
-    .slice(0, 6000)
+    .slice(0, 20_000)
 }
 
 function buildAIPrompt(text: string): string {
@@ -376,22 +375,38 @@ function parseAIResponse(raw: string): Partial<PrefillData> {
 
 async function extractWithAI(text: string): Promise<Partial<PrefillData>> {
   // Skip if no API key or if the page is a JS skeleton with no real content
-  if (!process.env.ANTHROPIC_API_KEY || text.length < 50) return {}
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey || text.length < 50) return {}
 
   try {
-    // Instantiate inside the function — module-scope would throw at cold start if key unset
-    const client = new Anthropic()
-    const msg = await client.messages.create({
-      model: 'claude-3-5-haiku-20241022',
-      max_tokens: 1024,
-      messages: [{ role: 'user', content: buildAIPrompt(text) }],
-    })
+    const res = await fetch(
+      // "-latest" tracks Google's current recommended model rather than a
+      // dated snapshot — avoids silent breakage when a specific model ID is
+      // retired (gemini-2.5-flash was gated from new API keys as of 2026-08,
+      // which is what caused this tier to silently no-op).
+      //
+      // Deliberately "flash-lite", not "flash": the plain flash-latest alias
+      // currently resolves to a model that reasons by default ("thinking"),
+      // which burns almost the entire maxOutputTokens budget on internal
+      // reasoning before it can write the answer — verified live, it hit
+      // MAX_TOKENS and returned a truncated, unparseable fragment. This is a
+      // structured single-shot extraction task with no need for chain-of-
+      // thought; flash-lite returns complete, correct JSON in ~3s instead.
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: buildAIPrompt(text) }] }],
+          generationConfig: { maxOutputTokens: 1024, temperature: 0.1 },
+        }),
+      }
+    )
 
-    const raw = msg.content
-      .filter(b => b.type === 'text')
-      .map(b => (b as { type: 'text'; text: string }).text)
-      .join('')
-      .trim()
+    if (!res.ok) return {}
+
+    const json = await res.json()
+    const raw: string = json?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
 
     return parseAIResponse(raw)
   } catch {

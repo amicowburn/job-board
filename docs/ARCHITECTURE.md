@@ -25,7 +25,7 @@ Last reviewed: 2026-08-09.
 | Admin auth + route protection | ✅ Working | `middleware.ts` → `lib/supabase/middleware.ts` |
 | Admin password reset | ✅ Working | `app/admin/reset-password/` |
 | Admin user management | ✅ Working (fixed 2026-08-09) | `app/api/admin/users/`, `app/api/admin/users/[id]/` |
-| AI-assisted job prefill | ⚠️ Working; AI tier only fires if `ANTHROPIC_API_KEY` is set | `app/api/prefill-job/route.ts` |
+| AI-assisted job prefill | ✅ Working (switched to Gemini 2.5 Flash 2026-08-09); AI tier fires if `GEMINI_API_KEY` is set | `app/api/prefill-job/route.ts` |
 | External job sync (cron) | ❌ Removed 2026-08-09 — was never functional | — |
 
 ### Known duplication
@@ -39,11 +39,16 @@ before adding more listing features, or the drift will keep compounding.
 
 ### Deliberately dormant
 
-- **AI prefill tier** (`extractWithAI` in `app/api/prefill-job/route.ts`)
-  only runs when `ANTHROPIC_API_KEY` is set and the JSON-LD/embedded-state
-  tiers came up empty. Absence of the key is not a bug — the other three
-  extraction tiers still work — but if prefill quality on JS-heavy ATS pages
-  seems poor, check whether the key is set in Vercel first.
+- **AI prefill tier** (`extractWithAI` in `app/api/prefill-job/route.ts`,
+  Gemini 2.5 Flash) only runs when `GEMINI_API_KEY` is set and the
+  JSON-LD/embedded-state tiers came up empty. Absence of the key is not a
+  bug — the other three extraction tiers still work — but real-world
+  coverage drops sharply without it: verified live against a current
+  Greenhouse posting (a modern client-rendered ATS with no JobPosting
+  JSON-LD) and without the AI tier, company/location/tags/description all
+  came back empty — only title and logo survived via OG-tag fallback. If
+  prefill quality on JS-heavy ATS pages seems poor, check whether the key
+  is set in Vercel first.
 
 ### Removed capabilities (historical record)
 
@@ -53,6 +58,16 @@ before adding more listing features, or the drift will keep compounding.
   was an explicit placeholder guessing at field names for an API that was
   never integrated. Removed rather than fixed, since there was no real API
   contract to fix it against. If reintroduced, start from a known API shape.
+
+- **Duplicate prefill implementation** (`supabase/functions/extract-job/`):
+  an untracked (never committed) Supabase Edge Function that reimplemented
+  the same 4-tier extraction pipeline as `/api/prefill-job`, but called
+  Gemini directly via its own `GEMINI_API_KEY` instead of going through the
+  Next.js route. Nothing in the app ever called it — it was fully
+  disconnected. Discovered 2026-08-09 when a Gemini key set for it was
+  mistaken for the main route's AI key. Its Gemini-calling logic was ported
+  into `/api/prefill-job` (replacing the Anthropic tier) and the standalone
+  function was deleted, along with its `supabase/config.toml` registration.
 
 ---
 

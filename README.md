@@ -178,7 +178,7 @@ Set these in Vercel Dashboard > Settings > Environment Variables:
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `NEXT_PUBLIC_APP_URL` (your production URL)
 - `RESEND_API_KEY` (for submission/notification emails)
-- `ANTHROPIC_API_KEY` (optional, improves AI-assisted job prefill)
+- `GEMINI_API_KEY` (optional, improves AI-assisted job prefill)
 
 ## Database Schema
 
