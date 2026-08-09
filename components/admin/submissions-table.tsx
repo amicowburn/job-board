@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useOptimistic, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button, Badge, Alert, AlertDescription } from '@/components/ui'
+import { toast } from 'sonner'
+import { Button, Badge } from '@/components/ui'
 import { Pagination } from '@/components/ui/pagination'
 import { formatDate } from '@/lib/utils'
 import type { JobSubmission } from '@/lib/types'
@@ -27,37 +28,81 @@ export function SubmissionsTable({
   totalPages,
 }: SubmissionsTableProps) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
 
-  const filtered = filter === 'all' ? submissions : submissions.filter((s) => s.status === filter)
+  // Status flips to approved/rejected immediately; React drops the optimistic
+  // layer if the request fails, restoring the pending row.
+  const [optimisticSubmissions, applyOptimistic] = useOptimistic(
+    submissions,
+    (rows: JobSubmission[], update: { id: string; status: JobSubmission['status'] }) =>
+      rows.map((row) => (row.id === update.id ? { ...row, status: update.status } : row))
+  )
 
-  const handleApprove = async (id: string) => {
+  const filtered =
+    filter === 'all'
+      ? optimisticSubmissions
+      : optimisticSubmissions.filter((s) => s.status === filter)
+
+  const handleApprove = (id: string) => {
     if (!confirm('Approve this submission and publish it to the live job board?')) return
-    setError(''); setSuccess('')
-    const res = await fetch(`/api/admin/submissions/${id}/approve`, { method: 'POST' })
-    if (!res.ok) {
+
+    startTransition(async () => {
+      applyOptimistic({ id, status: 'approved' })
+
+      const res = await fetch(`/api/admin/submissions/${id}/approve`, { method: 'POST' })
       const body = await res.json().catch(() => ({}))
-      setError(body.error || 'Failed to approve submission')
-    } else {
-      setSuccess('Job published to the live board.')
-      startTransition(() => router.refresh())
-    }
+
+      if (!res.ok) {
+        toast.error(body.error || 'Failed to approve submission')
+        return
+      }
+
+      // The job is published either way — but if the submitter was never
+      // emailed, the admin needs to know so they can follow up.
+      if (body.email_sent === false) {
+        toast.warning('Job published, but the approval email failed to send', {
+          description: body.email_error,
+          duration: 10000,
+        })
+      } else {
+        toast.success('Job published to the live board')
+      }
+
+      router.refresh()
+    })
   }
 
-  const handleReject = async (id: string) => {
-    const note = window.prompt('Optional rejection note (visible to admins only):') ?? ''
+  const handleReject = (id: string) => {
+    const note = window.prompt('Optional rejection note (visible to admins only):')
     if (note === null) return
-    setError(''); setSuccess('')
-    const res = await fetch(`/api/admin/submissions/${id}/reject`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ admin_note: note || null }),
+
+    startTransition(async () => {
+      applyOptimistic({ id, status: 'rejected' })
+
+      const res = await fetch(`/api/admin/submissions/${id}/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ admin_note: note || null }),
+      })
+      const body = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        toast.error(body.error || 'Failed to reject submission')
+        return
+      }
+
+      if (body.email_sent === false) {
+        toast.warning('Submission rejected, but the notification email failed to send', {
+          description: body.email_error,
+          duration: 10000,
+        })
+      } else {
+        toast.success('Submission rejected')
+      }
+
+      router.refresh()
     })
-    if (!res.ok) setError('Failed to reject submission')
-    else { setSuccess('Submission rejected.'); startTransition(() => router.refresh()) }
   }
 
   return (
@@ -80,14 +125,6 @@ export function SubmissionsTable({
         ))}
       </div>
 
-      {/* Alerts */}
-      {(error || success) && (
-        <div className="px-5 py-3 border-b border-slate-100">
-          {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
-          {success && <Alert variant="success"><AlertDescription>{success}</AlertDescription></Alert>}
-        </div>
-      )}
-
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -103,7 +140,7 @@ export function SubmissionsTable({
           </thead>
           <tbody className="divide-y divide-slate-50">
             {filtered.map((submission) => (
-              <tr key={submission.id} className={`hover:bg-slate-50/60 transition-colors ${isPending ? 'opacity-50' : ''}`}>
+              <tr key={submission.id} className="hover:bg-slate-50/60 transition-colors">
                 <td className="px-5 py-4">
                   <p className="font-medium text-slate-800">{submission.submitter_name}</p>
                   <a href={`mailto:${submission.submitter_email}`} className="text-xs text-primary hover:underline">

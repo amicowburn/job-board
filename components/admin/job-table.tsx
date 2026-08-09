@@ -1,33 +1,54 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useOptimistic, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Button, Badge, Input, Alert, AlertDescription } from '@/components/ui'
+import { toast } from 'sonner'
+import { Button, Badge, Input } from '@/components/ui'
 import { Pagination } from '@/components/ui/pagination'
 import { createClient } from '@/lib/supabase/client'
 import { formatDate } from '@/lib/utils'
 import { BulkImport } from './bulk-import'
-import type { Job } from '@/lib/types'
+import type { AdminJobRow } from '@/lib/types'
 
 interface JobTableProps {
-  jobs: Job[]
+  jobs: AdminJobRow[]
   totalJobs: number
   currentPage: number
   totalPages: number
 }
 
+/** Optimistic edits applied on top of the server-rendered rows. */
+type JobAction =
+  | { type: 'delete'; ids: string[] }
+  | { type: 'deactivate'; ids: string[] }
+
+function applyJobAction(rows: AdminJobRow[], action: JobAction): AdminJobRow[] {
+  const ids = new Set(action.ids)
+
+  if (action.type === 'delete') {
+    return rows.filter((job) => !ids.has(job.id))
+  }
+
+  return rows.map((job) =>
+    ids.has(job.id) ? { ...job, is_active: false } : job
+  )
+}
+
 export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableProps) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
   const [search, setSearch] = useState('')
   const [selectedJobs, setSelectedJobs] = useState<Set<string>>(new Set())
   const [showBulkActions, setShowBulkActions] = useState(false)
   const [bulkDays, setBulkDays] = useState('30')
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
 
-  const filteredJobs = jobs.filter(
+  // Rows the user sees: server data plus any in-flight change. React discards
+  // the optimistic layer when the surrounding transition settles, so a failed
+  // mutation restores the real row on its own — we only surface the error.
+  const [optimisticJobs, applyOptimistic] = useOptimistic(jobs, applyJobAction)
+
+  const filteredJobs = optimisticJobs.filter(
     (job) =>
       job.title.toLowerCase().includes(search.toLowerCase()) ||
       job.company.toLowerCase().includes(search.toLowerCase())
@@ -47,42 +68,98 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
     else setSelectedJobs(new Set(filteredJobs.map((j) => j.id)))
   }
 
-  const handleDeactivate = async (jobId: string) => {
+  const handleDeactivate = (jobId: string) => {
     if (!confirm('Are you sure you want to deactivate this job?')) return
-    const supabase = createClient()
-    const { error } = await supabase.from('jobs').update({ is_active: false }).eq('id', jobId)
-    if (error) setError('Failed to deactivate job')
-    else { setSuccess('Job deactivated'); startTransition(() => router.refresh()) }
+
+    startTransition(async () => {
+      applyOptimistic({ type: 'deactivate', ids: [jobId] })
+
+      const supabase = createClient()
+      const { error } = await supabase.from('jobs').update({ is_active: false }).eq('id', jobId)
+
+      if (error) {
+        toast.error('Failed to deactivate job', { description: error.message })
+        return
+      }
+
+      toast.success('Job deactivated')
+      router.refresh()
+    })
   }
 
-  const handleDelete = async (jobId: string) => {
+  const handleDelete = (jobId: string) => {
     if (!confirm('Are you sure you want to permanently delete this job? This action cannot be undone.')) return
-    const supabase = createClient()
-    const { error } = await supabase.from('jobs').delete().eq('id', jobId)
-    if (error) setError('Failed to delete job')
-    else { setSuccess('Job deleted'); startTransition(() => router.refresh()) }
+
+    startTransition(async () => {
+      applyOptimistic({ type: 'delete', ids: [jobId] })
+
+      const supabase = createClient()
+      const { error } = await supabase.from('jobs').delete().eq('id', jobId)
+
+      if (error) {
+        toast.error('Failed to delete job', { description: error.message })
+        return
+      }
+
+      toast.success('Job deleted')
+      router.refresh()
+    })
   }
 
-  const handleBulkDeactivate = async () => {
+  const handleBulkDeactivate = () => {
     const days = parseInt(bulkDays, 10)
-    if (isNaN(days) || days < 1) { setError('Please enter a valid number of days'); return }
+    if (isNaN(days) || days < 1) {
+      toast.error('Please enter a valid number of days')
+      return
+    }
     if (!confirm(`This will deactivate all jobs older than ${days} days or with a closing date in the past. Continue?`)) return
+
     const cutoffDate = new Date()
     cutoffDate.setDate(cutoffDate.getDate() - days)
-    const supabase = createClient()
-    const { error: oldError } = await supabase.from('jobs').update({ is_active: false }).lt('created_at', cutoffDate.toISOString()).eq('is_active', true)
-    const { error: closedError } = await supabase.from('jobs').update({ is_active: false }).lt('closing_at', new Date().toISOString()).eq('is_active', true)
-    if (oldError || closedError) setError('Failed to deactivate some jobs')
-    else { setSuccess('Old and expired jobs deactivated'); setShowBulkActions(false); startTransition(() => router.refresh()) }
+
+    startTransition(async () => {
+      // Server-side predicate — which rows match is not known here, so this one
+      // stays non-optimistic and reconciles from the refresh.
+      const supabase = createClient()
+      const [{ error: oldError }, { error: closedError }] = await Promise.all([
+        supabase.from('jobs').update({ is_active: false }).lt('created_at', cutoffDate.toISOString()).eq('is_active', true),
+        supabase.from('jobs').update({ is_active: false }).lt('closing_at', new Date().toISOString()).eq('is_active', true),
+      ])
+
+      if (oldError || closedError) {
+        toast.error('Failed to deactivate some jobs', {
+          description: (oldError ?? closedError)?.message,
+        })
+        return
+      }
+
+      setShowBulkActions(false)
+      toast.success('Old and expired jobs deactivated')
+      router.refresh()
+    })
   }
 
-  const handleBulkDeactivateSelected = async () => {
+  const handleBulkDeactivateSelected = () => {
     if (selectedJobs.size === 0) return
     if (!confirm(`Deactivate ${selectedJobs.size} selected jobs?`)) return
-    const supabase = createClient()
-    const { error } = await supabase.from('jobs').update({ is_active: false }).in('id', Array.from(selectedJobs))
-    if (error) setError('Failed to deactivate jobs')
-    else { setSuccess(`${selectedJobs.size} jobs deactivated`); setSelectedJobs(new Set()); startTransition(() => router.refresh()) }
+
+    const ids = Array.from(selectedJobs)
+
+    startTransition(async () => {
+      applyOptimistic({ type: 'deactivate', ids })
+
+      const supabase = createClient()
+      const { error } = await supabase.from('jobs').update({ is_active: false }).in('id', ids)
+
+      if (error) {
+        toast.error('Failed to deactivate jobs', { description: error.message })
+        return
+      }
+
+      setSelectedJobs(new Set())
+      toast.success(`${ids.length} jobs deactivated`)
+      router.refresh()
+    })
   }
 
   return (
@@ -105,14 +182,6 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
           </Link>
         </div>
       </div>
-
-      {/* Alerts */}
-      {(error || success) && (
-        <div className="px-5 py-3 border-b border-slate-100">
-          {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
-          {success && <Alert variant="success"><AlertDescription>{success}</AlertDescription></Alert>}
-        </div>
-      )}
 
       {/* Bulk Actions Panel */}
       {showBulkActions && (
@@ -164,7 +233,7 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
           </thead>
           <tbody className="divide-y divide-slate-50">
             {filteredJobs.map((job) => (
-              <tr key={job.id} className={`hover:bg-slate-50/60 transition-colors ${isPending ? 'opacity-50' : ''}`}>
+              <tr key={job.id} className="hover:bg-slate-50/60 transition-colors">
                 <td className="px-5 py-4">
                   <input
                     type="checkbox"

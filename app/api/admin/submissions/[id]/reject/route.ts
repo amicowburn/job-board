@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
+import { SUBMISSIONS_TAG } from '@/lib/admin-data'
 import { sendEmail } from '@/lib/email'
 import { isCurrentUserAdmin } from '@/lib/supabase/server'
 import { createServerClient } from '@/lib/supabase/server'
@@ -37,6 +39,10 @@ export async function POST(
   if (error) {
     return NextResponse.json({ error: 'Failed to reject submission' }, { status: 500 })
   }
+
+  // The pending count in the admin nav is cached — drop it now that this
+  // submission has left the pending set.
+  revalidateTag(SUBMISSIONS_TAG)
 
   // Notify the HR submitter their listing wasn't approved (non-blocking, never silent)
   const emailResult = await sendEmail(

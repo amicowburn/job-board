@@ -1,7 +1,9 @@
 import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { getUser, isCurrentUserAdmin, createServerClient } from '@/lib/supabase/server'
+import { Toaster } from 'sonner'
+import { getUser, isCurrentUserAdmin } from '@/lib/supabase/server'
+import { getPendingSubmissionCount } from '@/lib/admin-data'
 import { AdminNav } from '@/components/admin/admin-nav'
 
 export const metadata = {
@@ -18,17 +20,18 @@ export default async function AdminLayout({
   let pendingSubmissions = 0
 
   if (user) {
-    const isAdmin = await isCurrentUserAdmin()
+    // Independent of each other — the admin check reuses the request-cached
+    // user, so run it alongside the count rather than waiting on it first.
+    const [isAdmin, count] = await Promise.all([
+      isCurrentUserAdmin(),
+      getPendingSubmissionCount(),
+    ])
+
     if (!isAdmin) {
       redirect('/admin/login?error=unauthorized')
     }
 
-    const supabase = await createServerClient()
-    const { count } = await supabase
-      .from('job_submissions')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'pending')
-    pendingSubmissions = count ?? 0
+    pendingSubmissions = count
   }
 
   return (
@@ -78,6 +81,8 @@ export default async function AdminLayout({
       <main className="flex-1 px-4 sm:px-[15px] py-6 w-full max-w-[1200px] mx-auto">
         {children}
       </main>
+
+      <Toaster position="bottom-right" richColors closeButton />
     </div>
   )
 }
