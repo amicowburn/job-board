@@ -5,7 +5,8 @@ import { submissionConfirmationEmail } from '@/lib/email-templates'
 import type { JobSubmissionInsert, JobSubmission } from '@/lib/types'
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-const ADMIN_EMAIL = 'enquires@monashmss.com'
+const ADMIN_EMAIL = 'partnerships@monashmss.com'
+const ADMIN_BCC = ['mmss@monashclubs.org', 'club.mmss@monsu.org']
 
 export async function POST(request: Request) {
   let body: JobSubmissionInsert
@@ -60,6 +61,7 @@ export async function POST(request: Request) {
       resend.emails.send({
         from: 'MMSS Job Board <noreply@monashmss.com>',
         to: ADMIN_EMAIL,
+        bcc: ADMIN_BCC,
         subject: `New submission: ${data.title} at ${data.company}`,
         text: [
           'A new job submission is waiting for review.',

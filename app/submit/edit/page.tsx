@@ -35,7 +35,7 @@ export default async function EditSubmissionPage({ searchParams }: EditSubmissio
           <p className="text-slate-500 text-sm">
             {submission.status === 'approved'
               ? 'Your job listing has been approved and is now live on the MMSS Job Board.'
-              : 'Your submission has already been reviewed and can no longer be edited. Contact enquires@monashmss.com with any questions.'
+              : 'Your submission has already been reviewed and can no longer be edited. Contact enquiries@monashmss.com with any questions.'
             }
           </p>
         </div>

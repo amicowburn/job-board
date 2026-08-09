@@ -10,7 +10,7 @@
  */
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-const CONTACT_EMAIL = 'enquires@monashmss.com'
+const CONTACT_EMAIL = 'enquiries@monashmss.com'
 const LOGO_URL = 'https://olyzdpqfecawcueffrsq.supabase.co/storage/v1/object/public/mmss-email-assets/MMSS%20Hero%20Logo%20(white).png'
 
 // Supabase-hosted brand image assets
