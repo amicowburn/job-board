@@ -7,3 +7,5 @@ export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 export { Pagination, type PaginationProps } from './pagination'
 export { Label, type LabelProps } from './label'
 export { Alert, AlertTitle, AlertDescription, type AlertProps } from './alert'
+export { Modal, type ModalProps } from './modal'
+export { useConfirmDialog, type ConfirmOptions, type ConfirmResult } from './confirm-dialog'

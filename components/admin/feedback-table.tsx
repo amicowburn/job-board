@@ -4,7 +4,7 @@ import { useOptimistic, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Button, Badge } from '@/components/ui'
+import { Button, Badge, useConfirmDialog } from '@/components/ui'
 import { Pagination } from '@/components/ui/pagination'
 import { createClient } from '@/lib/supabase/client'
 import { formatDate } from '@/lib/utils'
@@ -38,6 +38,7 @@ const STATUS_VARIANTS: Record<string, 'default' | 'secondary' | 'destructive'> =
 export function FeedbackTable({ feedback, totalCount, currentPage, totalPages }: FeedbackTableProps) {
   const router = useRouter()
   const [, startTransition] = useTransition()
+  const { confirm, dialog } = useConfirmDialog()
 
   const [optimisticFeedback, applyOptimistic] = useOptimistic(
     feedback,
@@ -67,8 +68,15 @@ export function FeedbackTable({ feedback, totalCount, currentPage, totalPages }:
     })
   }
 
-  const handleDelete = (id: string) => {
-    if (!confirm('Are you sure you want to delete this feedback?')) return
+  const handleDelete = async (id: string) => {
+    const { confirmed } = await confirm({
+      title: 'Delete this report?',
+      description: 'The report is removed from the database entirely.',
+      warning: 'This cannot be undone. Mark it as reviewed instead if you only want it out of the way.',
+      confirmLabel: 'Delete permanently',
+      destructive: true,
+    })
+    if (!confirmed) return
 
     startTransition(async () => {
       applyOptimistic({ type: 'delete', id })
@@ -171,6 +179,8 @@ export function FeedbackTable({ feedback, totalCount, currentPage, totalPages }:
         </p>
         <Pagination currentPage={currentPage} totalPages={totalPages} baseUrl="/admin/feedback" />
       </div>
+
+      {dialog}
     </>
   )
 }

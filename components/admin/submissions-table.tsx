@@ -3,7 +3,7 @@
 import { useOptimistic, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Button, Badge } from '@/components/ui'
+import { Button, Badge, useConfirmDialog } from '@/components/ui'
 import { Pagination } from '@/components/ui/pagination'
 import { formatDate } from '@/lib/utils'
 import type { JobSubmission } from '@/lib/types'
@@ -30,6 +30,7 @@ export function SubmissionsTable({
   const router = useRouter()
   const [, startTransition] = useTransition()
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
+  const { confirm, dialog } = useConfirmDialog()
 
   // Status flips to approved/rejected immediately; React drops the optimistic
   // layer if the request fails, restoring the pending row.
@@ -44,8 +45,14 @@ export function SubmissionsTable({
       ? optimisticSubmissions
       : optimisticSubmissions.filter((s) => s.status === filter)
 
-  const handleApprove = (id: string) => {
-    if (!confirm('Approve this submission and publish it to the live job board?')) return
+  const handleApprove = async (id: string) => {
+    const { confirmed } = await confirm({
+      title: 'Publish this listing?',
+      description:
+        'The job goes live on the public board straight away, and the submitter is emailed to let them know.',
+      confirmLabel: 'Approve and publish',
+    })
+    if (!confirmed) return
 
     startTransition(async () => {
       applyOptimistic({ id, status: 'approved' })
@@ -73,9 +80,24 @@ export function SubmissionsTable({
     })
   }
 
-  const handleReject = (id: string) => {
-    const note = window.prompt('Optional rejection note (visible to admins only):')
-    if (note === null) return
+  const handleReject = async (id: string) => {
+    const { confirmed, note } = await confirm({
+      title: 'Reject this submission?',
+      description:
+        'The submitter is emailed to let them know their listing was not approved.',
+      confirmLabel: 'Reject submission',
+      destructive: true,
+      note: {
+        label: 'Reason for rejection (optional)',
+        placeholder: 'e.g. This role is not relevant to marketing students.',
+        helper: 'Leave blank to send the standard rejection message.',
+      },
+      // The note is rendered as a "Reviewer note" block in the rejection email
+      // (lib/email-templates.ts). The old prompt claimed it was admin-only.
+      warning:
+        'Anything you write here is included in the email sent to the submitter. Do not record internal notes here.',
+    })
+    if (!confirmed) return
 
     startTransition(async () => {
       applyOptimistic({ id, status: 'rejected' })
@@ -160,7 +182,9 @@ export function SubmissionsTable({
                   {submission.job_type && <p className="capitalize">{submission.job_type}</p>}
                   {submission.work_mode && <p className="capitalize">{submission.work_mode}</p>}
                   {submission.closing_at && <p>Closes {formatDate(submission.closing_at)}</p>}
-                  {submission.admin_note && <p className="text-destructive">Note: {submission.admin_note}</p>}
+                  {submission.admin_note && (
+                    <p className="text-destructive">Sent to submitter: {submission.admin_note}</p>
+                  )}
                 </td>
                 <td className="px-5 py-4">
                   <Badge variant={STATUS_VARIANTS[submission.status] || 'secondary'} className="rounded-full capitalize">
@@ -201,6 +225,8 @@ export function SubmissionsTable({
         </p>
         <Pagination currentPage={currentPage} totalPages={totalPages} baseUrl="/admin/submissions" />
       </div>
+
+      {dialog}
     </>
   )
 }
