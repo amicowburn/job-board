@@ -4,7 +4,7 @@ import { useOptimistic, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Button, Badge, Input } from '@/components/ui'
+import { Button, Badge, Input, useConfirmDialog } from '@/components/ui'
 import { Pagination } from '@/components/ui/pagination'
 import { createClient } from '@/lib/supabase/client'
 import { formatDate } from '@/lib/utils'
@@ -42,6 +42,7 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
   const [selectedJobs, setSelectedJobs] = useState<Set<string>>(new Set())
   const [showBulkActions, setShowBulkActions] = useState(false)
   const [bulkDays, setBulkDays] = useState('30')
+  const { confirm, dialog } = useConfirmDialog()
 
   // Rows the user sees: server data plus any in-flight change. React discards
   // the optimistic layer when the surrounding transition settles, so a failed
@@ -68,8 +69,13 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
     else setSelectedJobs(new Set(filteredJobs.map((j) => j.id)))
   }
 
-  const handleDeactivate = (jobId: string) => {
-    if (!confirm('Are you sure you want to deactivate this job?')) return
+  const handleDeactivate = async (jobId: string) => {
+    const { confirmed } = await confirm({
+      title: 'Deactivate this job?',
+      description: 'It is removed from the public board but kept here, so you can reactivate it later.',
+      confirmLabel: 'Deactivate',
+    })
+    if (!confirmed) return
 
     startTransition(async () => {
       applyOptimistic({ type: 'deactivate', ids: [jobId] })
@@ -87,8 +93,15 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
     })
   }
 
-  const handleDelete = (jobId: string) => {
-    if (!confirm('Are you sure you want to permanently delete this job? This action cannot be undone.')) return
+  const handleDelete = async (jobId: string) => {
+    const { confirmed } = await confirm({
+      title: 'Delete this job permanently?',
+      description: 'The listing is removed from the database entirely.',
+      warning: 'This cannot be undone. To take it off the board temporarily, deactivate it instead.',
+      confirmLabel: 'Delete permanently',
+      destructive: true,
+    })
+    if (!confirmed) return
 
     startTransition(async () => {
       applyOptimistic({ type: 'delete', ids: [jobId] })
@@ -106,13 +119,20 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
     })
   }
 
-  const handleBulkDeactivate = () => {
+  const handleBulkDeactivate = async () => {
     const days = parseInt(bulkDays, 10)
     if (isNaN(days) || days < 1) {
       toast.error('Please enter a valid number of days')
       return
     }
-    if (!confirm(`This will deactivate all jobs older than ${days} days or with a closing date in the past. Continue?`)) return
+    const { confirmed } = await confirm({
+      title: `Deactivate jobs older than ${days} days?`,
+      description: 'Also deactivates any job whose closing date has already passed.',
+      warning: 'This affects every matching job on the board, not just the ones on this page.',
+      confirmLabel: 'Deactivate them',
+      destructive: true,
+    })
+    if (!confirmed) return
 
     const cutoffDate = new Date()
     cutoffDate.setDate(cutoffDate.getDate() - days)
@@ -139,9 +159,14 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
     })
   }
 
-  const handleBulkDeactivateSelected = () => {
+  const handleBulkDeactivateSelected = async () => {
     if (selectedJobs.size === 0) return
-    if (!confirm(`Deactivate ${selectedJobs.size} selected jobs?`)) return
+    const { confirmed } = await confirm({
+      title: `Deactivate ${selectedJobs.size} selected ${selectedJobs.size === 1 ? 'job' : 'jobs'}?`,
+      description: 'They are removed from the public board but kept here.',
+      confirmLabel: 'Deactivate',
+    })
+    if (!confirmed) return
 
     const ids = Array.from(selectedJobs)
 
@@ -298,6 +323,8 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
         </p>
         <Pagination currentPage={currentPage} totalPages={totalPages} baseUrl="/admin/jobs" />
       </div>
+
+      {dialog}
     </>
   )
 }
