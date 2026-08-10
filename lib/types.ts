@@ -126,6 +126,8 @@ export interface JobSubmission {
   status: SubmissionStatus
   admin_note: string | null
   edit_token: string
+  /** Set when an admin archives the row; NULL means it is still in the queue. */
+  archived_at: string | null
   created_at: string
   updated_at: string
 }
@@ -149,6 +151,7 @@ export interface JobSubmissionInsert {
 export interface JobSubmissionUpdate {
   status?: SubmissionStatus
   admin_note?: string | null
+  archived_at?: string | null
 }
 
 // Query filter types

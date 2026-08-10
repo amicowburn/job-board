@@ -1,6 +1,7 @@
 'use client'
 
 import { useOptimistic, useState, useTransition } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Button, Badge, useConfirmDialog } from '@/components/ui'
@@ -19,6 +20,8 @@ interface SubmissionsTableProps {
   totalCount: number
   currentPage: number
   totalPages: number
+  /** Viewing the archive rather than the live queue. */
+  showArchived?: boolean
 }
 
 export function SubmissionsTable({
@@ -26,6 +29,7 @@ export function SubmissionsTable({
   totalCount,
   currentPage,
   totalPages,
+  showArchived = false,
 }: SubmissionsTableProps) {
   const router = useRouter()
   const [, startTransition] = useTransition()
@@ -36,8 +40,17 @@ export function SubmissionsTable({
   // layer if the request fails, restoring the pending row.
   const [optimisticSubmissions, applyOptimistic] = useOptimistic(
     submissions,
-    (rows: JobSubmission[], update: { id: string; status: JobSubmission['status'] }) =>
-      rows.map((row) => (row.id === update.id ? { ...row, status: update.status } : row))
+    (
+      rows: JobSubmission[],
+      update:
+        | { type: 'status'; id: string; status: JobSubmission['status'] }
+        | { type: 'remove'; id: string }
+    ) =>
+      update.type === 'remove'
+        ? rows.filter((row) => row.id !== update.id)
+        : rows.map((row) =>
+            row.id === update.id ? { ...row, status: update.status } : row
+          )
   )
 
   const filtered =
@@ -55,7 +68,7 @@ export function SubmissionsTable({
     if (!confirmed) return
 
     startTransition(async () => {
-      applyOptimistic({ id, status: 'approved' })
+      applyOptimistic({ type: 'status', id, status: 'approved' })
 
       const res = await fetch(`/api/admin/submissions/${id}/approve`, { method: 'POST' })
       const body = await res.json().catch(() => ({}))
@@ -100,7 +113,7 @@ export function SubmissionsTable({
     if (!confirmed) return
 
     startTransition(async () => {
-      applyOptimistic({ id, status: 'rejected' })
+      applyOptimistic({ type: 'status', id, status: 'rejected' })
 
       const res = await fetch(`/api/admin/submissions/${id}/reject`, {
         method: 'POST',
@@ -127,6 +140,40 @@ export function SubmissionsTable({
     })
   }
 
+  const handleArchive = async (id: string) => {
+    if (!showArchived) {
+      const { confirmed } = await confirm({
+        title: 'Archive this submission?',
+        description:
+          'It leaves the queue but is kept in full — you can restore it from the archive at any time. The submitter is not notified.',
+        confirmLabel: 'Archive',
+      })
+      if (!confirmed) return
+    }
+
+    startTransition(async () => {
+      // Either way the row leaves the view it is currently in.
+      applyOptimistic({ type: 'remove', id })
+
+      const res = await fetch(`/api/admin/submissions/${id}/archive`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ archived: !showArchived }),
+      })
+      const body = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        toast.error(
+          body.error || (showArchived ? 'Failed to restore submission' : 'Failed to archive submission')
+        )
+        return
+      }
+
+      toast.success(showArchived ? 'Submission restored to the queue' : 'Submission archived')
+      router.refresh()
+    })
+  }
+
   return (
     <>
       {/* Toolbar */}
@@ -145,6 +192,13 @@ export function SubmissionsTable({
             {f}
           </button>
         ))}
+
+        <Link
+          href={showArchived ? '/admin/submissions' : '/admin/submissions?view=archived'}
+          className="ml-auto self-center text-xs text-slate-500 hover:text-slate-800 underline underline-offset-2"
+        >
+          {showArchived ? '← Back to queue' : 'View archive'}
+        </Link>
       </div>
 
       {/* Table */}
@@ -195,16 +249,26 @@ export function SubmissionsTable({
                   {formatDate(submission.created_at)}
                 </td>
                 <td className="px-5 py-4">
-                  {submission.status === 'pending' && (
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="sm" className="text-success" onClick={() => handleApprove(submission.id)}>
-                        Approve
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleReject(submission.id)}>
-                        Reject
-                      </Button>
-                    </div>
-                  )}
+                  <div className="flex gap-1">
+                    {submission.status === 'pending' && !showArchived && (
+                      <>
+                        <Button variant="ghost" size="sm" className="text-success" onClick={() => handleApprove(submission.id)}>
+                          Approve
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleReject(submission.id)}>
+                          Reject
+                        </Button>
+                      </>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-slate-500"
+                      onClick={() => handleArchive(submission.id)}
+                    >
+                      {showArchived ? 'Restore' : 'Archive'}
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -214,7 +278,11 @@ export function SubmissionsTable({
 
       {filtered.length === 0 && (
         <div className="text-center py-12 text-slate-400 text-sm">
-          {filter !== 'all' ? `No ${filter} submissions` : 'No job submissions yet'}
+          {showArchived
+            ? 'Nothing archived'
+            : filter !== 'all'
+              ? `No ${filter} submissions`
+              : 'No job submissions yet'}
         </div>
       )}
 
