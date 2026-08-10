@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { FeedbackForm } from './feedback-form'
+import { trackEvent } from '@/lib/analytics/track'
+import { handleApplyClick } from './apply-link'
 import type { Job } from '@/lib/types'
 
 interface JobDetailPanelProps {
@@ -145,6 +147,7 @@ export function JobDetailPanel({ job, isMainView = false, onBack }: JobDetailPan
                 href={job.url}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => handleApplyClick({ jobId: job.id, title: job.title, company: job.company })}
                 className="inline-flex items-center text-primary font-medium text-sm mt-2 hover:underline"
               >
                 View full details on company website
@@ -187,6 +190,7 @@ export function JobDetailPanel({ job, isMainView = false, onBack }: JobDetailPan
             href={job.url}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => handleApplyClick({ jobId: job.id, title: job.title, company: job.company })}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
             transition={{ type: 'spring', stiffness: 500, damping: 25 }}
@@ -202,6 +206,11 @@ export function JobDetailPanel({ job, isMainView = false, onBack }: JobDetailPan
             whileTap={{ scale: 0.93 }}
             transition={{ type: 'spring', stiffness: 500, damping: 25 }}
             onClick={() => {
+              // Tracked before the copy: `writeText` can reject (or throw
+              // outright) when the document isn't focused or the API is
+              // unavailable, and a share the visitor intended shouldn't go
+              // uncounted because the clipboard was unavailable.
+              trackEvent('share', job.id)
               navigator.clipboard.writeText(`${window.location.origin}/?job=${job.id}`)
               setCopied(true)
               setTimeout(() => setCopied(false), 2000)
@@ -274,6 +283,7 @@ export function JobDetailPanel({ job, isMainView = false, onBack }: JobDetailPan
           href={job.url}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => handleApplyClick({ jobId: job.id, title: job.title, company: job.company })}
           className="flex-1 bg-primary hover:bg-primary/90 text-white font-medium py-2.5 px-4 rounded-xl text-center transition-colors text-sm"
         >
           Apply Now

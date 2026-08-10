@@ -154,6 +154,69 @@ export interface JobSubmissionUpdate {
   archived_at?: string | null
 }
 
+// =====================
+// Analytics types
+// =====================
+
+/**
+ * `apply` is a click on the outbound link; `apply_confirmed` is the visitor
+ * telling us afterwards that they actually finished. The second is always a
+ * lower bound — it only exists for people who came back to the board.
+ */
+export type AnalyticsEventType = 'view' | 'click' | 'apply' | 'apply_confirmed' | 'share'
+export type Granularity = 'week' | 'month' | 'quarter' | 'year'
+
+export interface AnalyticsEvent {
+  id: number
+  event_type: AnalyticsEventType
+  /** NULL once the job it referenced has been deleted — the event still counts. */
+  job_id: string | null
+  visitor_id: string
+  /** Snapshot of the job at event time; written by a trigger, never by the caller. */
+  job_type: JobType | null
+  tags: string[] | null
+  occurred_at: string
+}
+
+/**
+ * What the tracking route inserts.
+ *
+ * `job_type`, `tags` and `occurred_at` are absent on purpose: the trigger and
+ * the column default own them, so a caller cannot spoof a category or backdate
+ * an event.
+ */
+export interface AnalyticsEventInsert {
+  event_type: AnalyticsEventType
+  job_id: string | null
+  visitor_id: string
+}
+
+/** One row of `analytics_viewers_by_bucket`. */
+export interface ViewerBucket {
+  bucket_start: string
+  viewers: number
+  views: number
+}
+
+/** One row of `analytics_interest_breakdown`. */
+export interface InterestRow {
+  dimension: 'job_type' | 'tag'
+  label: string
+  events: number
+  visitors: number
+}
+
+/** One row of `analytics_action_counts`. */
+export interface ActionCountRow {
+  action: AnalyticsEventType
+  events: number
+  distinct_jobs: number
+  visitors: number
+}
+
+/** `ActionCountRow` densified so every action is present. */
+export type ActionCounts = Record<AnalyticsEventType, Omit<ActionCountRow, 'action'>>
+
 // Query filter types
 export interface JobFilters {
   search?: string
@@ -208,6 +271,19 @@ export type Database = {
         Update: JobSubmissionUpdate
         Relationships: []
       }
+      analytics_events: {
+        Row: AnalyticsEvent
+        Insert: AnalyticsEventInsert
+        Update: never
+        Relationships: [
+          {
+            foreignKeyName: 'analytics_events_job_id_fkey'
+            columns: ['job_id']
+            referencedRelation: 'jobs'
+            referencedColumns: ['id']
+          }
+        ]
+      }
       admin_users: {
         Row: AdminUser
         Insert: Omit<AdminUser, 'created_at'>
@@ -222,6 +298,18 @@ export type Database = {
       is_admin: {
         Args: Record<string, never>
         Returns: boolean
+      }
+      analytics_viewers_by_bucket: {
+        Args: { p_granularity: Granularity; p_buckets: number; p_tz: string }
+        Returns: ViewerBucket[]
+      }
+      analytics_interest_breakdown: {
+        Args: { p_granularity: Granularity; p_buckets: number; p_tz: string; p_limit: number }
+        Returns: InterestRow[]
+      }
+      analytics_action_counts: {
+        Args: { p_granularity: Granularity; p_buckets: number; p_tz: string }
+        Returns: ActionCountRow[]
       }
     }
     Enums: {

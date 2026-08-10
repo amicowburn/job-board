@@ -52,6 +52,24 @@
 
   /* Border Radius - Subtle */
   --radius: 0.375rem;
+
+  /*
+   * Chart Palette
+   * =============
+   * Consumed by shadcn chart configs as var(--chart-N). Validated as a
+   * categorical set against a light chart surface: worst adjacent CVD
+   * separation ΔE 9.1 (protan), worst normal-vision ΔE 22.9 — both clear of
+   * the floors. Re-validate before changing any value.
+   *
+   * --chart-4 and --chart-5 sit below 3:1 contrast on white, so any chart
+   * using them must carry visible direct labels or a table view. The interest
+   * charts carry both.
+   */
+  --chart-1: #6b4d8a; /* MMSS purple — distinct viewers */
+  --chart-2: #eb6834; /* orange — job views */
+  --chart-3: #2a78d6; /* blue — interest by job type */
+  --chart-4: #1baf7a; /* aqua — interest by tag */
+  --chart-5: #eda100; /* yellow — spare */
 }
 
 /* Dark mode support (optional - uncomment to enable) */

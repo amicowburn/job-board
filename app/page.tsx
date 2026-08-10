@@ -6,6 +6,8 @@ import { createClient } from '@/lib/supabase/client'
 import { JobDetailPanel } from '@/components/jobs/job-detail-panel'
 import { JobsHeader } from '@/components/jobs/jobs-header'
 import { JobCard } from '@/components/jobs/job-card'
+import { ApplyConfirmPrompt } from '@/components/jobs/apply-confirm-prompt'
+import { trackEvent } from '@/lib/analytics/track'
 import type { Job } from '@/lib/types'
 
 const JOBS_PER_PAGE = 25
@@ -99,6 +101,14 @@ export default function HomePage() {
   }, [])
 
   // Once jobs load, pre-select the linked job
+  //
+  // Arriving on a shared ?job= link counts as a view even though no card was
+  // clicked — that link is exactly what the Share button produces, so counting
+  // it is what makes shares legible against the views they generate.
+  //
+  // The plain first-job auto-selection in fetchJobs is deliberately NOT tracked:
+  // nobody asked to see that job, and counting it would credit whatever happens
+  // to sort first with a view on every single page load.
   useEffect(() => {
     if (!linkedJobId || isLoading) return
     const found = jobs.find(j => j.id === linkedJobId)
@@ -106,6 +116,7 @@ export default function HomePage() {
       setSelectedJob(found)
       setShowDetail(true)
       setLinkedJobId(null)
+      trackEvent('view', found.id)
     } else {
       // Job not in current page — fetch it directly and show in the panel
       const supabase = createClient()
@@ -113,6 +124,7 @@ export default function HomePage() {
         if (data) {
           setSelectedJob(data as Job)
           setShowDetail(true)
+          trackEvent('view', (data as Job).id)
         }
         setLinkedJobId(null)
       })
@@ -126,6 +138,11 @@ export default function HomePage() {
   const handleJobSelect = (job: Job) => {
     setSelectedJob(job)
     setShowDetail(true)
+    // A click and a view are recorded separately: the click is the card press,
+    // the view is the detail panel it opens. They diverge for shared links,
+    // which produce a view with no click (see the ?job= effect above).
+    trackEvent('click', job.id)
+    trackEvent('view', job.id)
   }
 
   const handleBack = () => {
@@ -291,6 +308,11 @@ export default function HomePage() {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Asks returning visitors whether an apply click became a real
+          application — the only application signal this board can observe,
+          since applying itself happens on the employer's site. */}
+      <ApplyConfirmPrompt />
     </div>
   )
 }

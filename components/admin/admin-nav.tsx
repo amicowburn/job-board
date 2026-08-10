@@ -15,6 +15,7 @@ export function AdminNav({ pendingSubmissions = 0 }: AdminNavProps) {
     { href: '/admin/jobs', label: 'Jobs' },
     { href: '/admin/submissions', label: 'Submissions', badge: pendingSubmissions },
     { href: '/admin/feedback', label: 'Feedback' },
+    { href: '/admin/analytics', label: 'Analytics' },
     { href: '/admin/users', label: 'Admins' },
   ]
 
