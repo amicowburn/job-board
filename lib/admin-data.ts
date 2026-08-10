@@ -23,6 +23,7 @@ export const getPendingSubmissionCount = unstable_cache(
       .from('job_submissions')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'pending')
+      .is('archived_at', null)
 
     return count ?? 0
   },
