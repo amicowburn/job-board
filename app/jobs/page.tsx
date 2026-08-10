@@ -6,6 +6,8 @@ import { createClient } from '@/lib/supabase/client'
 import { JobDetailPanel } from '@/components/jobs/job-detail-panel'
 import { JobsHeader } from '@/components/jobs/jobs-header'
 import { JobCard } from '@/components/jobs/job-card'
+import { ApplyConfirmPrompt } from '@/components/jobs/apply-confirm-prompt'
+import { trackEvent } from '@/lib/analytics/track'
 import type { Job } from '@/lib/types'
 
 const JOBS_PER_PAGE = 25
@@ -107,6 +109,10 @@ export default function JobsPage() {
 
   const handleJobSelect = (job: Job) => {
     setSelectedJob(job)
+    // Duplicated from app/page.tsx on purpose — these two pages are knowingly
+    // near-identical copies, and unifying them is out of scope here.
+    trackEvent('click', job.id)
+    trackEvent('view', job.id)
   }
 
   const handlePageChange = (page: number) => {
@@ -234,6 +240,8 @@ export default function JobsPage() {
           </div>
         </div>
       </div>
+
+      <ApplyConfirmPrompt />
     </div>
   )
 }

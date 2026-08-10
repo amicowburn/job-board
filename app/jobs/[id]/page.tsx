@@ -4,6 +4,8 @@ import type { Metadata } from 'next'
 import { createServerClient } from '@/lib/supabase/server'
 import { Button, Badge } from '@/components/ui'
 import { FeedbackForm } from '@/components/jobs'
+import { ApplyLink } from '@/components/jobs/apply-link'
+import { ApplyConfirmPrompt } from '@/components/jobs/apply-confirm-prompt'
 import { formatDate, daysUntilClosing, isJobExpired } from '@/lib/utils'
 import type { Job } from '@/lib/types'
 
@@ -90,15 +92,16 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
             </div>
 
             {!expired && (
-              <a
+              <ApplyLink
+                jobId={job.id}
+                jobTitle={job.title}
+                jobCompany={job.company}
                 href={job.url}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="btn-md bg-white text-primary hover:bg-white/90 font-semibold rounded-md inline-flex items-center"
               >
                 Apply Now
                 <ExternalLinkIcon className="h-4 w-4 ml-2" />
-              </a>
+              </ApplyLink>
             )}
           </div>
         </div>
@@ -197,15 +200,16 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
 
               {/* Apply Button (Mobile) */}
               {!expired && (
-                <a
+                <ApplyLink
+                  jobId={job.id}
+                  jobTitle={job.title}
+                  jobCompany={job.company}
                   href={job.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   className="w-full btn-primary btn-lg flex items-center justify-center lg:hidden"
                 >
                   Apply Now
                   <ExternalLinkIcon className="h-4 w-4 ml-2" />
-                </a>
+                </ApplyLink>
               )}
 
               {/* Back to Jobs */}
@@ -226,6 +230,8 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
           <p>&copy; {new Date().getFullYear()} Monash Marketing Students&apos; Society. All rights reserved.</p>
         </div>
       </footer>
+
+      <ApplyConfirmPrompt />
     </main>
   )
 }

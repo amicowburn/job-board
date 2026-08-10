@@ -8,6 +8,17 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      keyframes: {
+        // Entrance for the apply-confirmation prompt. Deliberately CSS rather
+        // than framer-motion: the prompt must unmount reliably when answered.
+        'apply-prompt-in': {
+          from: { opacity: '0', transform: 'translateY(16px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        'apply-prompt-in': 'apply-prompt-in 220ms ease-out',
+      },
       colors: {
         // MMSS Brand Colors - Update these hex values when provided
         primary: {
@@ -56,7 +67,9 @@ const config: Config = {
       },
     },
   },
-  plugins: [require('@tailwindcss/typography')],
+  // tailwindcss-animate supplies the enter/exit utilities shadcn's Select
+  // popover relies on (animate-in, fade-in-0, zoom-in-95, slide-in-from-*).
+  plugins: [require('@tailwindcss/typography'), require('tailwindcss-animate')],
 }
 
 export default config

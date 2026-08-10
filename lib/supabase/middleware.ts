@@ -2,6 +2,8 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { CookieOptions } from '@supabase/ssr'
 
+import { VISITOR_COOKIE, VISITOR_COOKIE_MAX_AGE } from '@/lib/analytics/constants'
+
 type CookieToSet = { name: string; value: string; options: CookieOptions }
 
 /**
@@ -72,6 +74,23 @@ export async function updateSession(request: NextRequest) {
       url.searchParams.set('error', 'unauthorized')
       return NextResponse.redirect(url)
     }
+  }
+
+  // Issue the anonymous visitor id if this browser doesn't have one yet.
+  //
+  // Deliberately below the admin gate: the redirect responses above return
+  // early, so a visitor id is never minted on a request that isn't actually
+  // being served a page. The cookie lands on the browser with this response,
+  // which means the first /api/track call — fired after the page has loaded —
+  // already has it.
+  if (!request.cookies.get(VISITOR_COOKIE)) {
+    supabaseResponse.cookies.set(VISITOR_COOKIE, crypto.randomUUID(), {
+      maxAge: VISITOR_COOKIE_MAX_AGE,
+      sameSite: 'lax',
+      path: '/',
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+    })
   }
 
   return supabaseResponse
