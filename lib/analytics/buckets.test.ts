@@ -158,14 +158,14 @@ describe('shiftBucket — calendar rollover', () => {
     // 2028 is a leap year: Feb has 29 days, so March must still start on the 1st.
     const march = bucketStart('month', new Date('2028-03-15T05:00:00Z'), TZ)
     const february = shiftBucket('month', march, -1, TZ)
-    expect(bucketLabel('month', february, TZ)).toBe('Feb 2028')
+    expect(bucketLabel('month', february, TZ)).toBe('February 2028')
     expect(iso(shiftBucket('month', february, 1, TZ))).toBe(iso(march))
   })
 
   it('rolls quarters backwards across a year boundary', () => {
     const q1 = bucketStart('quarter', new Date('2026-02-15T05:00:00Z'), TZ)
     const q4Previous = shiftBucket('quarter', q1, -1, TZ)
-    expect(bucketLabel('quarter', q4Previous, TZ)).toBe('Q4 2025')
+    expect(bucketLabel('quarter', q4Previous, TZ)).toBe('October 2025')
     expect(iso(q4Previous)).toBe('2025-09-30T14:00:00.000Z')
   })
 
@@ -176,33 +176,47 @@ describe('shiftBucket — calendar rollover', () => {
 })
 
 describe('bucketLabel', () => {
-  it('labels months and quarters and years', () => {
+  it('labels months and quarters as "Month YYYY" and years as "YYYY"', () => {
     const now = new Date('2026-08-10T05:00:00Z')
-    expect(bucketLabel('month', bucketStart('month', now, TZ), TZ)).toBe('Aug 2026')
-    expect(bucketLabel('quarter', bucketStart('quarter', now, TZ), TZ)).toBe('Q3 2026')
+    expect(bucketLabel('month', bucketStart('month', now, TZ), TZ)).toBe('August 2026')
+    // A quarter is named for the month it opens, not "Q3".
+    expect(bucketLabel('quarter', bucketStart('quarter', now, TZ), TZ)).toBe('July 2026')
     expect(bucketLabel('year', bucketStart('year', now, TZ), TZ)).toBe('2026')
   })
 
-  it('uses the ISO week-numbering year, not the calendar year', () => {
-    // Monday 29 Dec 2025 opens ISO week 1 of 2026. Labelling it "W1 2025" would
-    // put two W1 bars on one axis; labelling it "W53 2025" would be wrong too.
+  it('labels a week by the day it opens, in "DD Month"', () => {
+    const week = bucketStart('week', new Date('2026-08-12T05:00:00Z'), TZ)
+    expect(bucketLabel('week', week, TZ)).toBe('10 August')
+  })
+
+  it('names the opening day of a week that starts in the previous year', () => {
+    // Monday 29 Dec 2025 opens a week running into 2026. Under the old ISO
+    // scheme this was "W1 2026"; the date says the same thing without needing
+    // the reader to know ISO week numbering.
     const week = bucketStart('week', new Date('2025-12-30T05:00:00Z'), TZ)
     expect(iso(week)).toBe('2025-12-28T13:00:00.000Z')
-    expect(bucketLabel('week', week, TZ)).toBe('W1 2026')
+    expect(bucketLabel('week', week, TZ)).toBe('29 December')
   })
 
-  it('labels the last ISO week of a year that has 53', () => {
-    // 2026 is a 53-week ISO year; 28 Dec 2026 is the Monday of W53.
-    const week = bucketStart('week', new Date('2026-12-29T05:00:00Z'), TZ)
-    expect(bucketLabel('week', week, TZ)).toBe('W53 2026')
-  })
-
-  it('produces strictly increasing labels across a year boundary', () => {
+  it('produces distinct, ordered labels across a year boundary', () => {
     const start = bucketStart('week', new Date('2025-12-08T05:00:00Z'), TZ)
     const labels = Array.from({ length: 6 }, (_, i) =>
       bucketLabel('week', shiftBucket('week', start, i, TZ), TZ)
     )
-    expect(labels).toEqual(['W50 2025', 'W51 2025', 'W52 2025', 'W1 2026', 'W2 2026', 'W3 2026'])
+    expect(labels).toEqual([
+      '8 December',
+      '15 December',
+      '22 December',
+      '29 December',
+      '5 January',
+      '12 January',
+    ])
+    expect(new Set(labels).size).toBe(labels.length)
+  })
+
+  it('does not zero-pad single-digit days', () => {
+    const week = bucketStart('week', new Date('2026-01-07T05:00:00Z'), TZ)
+    expect(bucketLabel('week', week, TZ)).toBe('5 January')
   })
 })
 
@@ -278,7 +292,12 @@ describe('fillBuckets', () => {
 
   it('attaches the correct label to each bucket', () => {
     const filled = fillBuckets([], 'quarter', 4, now, TZ)
-    expect(filled.map((b) => b.label)).toEqual(['Q4 2025', 'Q1 2026', 'Q2 2026', 'Q3 2026'])
+    expect(filled.map((b) => b.label)).toEqual([
+      'October 2025',
+      'January 2026',
+      'April 2026',
+      'July 2026',
+    ])
   })
 
   it('ignores rows outside the window and rows with an unparseable timestamp', () => {

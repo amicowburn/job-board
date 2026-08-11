@@ -20,6 +20,7 @@ export const EVENT_TYPES: readonly AnalyticsEventType[] = [
   'share',
 ]
 
+/** The page-level range picker. `day` is excluded on purpose — see Granularity. */
 export const GRANULARITIES: readonly Granularity[] = ['week', 'month', 'quarter', 'year']
 
 /**
@@ -29,6 +30,9 @@ export const GRANULARITIES: readonly Granularity[] = ['week', 'month', 'quarter'
  * unreadable: 12 weeks is a semester, 12 months a year, 8 quarters two years.
  */
 export const BUCKET_COUNT: Record<Granularity, number> = {
+  // The widest range the Total Visitors card offers; 30d and 7d are sliced
+  // from this same fetch client-side rather than costing another round trip.
+  day: 90,
   week: 12,
   month: 12,
   quarter: 8,

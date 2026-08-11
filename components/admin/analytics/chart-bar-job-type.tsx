@@ -1,13 +1,10 @@
 'use client'
 
-import { TrendingUp } from 'lucide-react'
 import { Bar, BarChart, LabelList, XAxis, YAxis } from 'recharts'
 
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui'
@@ -23,9 +20,10 @@ import {
   InterestTable,
   formatCount,
   interestChartHeight,
-  leadSummary,
 } from './interest-shared'
+import { InsightBadge } from './insight-treatments'
 import type { InterestSlice } from '@/lib/analytics/buckets'
+import type { GrowthInsight } from '@/lib/analytics/growth'
 
 export const description = 'A horizontal bar chart of interest by job type'
 
@@ -39,9 +37,10 @@ const chartConfig = {
 /**
  * Which job categories visitors engage with.
  *
- * Horizontal because the labels are words of varying length — "part-time",
- * "internship" — and rotated x-axis labels are the standard way to make a
- * category chart unreadable.
+ * Horizontal bars rather than a pie: these categories routinely land within a
+ * few percent of each other, and near-equal slice angles are very hard to rank
+ * by eye where bar lengths are trivially comparable. Bars also leave room for
+ * the value on every row instead of pushing it into a legend.
  *
  * Every event type counts, not just views: an apply click is a stronger
  * interest signal than a view, and excluding it would understate the categories
@@ -49,19 +48,18 @@ const chartConfig = {
  */
 export function ChartBarJobType({
   data,
-  periodLabel,
+  growth,
 }: {
   data: InterestSlice[]
-  periodLabel: string
+  growth: GrowthInsight
 }) {
   if (data.length === 0) {
     return (
-      <Card className="bg-white rounded-2xl border-slate-200">
+      <Card className="bg-white rounded-2xl border-slate-200 flex flex-col">
         <CardHeader>
           <CardTitle className="text-base">Interest by job type</CardTitle>
-          <CardDescription>Every tracked interaction, weighted equally</CardDescription>
         </CardHeader>
-        <CardContent className="h-[200px] flex items-center justify-center">
+        <CardContent className="flex-1 flex items-center justify-center pb-6">
           <p className="text-sm text-muted-foreground">No job types recorded yet</p>
         </CardContent>
       </Card>
@@ -69,12 +67,12 @@ export function ChartBarJobType({
   }
 
   return (
-    <Card className="bg-white rounded-2xl border-slate-200">
-      <CardHeader>
+    <Card className="bg-white rounded-2xl border-slate-200 flex flex-col">
+      <CardHeader className="space-y-1.5">
         <CardTitle className="text-base">Interest by job type</CardTitle>
-        <CardDescription>Every tracked interaction, weighted equally</CardDescription>
+        <InsightBadge insight={growth} />
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1">
         <ChartContainer
           config={chartConfig}
           className="w-full"
@@ -114,14 +112,6 @@ export function ChartBarJobType({
 
         <InterestTable data={data} dimensionLabel="Job type" />
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
-        <div className="flex gap-2 leading-none font-medium">
-          {leadSummary(data)} <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="leading-none text-muted-foreground">
-          Showing interest across job types for the last {periodLabel}
-        </div>
-      </CardFooter>
     </Card>
   )
 }

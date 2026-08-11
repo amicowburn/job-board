@@ -16,6 +16,9 @@ interface PageProps {
 }
 
 const PERIOD_NOUN: Record<Granularity, string> = {
+  // Never reached from this page — `day` is not offered by GranularitySelect —
+  // but the map has to be total over the union.
+  day: 'days',
   week: 'weeks',
   month: 'months',
   quarter: 'quarters',
@@ -32,15 +35,11 @@ export default async function AdminAnalyticsPage({ searchParams }: PageProps) {
     ? (range as Granularity)
     : 'month'
 
-  const { buckets, jobTypes, tags, actions, isEmpty } = await getAnalyticsSnapshot(granularity)
+  const { dailyBuckets, jobTypes, tags, actions, jobTypeGrowth, tagGrowth, isEmpty } =
+    await getAnalyticsSnapshot(granularity)
 
   const periodLabel = `${BUCKET_COUNT[granularity]} ${PERIOD_NOUN[granularity]}`
 
-  // Distinct visitors across the whole window, counted by Postgres over the
-  // whole window rather than derived from the chart. Summing the per-bucket
-  // bars would count a returning student once per period they showed up in,
-  // and taking their max would undercount everyone who visited only once.
-  const totalViewers = actions.view.visitors
 
   return (
     <div>
@@ -64,17 +63,13 @@ export default async function AdminAnalyticsPage({ searchParams }: PageProps) {
         <EmptyState />
       ) : (
         <div className="space-y-4">
-          <MetricCards actions={actions} totalViewers={totalViewers} periodLabel={periodLabel} />
+          <MetricCards actions={actions} />
 
-          <ChartViewersOverTime
-            data={buckets}
-            granularity={granularity}
-            periodLabel={periodLabel}
-          />
+          <ChartViewersOverTime data={dailyBuckets} />
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <ChartBarJobType data={jobTypes} periodLabel={periodLabel} />
-            <ChartBarTag data={tags} periodLabel={periodLabel} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
+            <ChartBarJobType data={jobTypes} growth={jobTypeGrowth} />
+            <ChartBarTag data={tags} growth={tagGrowth} />
           </div>
         </div>
       )}

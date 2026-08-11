@@ -14,6 +14,9 @@ import { GRANULARITIES } from '@/lib/analytics/constants'
 import type { Granularity } from '@/lib/types'
 
 const LABELS: Record<Granularity, string> = {
+  // Present only to keep the map total; GRANULARITIES omits 'day', so this
+  // option is never rendered.
+  day: 'Daily',
   week: 'Weekly',
   month: 'Monthly',
   quarter: 'Quarterly',

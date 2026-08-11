@@ -1,7 +1,9 @@
 import { unstable_cache } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { BUCKET_COUNT, REPORTING_TIMEZONE } from './constants'
-import { fillBuckets, normalizeActionCounts, topInterests } from './buckets'
+import { bucketWindow, fillBuckets, normalizeActionCounts, shiftBucket, topInterests } from './buckets'
+import { growthInsight } from './growth'
+import type { GrowthInsight } from './growth'
 import type { FilledBucket, InterestSlice } from './buckets'
 import type { ActionCountRow, ActionCounts, Granularity, InterestRow, ViewerBucket } from '@/lib/types'
 
@@ -21,10 +23,14 @@ const INTEREST_LIMIT = 8
 const INTEREST_FETCH_LIMIT = 50
 
 export interface AnalyticsSnapshot {
-  buckets: FilledBucket[]
+  /** 90 daily buckets powering the Total Visitors card's own range control. */
+  dailyBuckets: FilledBucket[]
   jobTypes: InterestSlice[]
   tags: InterestSlice[]
   actions: ActionCounts
+  /** Period-over-period movers, compared against the equal-length prior window. */
+  jobTypeGrowth: GrowthInsight
+  tagGrowth: GrowthInsight
   /** True when nothing was tracked in the window — the page says so rather than drawing empty axes. */
   isEmpty: boolean
 }
@@ -63,32 +69,89 @@ export async function getAnalyticsSnapshot(
       // One round trip each, issued together — they share a window but not a
       // shape, and unioning them in SQL would mean reconciling three different
       // row types for no saving.
-      const [viewers, interest, actions] = await Promise.all([
-        supabase.rpc('analytics_viewers_by_bucket', args),
+      const [interest, priorInterest, actions, daily, earliest] = await Promise.all([
         supabase.rpc('analytics_interest_breakdown', { ...args, p_limit: INTEREST_FETCH_LIMIT }),
+        // The equal-length window immediately before this one. Offsetting by
+        // the bucket count is what makes the growth figures period-over-period
+        // rather than a comparison against an arbitrary earlier stretch.
+        supabase.rpc('analytics_interest_breakdown', {
+          ...args,
+          p_limit: INTEREST_FETCH_LIMIT,
+          p_offset_buckets: buckets,
+        }),
         supabase.rpc('analytics_action_counts', args),
+        // Daily series for the Total Visitors card. Fetched at its widest range
+        // (90 days) so the card's 30d and 7d options are a client-side slice of
+        // this one result rather than a round trip per click.
+        supabase.rpc('analytics_viewers_by_bucket', {
+          p_granularity: 'day',
+          p_buckets: BUCKET_COUNT.day,
+          p_tz: REPORTING_TIMEZONE,
+        }),
+        // Oldest event on record. Used to decide whether the previous window is
+        // actually covered by tracked history — see below.
+        supabase
+          .from('analytics_events')
+          .select('occurred_at')
+          .order('occurred_at', { ascending: true })
+          .limit(1)
+          .maybeSingle(),
       ])
 
-      for (const { error } of [viewers, interest, actions]) {
+      for (const { error } of [interest, priorInterest, actions, daily, earliest]) {
         if (error) {
           console.error('Analytics query failed:', error)
           throw new Error('Failed to load analytics')
         }
       }
 
-      const viewerRows = (viewers.data ?? []) as ViewerBucket[]
       const interestRows = (interest.data ?? []) as InterestRow[]
+      const priorInterestRows = (priorInterest.data ?? []) as InterestRow[]
       const actionRows = (actions.data ?? []) as ActionCountRow[]
+      const dailyRows = (daily.data ?? []) as ViewerBucket[]
+
+      // Does tracked history actually reach back far enough to compare against?
+      // On the yearly view the previous window can start years before the first
+      // event ever recorded; the database returns a near-empty window and the
+      // division produces figures like "+5462% growth", which is not growth but
+      // the absence of history. Requiring full coverage keeps the dashboard from
+      // inventing a trend out of a gap.
+      const now = new Date()
+      const previousWindowStart = shiftBucket(
+        granularity,
+        bucketWindow(granularity, buckets, now, REPORTING_TIMEZONE).start,
+        -buckets,
+        REPORTING_TIMEZONE
+      )
+      const earliestEvent = (earliest.data as { occurred_at: string } | null)?.occurred_at
+      const historyCoversPreviousWindow =
+        earliestEvent !== undefined && new Date(earliestEvent) <= previousWindowStart
+
+      const jobTypes = topInterests(interestRows, 'job_type', INTEREST_LIMIT)
+      const tags = topInterests(interestRows, 'tag', INTEREST_LIMIT)
 
       // Bucket labels are derived here, inside the cache, from the same instant
       // the SQL used. Deriving them at read time instead would silently break
       // the moment a cached payload outlived a bucket boundary: the axis would
       // advance, the rows would not, and every bar would render as zero.
       return {
-        buckets: fillBuckets(viewerRows, granularity, buckets, new Date(), REPORTING_TIMEZONE),
-        jobTypes: topInterests(interestRows, 'job_type', INTEREST_LIMIT),
-        tags: topInterests(interestRows, 'tag', INTEREST_LIMIT),
+        dailyBuckets: fillBuckets(dailyRows, 'day', BUCKET_COUNT.day, now, REPORTING_TIMEZONE),
+        jobTypes,
+        tags,
         actions: normalizeActionCounts(actionRows),
+        // Growth is compared against the *unfolded* prior rows, not the top-N
+        // slice: a category can drop out of the visible top N between windows,
+        // and comparing against a truncated list would read that as a collapse.
+        jobTypeGrowth: growthInsight(
+          jobTypes,
+          topInterests(priorInterestRows, 'job_type', INTEREST_FETCH_LIMIT),
+          { subjectNoun: 'roles', historyCoversPreviousWindow }
+        ),
+        tagGrowth: growthInsight(
+          tags,
+          topInterests(priorInterestRows, 'tag', INTEREST_FETCH_LIMIT),
+          { historyCoversPreviousWindow }
+        ),
         isEmpty: actionRows.length === 0,
       }
     },

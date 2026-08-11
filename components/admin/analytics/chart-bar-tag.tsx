@@ -1,13 +1,10 @@
 'use client'
 
-import { TrendingUp } from 'lucide-react'
 import { Bar, BarChart, LabelList, XAxis, YAxis } from 'recharts'
 
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui'
@@ -23,9 +20,10 @@ import {
   InterestTable,
   formatCount,
   interestChartHeight,
-  leadSummary,
 } from './interest-shared'
+import { InsightBadge } from './insight-treatments'
 import type { InterestSlice } from '@/lib/analytics/buckets'
+import type { GrowthInsight } from '@/lib/analytics/growth'
 
 export const description = 'A horizontal bar chart of interest by tag'
 
@@ -46,19 +44,18 @@ const chartConfig = {
  */
 export function ChartBarTag({
   data,
-  periodLabel,
+  growth,
 }: {
   data: InterestSlice[]
-  periodLabel: string
+  growth: GrowthInsight
 }) {
   if (data.length === 0) {
     return (
-      <Card className="bg-white rounded-2xl border-slate-200">
+      <Card className="bg-white rounded-2xl border-slate-200 flex flex-col">
         <CardHeader>
           <CardTitle className="text-base">Interest by tag</CardTitle>
-          <CardDescription>Top tags across all tracked interactions</CardDescription>
         </CardHeader>
-        <CardContent className="h-[200px] flex items-center justify-center">
+        <CardContent className="flex-1 flex items-center justify-center pb-6">
           <p className="text-sm text-muted-foreground">No tags recorded yet</p>
         </CardContent>
       </Card>
@@ -66,12 +63,12 @@ export function ChartBarTag({
   }
 
   return (
-    <Card className="bg-white rounded-2xl border-slate-200">
-      <CardHeader>
+    <Card className="bg-white rounded-2xl border-slate-200 flex flex-col">
+      <CardHeader className="space-y-1.5">
         <CardTitle className="text-base">Interest by tag</CardTitle>
-        <CardDescription>Top tags across all tracked interactions</CardDescription>
+        <InsightBadge insight={growth} />
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1">
         <ChartContainer
           config={chartConfig}
           className="w-full"
@@ -111,14 +108,6 @@ export function ChartBarTag({
 
         <InterestTable data={data} dimensionLabel="Tag" />
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
-        <div className="flex gap-2 leading-none font-medium">
-          {leadSummary(data)} <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="leading-none text-muted-foreground">
-          Showing interest across tags for the last {periodLabel}
-        </div>
-      </CardFooter>
     </Card>
   )
 }

@@ -51,23 +51,6 @@ export function CategoryTick({
   )
 }
 
-/**
- * Footer line naming the leading category and its margin over the runner-up.
- *
- * Computed rather than hardcoded — a static "trending up 5.2%" would be a
- * decorative lie the moment the data moved.
- */
-export function leadSummary(data: InterestSlice[]): string {
-  if (data.length === 0) return 'No interactions recorded'
-  const [first, second] = data
-  if (!second || second.events === 0) return `${first.label} leads`
-
-  const margin = Math.round(((first.events - second.events) / second.events) * 100)
-  if (margin <= 0) return `${first.label} and ${second.label} are level`
-
-  return `${first.label} leads ${second.label} by ${margin}%`
-}
-
 export function InterestTable({
   data,
   dimensionLabel,

@@ -24,9 +24,14 @@ import type {
 
 const MS_PER_DAY = 86_400_000
 
-const MONTH_NAMES = [
+const SHORT_MONTH_NAMES = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+]
+
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
 ]
 
 interface ZonedParts {
@@ -122,6 +127,8 @@ export function bucketStart(
   const local = localDate(date, timeZone)
 
   switch (granularity) {
+    case 'day':
+      return startOfLocalDay(local, timeZone)
     case 'week': {
       const shifted = new Date(
         Date.UTC(local.year, local.month - 1, local.day) - isoWeekday(local) * MS_PER_DAY
@@ -163,9 +170,11 @@ export function shiftBucket(
   const local = localDate(bucket, timeZone)
 
   switch (granularity) {
+    case 'day':
     case 'week': {
+      const days = granularity === 'week' ? count * 7 : count
       const shifted = new Date(
-        Date.UTC(local.year, local.month - 1, local.day) + count * 7 * MS_PER_DAY
+        Date.UTC(local.year, local.month - 1, local.day) + days * MS_PER_DAY
       )
       return startOfLocalDay(
         {
@@ -224,45 +233,39 @@ export function bucketSeries(
   )
 }
 
-/** ISO-8601 week number and week-numbering year for a calendar date. */
-function isoWeek({ year, month, day }: ZonedParts): { week: number; year: number } {
-  // Thursday of this week decides which year the week belongs to.
-  const thursday = new Date(
-    Date.UTC(year, month - 1, day) + (3 - isoWeekday({ year, month, day })) * MS_PER_DAY
-  )
-  const isoYear = thursday.getUTCFullYear()
-
-  const jan4 = { year: isoYear, month: 1, day: 4 }
-  const firstThursday = new Date(
-    Date.UTC(isoYear, 0, 4) + (3 - isoWeekday(jan4)) * MS_PER_DAY
-  )
-
-  return {
-    week: 1 + Math.round((thursday.getTime() - firstThursday.getTime()) / (7 * MS_PER_DAY)),
-    year: isoYear,
-  }
-}
-
-/** Axis label for a bucket, e.g. `W32 2026`, `Aug 2026`, `Q3 2026`, `2026`. */
+/**
+ * Axis label for a bucket.
+ *
+ * One convention across the whole dashboard, keyed off granularity:
+ * `12 March` (week), `March 2026` (month and quarter), `2026` (year).
+ */
 export function bucketLabel(
   granularity: Granularity,
   bucket: Date,
   timeZone: string = REPORTING_TIMEZONE
 ): string {
   const local = localDate(bucket, timeZone)
+  const month = MONTH_NAMES[local.month - 1]
 
   switch (granularity) {
-    case 'week': {
-      // A week's ISO year is not always its calendar year: 29 Dec 2025 is a
-      // Monday belonging to ISO week 1 of 2026, and labelling it "2025" would
-      // put two W1 bars on the same axis.
-      const { week, year } = isoWeek(local)
-      return `W${week} ${year}`
-    }
+    // Short month and day, matching the reference design: "Apr 5". Days never
+    // carry a year — a 90-day axis is unambiguous without one.
+    case 'day':
+      return `${SHORT_MONTH_NAMES[local.month - 1]} ${local.day}`
+
+    // The bucket's opening day. Week labels carry no year: across a 12-week
+    // window the year is never in doubt, and "29 December" reads better than
+    // the ISO "W1 2026" it replaces — which was accurate but needed explaining.
+    case 'week':
+      return `${local.day} ${month}`
+
+    // Quarters are labelled by their opening month rather than "Q3 2026". Note
+    // this makes a quarter bucket visually identical to a month bucket; the
+    // card heading and the granularity control are what disambiguate them.
     case 'month':
-      return `${MONTH_NAMES[local.month - 1]} ${local.year}`
     case 'quarter':
-      return `Q${Math.floor((local.month - 1) / 3) + 1} ${local.year}`
+      return `${month} ${local.year}`
+
     case 'year':
       return String(local.year)
   }

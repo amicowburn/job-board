@@ -164,7 +164,12 @@ export interface JobSubmissionUpdate {
  * lower bound — it only exists for people who came back to the board.
  */
 export type AnalyticsEventType = 'view' | 'click' | 'apply' | 'apply_confirmed' | 'share'
-export type Granularity = 'week' | 'month' | 'quarter' | 'year'
+/**
+ * `day` exists for the Total Visitors card, which runs its own daily series
+ * independent of the page-level control. It is deliberately absent from
+ * GRANULARITIES so it never appears in the page's range picker.
+ */
+export type Granularity = 'day' | 'week' | 'month' | 'quarter' | 'year'
 
 export interface AnalyticsEvent {
   id: number

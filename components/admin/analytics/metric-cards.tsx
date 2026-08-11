@@ -3,47 +3,34 @@ import type { ActionCounts, AnalyticsEventType } from '@/lib/types'
 
 interface MetricCardsProps {
   actions: ActionCounts
-  /** Distinct visitors across the whole window, from the viewers series. */
-  totalViewers: number
-  periodLabel: string
 }
 
 /**
  * The headline counters.
  *
- * Each tile carries a second line naming how many distinct jobs the action
- * touched, because "number of jobs clicked" is genuinely ambiguous between the
- * event count and the job count, and showing only one invites the wrong reading.
+ * Each tile is a label, a number and one qualifying line — nothing else. The
+ * qualifier earns its place by saying something the label cannot: how many
+ * distinct jobs an action touched (because "jobs clicked" is ambiguous between
+ * the event count and the job count), or what the confirmed-application figure
+ * is a share of. The reporting window is stated once in the page header rather
+ * than repeated on every tile here.
+ *
+ * Apply clicks is deliberately not tiled, but the figure is still read below to
+ * express confirmed applications as a conversion rate — that ratio is what makes
+ * the Applications number interpretable.
  */
-const TRACKED: AnalyticsEventType[] = ['view', 'click', 'apply', 'share']
+const TRACKED: AnalyticsEventType[] = ['view', 'click', 'share']
 
-const DESCRIPTIONS: Record<AnalyticsEventType, string> = {
-  view: 'Job detail panels opened',
-  click: 'Listings opened from the board',
-  apply: 'Visitors sent to the employer',
-  apply_confirmed: 'Confirmed by the applicant on return',
-  share: 'Listing links copied',
-}
-
-export function MetricCards({ actions, totalViewers, periodLabel }: MetricCardsProps) {
+export function MetricCards({ actions }: MetricCardsProps) {
   const applyClicks = actions.apply.events
   const confirmed = actions.apply_confirmed.events
 
   // Share of people who left to apply and came back to say they finished.
   // Only meaningful once there is something to divide by.
-  const confirmRate =
-    applyClicks > 0 ? Math.round((confirmed / applyClicks) * 100) : null
+  const confirmRate = applyClicks > 0 ? Math.round((confirmed / applyClicks) * 100) : null
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      <Tile
-        label="Viewers"
-        value={totalViewers}
-        detail="Distinct visitors"
-        description={`Unique people over the last ${periodLabel}`}
-        emphasis
-      />
-
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {TRACKED.map((action) => (
         <Tile
           key={action}
@@ -52,15 +39,20 @@ export function MetricCards({ actions, totalViewers, periodLabel }: MetricCardsP
           detail={`${formatNumber(actions[action].distinct_jobs)} ${
             actions[action].distinct_jobs === 1 ? 'job' : 'jobs'
           }`}
-          description={DESCRIPTIONS[action]}
         />
       ))}
 
       <Tile
         label={ACTION_LABELS.apply_confirmed}
         value={confirmed}
-        detail={confirmRate === null ? 'No apply clicks yet' : `${confirmRate}% of apply clicks`}
-        description="Confirmed on return — a floor, not a total. Applicants who never come back are never counted."
+        // Kept, unlike the other descriptions: that this figure is a floor and
+        // not a total is the one thing a reader cannot infer from the label,
+        // and getting it wrong overstates how many people actually applied.
+        detail={
+          confirmRate === null
+            ? 'No apply clicks yet'
+            : `${confirmRate}% of apply clicks · confirmed on return, a floor`
+        }
         emphasis
       />
     </div>
@@ -71,13 +63,11 @@ function Tile({
   label,
   value,
   detail,
-  description,
   emphasis = false,
 }: {
   label: string
   value: number
   detail: string
-  description: string
   emphasis?: boolean
 }) {
   return (
@@ -93,8 +83,7 @@ function Tile({
       >
         {formatNumber(value)}
       </p>
-      <p className="text-xs text-slate-400 mt-0.5">{detail}</p>
-      <p className="text-[11px] text-slate-400 mt-2 leading-snug">{description}</p>
+      <p className="text-xs text-slate-400 mt-0.5 leading-snug">{detail}</p>
     </div>
   )
 }
