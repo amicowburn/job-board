@@ -20,23 +20,49 @@ export const EVENT_TYPES: readonly AnalyticsEventType[] = [
   'share',
 ]
 
-/** The page-level range picker. `day` is excluded on purpose — see Granularity. */
-export const GRANULARITIES: readonly Granularity[] = ['week', 'month', 'quarter', 'year']
+/**
+ * The dashboard's one time period.
+ *
+ * There used to be two controls: a granularity select (Weekly/Monthly/…) that
+ * decided what the server aggregated, and a range tab strip on the Total
+ * Visitors card that sliced its own series. Two controls over one page's sense
+ * of "when" meant the tiles could be reporting a quarter while the chart beside
+ * them showed a week — nothing on screen said which period any given number
+ * belonged to. This list is now the only answer to that question, and every
+ * figure on the page is cut from it.
+ */
+export const RANGES = [
+  { value: '90d', label: 'Last 3 months', days: 90 },
+  { value: '30d', label: 'Last 30 days', days: 30 },
+  { value: '7d', label: 'Last 7 days', days: 7 },
+] as const
+
+export type RangeOption = (typeof RANGES)[number]
+export type AnalyticsRange = RangeOption['value']
+
+/** Widest first, so the default shows the most history. */
+export const DEFAULT_RANGE: AnalyticsRange = RANGES[0].value
 
 /**
- * Buckets shown per granularity.
+ * Every window is cut into days.
  *
- * Tuned so each chart covers a comparable span of history without becoming
- * unreadable: 12 weeks is a semester, 12 months a year, 8 quarters two years.
+ * With the granularity picker gone there is one bucket size, which is what
+ * makes the ranges comparable: 90 daily points, 30, or 7. The coarser
+ * granularities still exist in `bucketStart` and friends — the SQL takes them,
+ * and a future report may want them — they are simply not something this page
+ * asks a reader to choose between any more.
  */
-export const BUCKET_COUNT: Record<Granularity, number> = {
-  // The widest range the Total Visitors card offers; 30d and 7d are sliced
-  // from this same fetch client-side rather than costing another round trip.
-  day: 90,
-  week: 12,
-  month: 12,
-  quarter: 8,
-  year: 5,
+export const RANGE_GRANULARITY: Granularity = 'day'
+
+/**
+ * The range named by a URL parameter, falling back to the default.
+ *
+ * Total by construction, which is the point: the value reaches a Postgres
+ * function, so an unrecognised `?range=` has to become a known option here
+ * rather than being passed through and rejected further down.
+ */
+export function resolveRange(value: string | null | undefined): RangeOption {
+  return RANGES.find((range) => range.value === value) ?? RANGES[0]
 }
 
 /**

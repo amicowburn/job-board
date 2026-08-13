@@ -1,9 +1,7 @@
 'use client'
 
-import * as React from 'react'
 import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts'
 
-import { useIsMobile } from '@/hooks/use-mobile'
 import {
   Card,
   CardContent,
@@ -17,17 +15,9 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/shadcn/chart'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/shadcn/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/shadcn/tabs'
 import type { FilledBucket } from '@/lib/analytics/buckets'
 
-export const description = 'An interactive area chart of total visitors'
+export const description = 'An area chart of total visitors over the reporting period'
 
 /**
  * Unchanged: MMSS purple for distinct viewers, orange for job views. The
@@ -45,99 +35,42 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-type TimeRange = '90d' | '30d' | '7d'
-
-const RANGE_OPTIONS: { value: TimeRange; label: string; days: number }[] = [
-  { value: '90d', label: 'Last 3 months', days: 90 },
-  { value: '30d', label: 'Last 30 days', days: 30 },
-  { value: '7d', label: 'Last 7 days', days: 7 },
-]
-
 /**
- * Total visitors over time, with its own range control.
+ * Total visitors over time, for whatever period the page is showing.
  *
- * The card owns its range rather than following the page-level picker: the tabs
- * sit in this header and change nothing else on the page. All 90 days arrive
- * from the server in one go and the shorter ranges are a slice of that array,
- * so switching is instant and costs no round trip.
+ * The card used to carry its own range tabs — a second time control that moved
+ * this chart and nothing else, so the series could be showing a week while the
+ * counters above it reported a quarter. The page-level control is now the only
+ * one, and the server sends exactly the days it asked for: no client-side
+ * slicing, no local range state, and one period stated once in the header.
  *
  * The two series are overlaid, not stacked. Job views already contains every
  * distinct viewer, so a stacked height would be a number that means nothing;
  * overlaying shows the gap between reach and repeat visits.
  */
-export function ChartViewersOverTime({ data }: { data: FilledBucket[] }) {
-  const isMobile = useIsMobile()
-  const [timeRange, setTimeRange] = React.useState<TimeRange>('90d')
-
-  React.useEffect(() => {
-    if (isMobile) setTimeRange('7d')
-  }, [isMobile])
-
-  const active = RANGE_OPTIONS.find((option) => option.value === timeRange) ?? RANGE_OPTIONS[0]
-
+export function ChartViewersOverTime({
+  data,
+  periodLabel,
+}: {
+  data: FilledBucket[]
+  /** Already lower-cased by the page, which owns the wording. */
+  periodLabel: string
+}) {
   return (
     <Card className="bg-white rounded-2xl border-slate-200">
-      {/*
-        Tabs wraps the whole card, not just the control. Radix points each
-        trigger's aria-controls at its panel, so a TabsList without a matching
-        TabsContent leaves those references dangling — the chart lives inside
-        the panels for that reason, and only the active one is mounted.
-      */}
-      <Tabs value={timeRange} onValueChange={(value) => setTimeRange(value as TimeRange)}>
-        <CardHeader className="flex flex-col gap-2 space-y-0 border-b py-5 sm:flex-row sm:items-center">
-          <div className="grid flex-1 gap-1">
-            <CardTitle className="text-base">Total Visitors</CardTitle>
-            {/* Tracks the active tab — the reference leaves this line static,
-                which reads as a bug the moment you switch range. */}
-            <CardDescription>Total for the {active.label.toLowerCase()}</CardDescription>
-          </div>
+      <CardHeader className="border-b py-5">
+        <CardTitle className="text-base">Total Visitors</CardTitle>
+        <CardDescription>Total for the {periodLabel}</CardDescription>
+      </CardHeader>
 
-          {/* Tabs on desktop; the same choices collapse into a select on narrow
-              screens, where three side-by-side triggers wrap. */}
-          <TabsList className="hidden sm:inline-flex">
-            {RANGE_OPTIONS.map((option) => (
-              <TabsTrigger key={option.value} value={option.value} className="px-4">
-                {option.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          <Select value={timeRange} onValueChange={(value) => setTimeRange(value as TimeRange)}>
-            <SelectTrigger
-              className="flex w-40 sm:hidden rounded-lg"
-              aria-label="Select a time range"
-            >
-              <SelectValue placeholder="Last 3 months" />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              {RANGE_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value} className="rounded-lg">
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </CardHeader>
-
-        <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-          {RANGE_OPTIONS.map((option) => (
-            <TabsContent key={option.value} value={option.value} className="mt-0">
-              {/* The server sends buckets oldest-first, so the most recent N
-                  days are the tail. Slicing beats filtering by date: the bucket
-                  boundaries were already resolved in Melbourne time server-side,
-                  and re-deriving them on the client risks disagreeing. */}
-              <RangePanel
-                buckets={data.slice(Math.max(0, data.length - option.days))}
-              />
-            </TabsContent>
-          ))}
-        </CardContent>
-      </Tabs>
+      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+        <VisitorsPanel buckets={data} />
+      </CardContent>
     </Card>
   )
 }
 
-function RangePanel({ buckets }: { buckets: FilledBucket[] }) {
+function VisitorsPanel({ buckets }: { buckets: FilledBucket[] }) {
   return (
     <>
       <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">

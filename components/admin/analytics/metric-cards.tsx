@@ -8,12 +8,19 @@ interface MetricCardsProps {
 /**
  * The headline counters.
  *
- * Each tile is a label, a number and one qualifying line — nothing else. The
- * qualifier earns its place by saying something the label cannot: how many
- * distinct jobs an action touched (because "jobs clicked" is ambiguous between
- * the event count and the job count), or what the confirmed-application figure
- * is a share of. The reporting window is stated once in the page header rather
- * than repeated on every tile here.
+ * One surface divided into four cells rather than four separate cards. The
+ * figures are short and the tiles were far wider than anything in them, so the
+ * card gaps and the six edges of padding between them were buying separation
+ * that a single hairline rule already provides. Value and qualifier share a
+ * baseline for the same reason — stacking them spent vertical space to leave
+ * the horizontal space emptier.
+ *
+ * Each cell is a label, a number and one qualifying line. The qualifier earns
+ * its place by saying something the label cannot: how many distinct jobs an
+ * action touched (because "jobs clicked" is ambiguous between the event count
+ * and the job count), or what the confirmed-application figure is a share of.
+ * The reporting window is stated once in the page header rather than repeated
+ * on every cell here.
  *
  * Apply clicks is deliberately not tiled, but the figure is still read below to
  * express confirmed applications as a conversion rate — that ratio is what makes
@@ -30,9 +37,12 @@ export function MetricCards({ actions }: MetricCardsProps) {
   const confirmRate = applyClicks > 0 ? Math.round((confirmed / applyClicks) * 100) : null
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div
+      className="bg-white rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1
+                 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-slate-100"
+    >
       {TRACKED.map((action) => (
-        <Tile
+        <Cell
           key={action}
           label={ACTION_LABELS[action]}
           value={actions[action].events}
@@ -42,7 +52,7 @@ export function MetricCards({ actions }: MetricCardsProps) {
         />
       ))}
 
-      <Tile
+      <Cell
         label={ACTION_LABELS.apply_confirmed}
         value={confirmed}
         // Kept, unlike the other descriptions: that this figure is a floor and
@@ -51,7 +61,7 @@ export function MetricCards({ actions }: MetricCardsProps) {
         detail={
           confirmRate === null
             ? 'No apply clicks yet'
-            : `${confirmRate}% of apply clicks · confirmed on return, a floor`
+            : `${confirmRate}% of apply clicks · a floor, not a total`
         }
         emphasis
       />
@@ -59,7 +69,7 @@ export function MetricCards({ actions }: MetricCardsProps) {
   )
 }
 
-function Tile({
+function Cell({
   label,
   value,
   detail,
@@ -71,19 +81,22 @@ function Tile({
   emphasis?: boolean
 }) {
   return (
-    <div
-      className={`bg-white rounded-2xl border shadow-sm p-4 ${
-        emphasis ? 'border-primary/30' : 'border-slate-200'
-      }`}
-    >
+    <div className="px-5 py-3.5">
       <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">{label}</p>
-      <p
-        className="text-[28px] leading-tight font-bold text-slate-800 mt-1"
-        style={{ fontFamily: 'var(--font-outfit)' }}
-      >
-        {formatNumber(value)}
-      </p>
-      <p className="text-xs text-slate-400 mt-0.5 leading-snug">{detail}</p>
+      <div className="flex items-baseline gap-2 flex-wrap mt-1.5">
+        <p
+          // Emphasis is carried by the brand colour rather than the outlined
+          // card it replaces: inside a divided strip a coloured border would
+          // read as a boundary between cells, not as weight on one figure.
+          className={`text-[26px] leading-none font-bold ${
+            emphasis ? 'text-primary' : 'text-slate-800'
+          }`}
+          style={{ fontFamily: 'var(--font-outfit)' }}
+        >
+          {formatNumber(value)}
+        </p>
+        <p className="text-[11px] text-slate-400 leading-snug">{detail}</p>
+      </div>
     </div>
   )
 }

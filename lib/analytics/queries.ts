@@ -1,11 +1,12 @@
 import { unstable_cache } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { BUCKET_COUNT, REPORTING_TIMEZONE } from './constants'
+import { RANGE_GRANULARITY, REPORTING_TIMEZONE, resolveRange } from './constants'
 import { bucketWindow, fillBuckets, normalizeActionCounts, shiftBucket, topInterests } from './buckets'
 import { growthInsight } from './growth'
 import type { GrowthInsight } from './growth'
 import type { FilledBucket, InterestSlice } from './buckets'
-import type { ActionCountRow, ActionCounts, Granularity, InterestRow, ViewerBucket } from '@/lib/types'
+import type { AnalyticsRange } from './constants'
+import type { ActionCountRow, ActionCounts, InterestRow, ViewerBucket } from '@/lib/types'
 
 /** Cache tag for the analytics dashboard. */
 export const ANALYTICS_TAG = 'analytics'
@@ -23,7 +24,7 @@ const INTEREST_LIMIT = 8
 const INTEREST_FETCH_LIMIT = 50
 
 export interface AnalyticsSnapshot {
-  /** 90 daily buckets powering the Total Visitors card's own range control. */
+  /** One bucket per day of the selected range, oldest first, gaps zero-filled. */
   dailyBuckets: FilledBucket[]
   jobTypes: InterestSlice[]
   tags: InterestSlice[]
@@ -53,16 +54,16 @@ export interface AnalyticsSnapshot {
  * anon key cannot read it even though this path bypasses RLS.
  */
 export async function getAnalyticsSnapshot(
-  granularity: Granularity
+  range: AnalyticsRange
 ): Promise<AnalyticsSnapshot> {
-  const buckets = BUCKET_COUNT[granularity]
+  const { days } = resolveRange(range)
 
   const load = unstable_cache(
     async (): Promise<AnalyticsSnapshot> => {
       const supabase = createAdminClient()
       const args = {
-        p_granularity: granularity,
-        p_buckets: buckets,
+        p_granularity: RANGE_GRANULARITY,
+        p_buckets: days,
         p_tz: REPORTING_TIMEZONE,
       }
 
@@ -77,17 +78,14 @@ export async function getAnalyticsSnapshot(
         supabase.rpc('analytics_interest_breakdown', {
           ...args,
           p_limit: INTEREST_FETCH_LIMIT,
-          p_offset_buckets: buckets,
+          p_offset_buckets: days,
         }),
         supabase.rpc('analytics_action_counts', args),
-        // Daily series for the Total Visitors card. Fetched at its widest range
-        // (90 days) so the card's 30d and 7d options are a client-side slice of
-        // this one result rather than a round trip per click.
-        supabase.rpc('analytics_viewers_by_bucket', {
-          p_granularity: 'day',
-          p_buckets: BUCKET_COUNT.day,
-          p_tz: REPORTING_TIMEZONE,
-        }),
+        // Daily series for the Total Visitors card, over the same window as
+        // everything else. It used to fetch a fixed 90 days regardless, because
+        // the card sliced its own shorter ranges client-side; with one control
+        // for the page there is nothing left to slice.
+        supabase.rpc('analytics_viewers_by_bucket', args),
         // Oldest event on record. Used to decide whether the previous window is
         // actually covered by tracked history — see below.
         supabase
@@ -111,16 +109,16 @@ export async function getAnalyticsSnapshot(
       const dailyRows = (daily.data ?? []) as ViewerBucket[]
 
       // Does tracked history actually reach back far enough to compare against?
-      // On the yearly view the previous window can start years before the first
-      // event ever recorded; the database returns a near-empty window and the
-      // division produces figures like "+5462% growth", which is not growth but
-      // the absence of history. Requiring full coverage keeps the dashboard from
-      // inventing a trend out of a gap.
+      // On the widest range the previous window starts six months back, which
+      // can be before the first event ever recorded; the database returns a
+      // near-empty window and the division produces figures like "+5462%
+      // growth", which is not growth but the absence of history. Requiring full
+      // coverage keeps the dashboard from inventing a trend out of a gap.
       const now = new Date()
       const previousWindowStart = shiftBucket(
-        granularity,
-        bucketWindow(granularity, buckets, now, REPORTING_TIMEZONE).start,
-        -buckets,
+        RANGE_GRANULARITY,
+        bucketWindow(RANGE_GRANULARITY, days, now, REPORTING_TIMEZONE).start,
+        -days,
         REPORTING_TIMEZONE
       )
       const earliestEvent = (earliest.data as { occurred_at: string } | null)?.occurred_at
@@ -135,7 +133,7 @@ export async function getAnalyticsSnapshot(
       // the moment a cached payload outlived a bucket boundary: the axis would
       // advance, the rows would not, and every bar would render as zero.
       return {
-        dailyBuckets: fillBuckets(dailyRows, 'day', BUCKET_COUNT.day, now, REPORTING_TIMEZONE),
+        dailyBuckets: fillBuckets(dailyRows, RANGE_GRANULARITY, days, now, REPORTING_TIMEZONE),
         jobTypes,
         tags,
         actions: normalizeActionCounts(actionRows),
@@ -155,7 +153,7 @@ export async function getAnalyticsSnapshot(
         isEmpty: actionRows.length === 0,
       }
     },
-    ['analytics', granularity],
+    ['analytics', range],
     { tags: [ANALYTICS_TAG], revalidate: 300 }
   )
 

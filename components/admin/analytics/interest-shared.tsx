@@ -3,52 +3,51 @@ import type { InterestSlice } from '@/lib/analytics/buckets'
 /**
  * Pieces shared by the two interest charts.
  *
- * They render the same measure on two different dimensions, so the row height,
- * the table view and the footer summary are identical by definition. Keeping
- * them in one place stops the pair drifting apart.
+ * They render the same measure on two different dimensions, so the number
+ * formatting and the table view are identical by definition. Keeping them in
+ * one place stops the pair drifting apart.
+ *
+ * The charts no longer share a shape: job type reads as columns and tag as
+ * rows, because a closed six-value enum and a long free-text tail want
+ * different layouts. The category-axis tick and its 112px gutter that used to
+ * live here went with that change — neither chart reserves an axis for labels
+ * any more.
  */
-
-/** Enough room per row to keep bars thin, with a floor so a two-row chart isn't a sliver. */
-export function interestChartHeight(rowCount: number): number {
-  return Math.max(180, rowCount * 34 + 24)
-}
-
-/** Width reserved for the category axis. */
-export const INTEREST_AXIS_WIDTH = 112
-
-/** Longest label that fits that width on one line at 11px. */
-const MAX_LABEL_CHARS = 17
-
-export const formatCount = (value: number | string) =>
-  new Intl.NumberFormat('en-AU').format(Number(value) || 0)
 
 /**
- * Single-line category tick.
+ * Height of the job-type columns.
  *
- * Recharts' default tick word-wraps anything wider than the axis, which turns a
- * free-form tag like "Brand campaign" into two stacked lines that collide with
- * its neighbours at these row heights. Truncating on one line keeps the rows
- * readable; the full label stays in the tooltip and the table.
+ * Fixed rather than derived from the category count: the enum has six values,
+ * so the column count barely moves, and a fixed height lets the card sit level
+ * with the tag chart beside it.
  */
-export function CategoryTick({
-  x,
-  y,
-  payload,
-}: {
-  x?: number
-  y?: number
-  payload?: { value?: string | number }
-}) {
-  const label = String(payload?.value ?? '')
-  const shown =
-    label.length > MAX_LABEL_CHARS ? `${label.slice(0, MAX_LABEL_CHARS - 1)}…` : label
+export const COLUMN_CHART_HEIGHT = 200
 
-  return (
-    <text x={x} y={y} dy={4} textAnchor="end" className="fill-muted-foreground" fontSize={11}>
-      <title>{label}</title>
-      {shown}
-    </text>
-  )
+/**
+ * Height of the tag rows.
+ *
+ * Tighter per row than the version with a category axis — the label now sits on
+ * the bar rather than beside it, so the row only has to be tall enough for the
+ * bar itself.
+ */
+export function rowChartHeight(rowCount: number): number {
+  return Math.max(160, rowCount * 30 + 16)
+}
+
+/**
+ * Takes `unknown` rather than `number | string`: Recharts' LabelFormatter is
+ * typed against RenderableText, which admits undefined, so a narrower parameter
+ * is not assignable to it.
+ */
+export const formatCount = (value: unknown): string =>
+  new Intl.NumberFormat('en-AU').format(Number(value) || 0)
+
+/** Longest category label drawn on a chart before it is cut. */
+export const MAX_LABEL_CHARS = 17
+
+/** Truncation for chart labels. The full text stays in the tooltip and the table. */
+export function truncateLabel(label: string, max: number = MAX_LABEL_CHARS): string {
+  return label.length > max ? `${label.slice(0, max - 1)}…` : label
 }
 
 export function InterestTable({

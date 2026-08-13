@@ -1,11 +1,10 @@
 import { getAnalyticsSnapshot } from '@/lib/analytics/queries'
-import { BUCKET_COUNT, GRANULARITIES } from '@/lib/analytics/constants'
-import { GranularitySelect } from '@/components/admin/analytics/granularity-select'
+import { resolveRange } from '@/lib/analytics/constants'
+import { RangeTabs } from '@/components/admin/analytics/range-tabs'
 import { MetricCards } from '@/components/admin/analytics/metric-cards'
 import { ChartViewersOverTime } from '@/components/admin/analytics/chart-viewers-over-time'
 import { ChartBarJobType } from '@/components/admin/analytics/chart-bar-job-type'
 import { ChartBarTag } from '@/components/admin/analytics/chart-bar-tag'
-import type { Granularity } from '@/lib/types'
 
 export const metadata = {
   title: 'User Analytics | Admin | MMSS Job Board',
@@ -15,31 +14,20 @@ interface PageProps {
   searchParams: Promise<{ range?: string }>
 }
 
-const PERIOD_NOUN: Record<Granularity, string> = {
-  // Never reached from this page — `day` is not offered by GranularitySelect —
-  // but the map has to be total over the union.
-  day: 'days',
-  week: 'weeks',
-  month: 'months',
-  quarter: 'quarters',
-  year: 'years',
-}
-
 export default async function AdminAnalyticsPage({ searchParams }: PageProps) {
   const { range } = await searchParams
 
-  // Validated against the whitelist rather than passed through: the value
-  // reaches a Postgres function, and `date_trunc` will happily take strings
-  // this dashboard has no charts for.
-  const granularity: Granularity = GRANULARITIES.includes(range as Granularity)
-    ? (range as Granularity)
-    : 'month'
+  // Resolved against the known ranges rather than passed through: the value
+  // reaches a Postgres function, and an unrecognised period has to become a
+  // real one here rather than further down.
+  const period = resolveRange(range)
 
   const { dailyBuckets, jobTypes, tags, actions, jobTypeGrowth, tagGrowth, isEmpty } =
-    await getAnalyticsSnapshot(granularity)
+    await getAnalyticsSnapshot(period.value)
 
-  const periodLabel = `${BUCKET_COUNT[granularity]} ${PERIOD_NOUN[granularity]}`
-
+  // "Last 3 months" reads as "last 3 months" mid-sentence, and as a tab label
+  // in title case — one string, two positions.
+  const periodLabel = period.label.toLowerCase()
 
   return (
     <div>
@@ -52,11 +40,11 @@ export default async function AdminAnalyticsPage({ searchParams }: PageProps) {
             User Analytics
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Anonymous engagement across the job board — last {periodLabel}, Melbourne time
+            Anonymous engagement across the job board — {periodLabel}, Melbourne time
           </p>
         </div>
 
-        <GranularitySelect current={granularity} />
+        <RangeTabs current={period.value} />
       </div>
 
       {isEmpty ? (
@@ -65,7 +53,7 @@ export default async function AdminAnalyticsPage({ searchParams }: PageProps) {
         <div className="space-y-4">
           <MetricCards actions={actions} />
 
-          <ChartViewersOverTime data={dailyBuckets} />
+          <ChartViewersOverTime data={dailyBuckets} periodLabel={periodLabel} />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
             <ChartBarJobType data={jobTypes} growth={jobTypeGrowth} />

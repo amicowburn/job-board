@@ -1,6 +1,6 @@
 'use client'
 
-import { Bar, BarChart, LabelList, XAxis, YAxis } from 'recharts'
+import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from 'recharts'
 
 import {
   Card,
@@ -15,17 +15,16 @@ import {
   type ChartConfig,
 } from '@/components/shadcn/chart'
 import {
-  CategoryTick,
-  INTEREST_AXIS_WIDTH,
+  COLUMN_CHART_HEIGHT,
   InterestTable,
   formatCount,
-  interestChartHeight,
+  truncateLabel,
 } from './interest-shared'
 import { InsightBadge } from './insight-treatments'
 import type { InterestSlice } from '@/lib/analytics/buckets'
 import type { GrowthInsight } from '@/lib/analytics/growth'
 
-export const description = 'A horizontal bar chart of interest by job type'
+export const description = 'A bar chart of interest by job type'
 
 const chartConfig = {
   events: {
@@ -37,10 +36,12 @@ const chartConfig = {
 /**
  * Which job categories visitors engage with.
  *
- * Horizontal bars rather than a pie: these categories routinely land within a
- * few percent of each other, and near-equal slice angles are very hard to rank
- * by eye where bar lengths are trivially comparable. Bars also leave room for
- * the value on every row instead of pushing it into a legend.
+ * Columns rather than rows, unlike the tag chart beside it. `job_type` is a
+ * closed enum of six values with short, one-word names, so they fit as axis
+ * ticks — and once the category axis is horizontal the 112px gutter the rows
+ * version reserved on the left disappears, along with the truncation it forced
+ * on every label. The chart is also half the height it was: six columns need
+ * 200px, where six rows plus their padding needed nearly 300.
  *
  * Every event type counts, not just views: an apply click is a stronger
  * interest signal than a view, and excluding it would understate the categories
@@ -76,31 +77,37 @@ export function ChartBarJobType({
         <ChartContainer
           config={chartConfig}
           className="w-full"
-          style={{ height: interestChartHeight(data.length) }}
+          style={{ height: COLUMN_CHART_HEIGHT }}
         >
-          <BarChart
-            accessibilityLayer
-            data={data}
-            layout="vertical"
-            margin={{ left: 0, right: 48 }}
-          >
-            <XAxis type="number" dataKey="events" hide />
-            <YAxis
+          {/* Top margin is for the value labels, which sit above the columns
+              and would otherwise be clipped by the plot area. */}
+          <BarChart accessibilityLayer data={data} margin={{ top: 18 }}>
+            <CartesianGrid vertical={false} />
+            {/* Hidden, but declared: Recharts' default domain rounds the top up
+                to a "nice" number, which on 420 means a 500-high plot and a
+                sixth of the card given over to blank space above the tallest
+                column. There are no tick labels to make round numbers legible,
+                so nothing is lost by ending the scale at the data. */}
+            <YAxis dataKey="events" type="number" domain={[0, 'dataMax']} hide />
+            <XAxis
               dataKey="label"
-              type="category"
-              tick={<CategoryTick />}
               tickLine={false}
               tickMargin={10}
               axisLine={false}
-              width={INTEREST_AXIS_WIDTH}
+              // Recharts drops ticks that would collide, which on a category
+              // axis means silently unlabelled columns. With six of them there
+              // is room for all six, so every column is labelled explicitly.
+              interval={0}
+              fontSize={11}
+              tickFormatter={(value: string) => truncateLabel(value, 12)}
             />
             <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-            <Bar dataKey="events" fill="var(--color-events)" radius={5} isAnimationActive={false}>
+            <Bar dataKey="events" fill="var(--color-events)" radius={6} isAnimationActive={false}>
               {/* Direct labels are the relief that keeps these bars readable
                   regardless of the fill's contrast against the card. */}
               <LabelList
                 dataKey="events"
-                position="right"
+                position="top"
                 offset={8}
                 className="fill-muted-foreground"
                 fontSize={11}

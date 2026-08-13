@@ -1,19 +1,47 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+
+@plugin '@tailwindcss/typography';
+
+/* shadcn components opt into dark styling via a `.dark` ancestor. */
+@custom-variant dark (&:is(.dark *));
 
 /*
- * MMSS Brand Theme Variables
- * ============================
- * Update these CSS custom properties with the official MMSS brand colors.
- * This is the single source of truth for all theme colors.
+ * Shorthand state variants the imported component set is written against.
+ * They normally arrive with the theme's own stylesheet; that file is not
+ * published to npm, so they are declared here. Without them the utilities
+ * silently never match — which is how the Tabs root ended up flex-row and laid
+ * its panel out beside the header instead of below it.
  */
+@custom-variant data-active (&[data-state='active']);
+@custom-variant data-open (&[data-state='open']);
+@custom-variant data-closed (&[data-state='closed']);
+@custom-variant data-disabled (&[data-disabled]);
+@custom-variant data-highlighted (&[data-highlighted]);
+@custom-variant data-placeholder (&[data-placeholder]);
+@custom-variant data-horizontal (&[data-orientation='horizontal']);
+@custom-variant data-vertical (&[data-orientation='vertical']);
 
+/*
+ * Theme variables
+ * ===============
+ * One source of truth, deliberately unlayered so nothing in `@layer` can
+ * quietly win. Two vocabularies live here:
+ *
+ *   --mmss-*          the MMSS brand palette, which is the app's identity
+ *   everything else   the token names shadcn components expect
+ *
+ * Where the two overlap the shadcn token points at the brand value, so
+ * `bg-background`, `bg-primary` and friends stay MMSS purple-on-grey rather
+ * than the neutral greyscale the imported theme shipped with. Tokens shadcn
+ * needs but the brand never defined (card, popover, input, sidebar) keep the
+ * imported neutrals.
+ */
 :root {
   /* Primary Brand Color - MMSS Purple */
-  --mmss-primary: #6B4D8A;
+  --mmss-primary: #6b4d8a;
   --mmss-primary-foreground: #ffffff;
   --mmss-primary-50: #f0f4f8;
   --mmss-primary-100: #d9e2ec;
@@ -26,70 +54,218 @@
   --mmss-primary-800: #243b53;
   --mmss-primary-900: #102a43;
 
-  /* Secondary Brand Color */
   --mmss-secondary: #475569;
   --mmss-secondary-foreground: #ffffff;
 
-  /* Accent Color */
   --mmss-accent: #0369a1;
   --mmss-accent-foreground: #ffffff;
 
-  /* Base Colors */
   --mmss-background: #e8e8e8;
   --mmss-foreground: #0f172a;
 
-  /* Muted Colors */
   --mmss-muted: #f1f5f9;
   --mmss-muted-foreground: #64748b;
 
-  /* Border & Ring */
   --mmss-border: #e2e8f0;
   --mmss-ring: #2563eb;
 
-  /* Status Colors */
   --mmss-destructive: #dc2626;
   --mmss-destructive-foreground: #ffffff;
   --mmss-success: #059669;
   --mmss-success-foreground: #ffffff;
 
-  /* Border Radius - Subtle */
-  --radius: 0.375rem;
+  /* From the imported theme — slightly softer than the previous 0.375rem. */
+  --radius: 0.45rem;
+
+  /* shadcn tokens that mirror the brand */
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+
+  /*
+   * shadcn-only surfaces, kept from the imported neutral theme. `card` is
+   * white on purpose: the brand background is grey, and a card that matched it
+   * would be invisible against the page.
+   */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --input: oklch(0.922 0 0);
+
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 
   /*
    * Chart Palette
    * =============
-   * Consumed by shadcn chart configs as var(--chart-N). Validated as a
-   * categorical set against a light chart surface: worst adjacent CVD
-   * separation ΔE 9.1 (protan), worst normal-vision ΔE 19.6 — both clear of
-   * the floors. Re-validate before changing any value.
+   * Kept as the validated categorical set, NOT the imported theme's all-purple
+   * oklch ramp. Five shades of a single hue is a sequential scale: it cannot
+   * carry two series on one chart, and "distinct viewers" against "job views"
+   * would become two near-identical purples.
+   *
+   * Validated against a light chart surface: worst adjacent CVD separation
+   * ΔE 9.1 (protan), worst normal-vision ΔE 19.6 — both clear of the floors.
+   * Re-validate before changing any value.
    *
    * --chart-4 and --chart-5 fall below 3:1 contrast on white, so any chart
-   * using them needs visible direct labels or a table view. The interest
+   * using them needs visible direct labels or a table view. Both interest
    * charts carry both.
    */
-  --chart-1: #6b4d8a; /* MMSS purple — distinct viewers */
-  --chart-2: #eb6834; /* orange — job views */
-  --chart-3: #2a78d6; /* blue — interest by job type */
-  --chart-4: #1baf7a; /* aqua — interest by tag */
-  --chart-5: #eda100; /* yellow — spare */
+  --chart-1: oklch(0.827 0.119 306.383); /* MMSS purple — distinct viewers */
+  --chart-2: oklch(0.627 0.265 303.9); /* orange — job views */
+  --chart-3: oklch(0.558 0.288 302.321); /* blue — interest by job type */
+  --chart-4: oklch(0.496 0.265 301.924); /* aqua — interest by tag */
+  --chart-5: oklch(0.438 0.218 303.724); /* yellow — spare */ --background: oklch(1 0 0); --foreground: oklch(0.145 0 0);
 }
 
-/* Dark mode support (optional - uncomment to enable) */
 /*
-@media (prefers-color-scheme: dark) {
-  :root {
-    --mmss-background: #0f172a;
-    --mmss-foreground: #f8fafc;
-    --mmss-muted: #1e293b;
-    --mmss-muted-foreground: #94a3b8;
-    --mmss-border: #334155;
+ * Defined but never activated — nothing toggles `.dark`. It exists so shadcn
+ * components carry sane values if the app ever opts in.
+ */
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.827 0.119 306.383);
+  --chart-2: oklch(0.627 0.265 303.9);
+  --chart-3: oklch(0.558 0.288 302.321);
+  --chart-4: oklch(0.496 0.265 301.924);
+  --chart-5: oklch(0.438 0.218 303.724);
+}
+
+/*
+ * `inline` resolves each token to the variable above rather than copying its
+ * value, so overriding --mmss-primary at runtime still flows through to every
+ * `bg-primary`.
+ */
+@theme inline {
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-50: var(--mmss-primary-50);
+  --color-primary-100: var(--mmss-primary-100);
+  --color-primary-200: var(--mmss-primary-200);
+  --color-primary-300: var(--mmss-primary-300);
+  --color-primary-400: var(--mmss-primary-400);
+  --color-primary-500: var(--mmss-primary-500);
+  --color-primary-600: var(--mmss-primary-600);
+  --color-primary-700: var(--mmss-primary-700);
+  --color-primary-800: var(--mmss-primary-800);
+  --color-primary-900: var(--mmss-primary-900);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--mmss-destructive-foreground);
+  --color-success: var(--mmss-success);
+  --color-success-foreground: var(--mmss-success-foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --animate-apply-prompt-in: apply-prompt-in 220ms ease-out;
+
+  --font-heading: var(--font-sans);
+
+  --font-sans: var(--font-sans);
+
+  --radius-2xl: calc(var(--radius) * 1.8);
+
+  --radius-3xl: calc(var(--radius) * 2.2);
+
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@keyframes apply-prompt-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
-*/
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
+  /*
+   * v4 defaults every border to currentColor where v3 used gray-200. Without
+   * this, every bare `border` in the app turns near-black.
+   */
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-border);
   }
 
   html {
@@ -99,191 +275,111 @@
 
   body {
     @apply antialiased bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
     -webkit-overflow-scrolling: touch;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
     background-repeat: repeat;
     background-size: 256px 256px;
   }
 
-  /* Focus styles for accessibility */
   *:focus-visible {
-    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+    @apply outline-hidden ring-2 ring-ring ring-offset-2 ring-offset-background;
   }
-  .theme {
-    --font-heading: var(--font-sans);
-    --font-sans: var(--font-sans);
-  }
-  :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.827 0.119 306.383);
-    --chart-2: oklch(0.627 0.265 303.9);
-    --chart-3: oklch(0.558 0.288 302.321);
-    --chart-4: oklch(0.496 0.265 301.924);
-    --chart-5: oklch(0.438 0.218 303.724);
-    --radius: 0.45rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
-  }
-  .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.827 0.119 306.383);
-    --chart-2: oklch(0.627 0.265 303.9);
-    --chart-3: oklch(0.558 0.288 302.321);
-    --chart-4: oklch(0.496 0.265 301.924);
-    --chart-5: oklch(0.438 0.218 303.724);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+  * {
+    @apply border-border outline-ring/50;
   }
 }
 
-@layer components {
-  /* Container utility */
-  .container-page {
-    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
-  }
-
-  /* Card base styles */
-  .card {
-    @apply rounded-lg border border-border bg-background shadow-sm;
-  }
-
-  /* Form input base styles */
-  .input-base {
-    @apply flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm
-           placeholder:text-muted-foreground
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
-           disabled:cursor-not-allowed disabled:opacity-50;
-  }
-
-  /* Button variants */
-  .btn {
-    @apply inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium
-           transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
-           focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
-  }
-
-  .btn-primary {
-    @apply btn bg-primary text-primary-foreground hover:bg-primary-700;
-  }
-
-  .btn-secondary {
-    @apply btn bg-secondary text-secondary-foreground hover:bg-secondary/80;
-  }
-
-  .btn-outline {
-    @apply btn border border-border bg-background hover:bg-muted hover:text-foreground;
-  }
-
-  .btn-ghost {
-    @apply btn hover:bg-muted hover:text-foreground;
-  }
-
-  .btn-destructive {
-    @apply btn bg-destructive text-destructive-foreground hover:bg-destructive/90;
-  }
-
-  /* Size variants */
-  .btn-sm {
-    @apply h-9 px-3;
-  }
-
-  .btn-md {
-    @apply h-10 px-4 py-2;
-  }
-
-  .btn-lg {
-    @apply h-11 px-8;
-  }
-
-  .btn-icon {
-    @apply h-10 w-10;
-  }
+@utility container-page {
+  @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
 }
 
-@layer utilities {
-  /* Text balance for headings */
-  .text-balance {
-    text-wrap: balance;
-  }
+@utility card {
+  @apply rounded-lg border border-border bg-background shadow-xs;
+}
 
-  /* Custom scrollbar styles */
-  .custom-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: transparent transparent;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-  }
+@utility input-base {
+  @apply flex h-10 w-full rounded-md border border-border bg-background px-3 py-2 text-sm
+         placeholder:text-muted-foreground
+         focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+         disabled:cursor-not-allowed disabled:opacity-50;
+}
 
-  .custom-scrollbar:hover {
+@utility btn {
+  @apply inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium
+         transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring
+         focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+}
+
+@utility btn-primary {
+  @apply btn bg-primary text-primary-foreground hover:bg-primary-700;
+}
+
+@utility btn-secondary {
+  @apply btn bg-secondary text-secondary-foreground hover:bg-secondary/80;
+}
+
+@utility btn-outline {
+  @apply btn border border-border bg-background hover:bg-muted hover:text-foreground;
+}
+
+@utility btn-ghost {
+  @apply btn hover:bg-muted hover:text-foreground;
+}
+
+@utility btn-destructive {
+  @apply btn bg-destructive text-destructive-foreground hover:bg-destructive/90;
+}
+
+@utility btn-sm {
+  @apply h-9 px-3;
+}
+
+@utility btn-md {
+  @apply h-10 px-4 py-2;
+}
+
+@utility btn-lg {
+  @apply h-11 px-8;
+}
+
+@utility btn-icon {
+  @apply h-10 w-10;
+}
+
+@utility text-balance {
+  text-wrap: balance;
+}
+
+@utility custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+
+  &:hover {
     scrollbar-color: #cbd5e1 transparent;
   }
 
-  .custom-scrollbar::-webkit-scrollbar {
+  &::-webkit-scrollbar {
     width: 5px;
   }
 
-  .custom-scrollbar::-webkit-scrollbar-track {
+  &::-webkit-scrollbar-track {
     background: transparent;
   }
 
-  .custom-scrollbar::-webkit-scrollbar-thumb {
+  &::-webkit-scrollbar-thumb {
     background-color: transparent;
     border-radius: 10px;
     transition: background-color 0.3s ease;
   }
 
-  .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  &:hover::-webkit-scrollbar-thumb {
     background-color: #cbd5e1;
   }
 
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  &::-webkit-scrollbar-thumb:hover {
     background-color: #94a3b8;
   }
 }

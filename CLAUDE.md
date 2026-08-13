@@ -5,10 +5,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm run dev      # localhost:3000
+npm run dev      # localhost:3000 (starts local Supabase first if it is down)
 npm run build
 npm run lint
+npm test
+npm run db:start # supabase start — needs Docker running
+npm run db:stop
 ```
+
+## Local Supabase
+
+`.env.local` points at the **local** stack (`http://127.0.0.1:54321`), and the keys
+in it are local keys — the hosted project rejects them. So the app has no database
+until `supabase start` is up, and Docker does not survive a reboot.
+
+When it is down, every request fails with `ECONNREFUSED 127.0.0.1:54321` and the
+board renders "No jobs found", which looks exactly like an empty database rather
+than a missing one. `scripts/dev-preflight.mjs` runs as `predev` to catch this: it
+probes the URL, starts the stack if Docker is up, and otherwise prints the fix.
+It never fails the build — a broken Docker must not make `npm run dev` unrunnable.
 
 ## Next.js Version Warning
 
