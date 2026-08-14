@@ -37,9 +37,9 @@ export default async function AdminLayout({
   return (
     <div className="min-h-screen flex flex-col bg-[#e8e8e8]">
       {user && (
-        <header className="sticky top-0 z-50 px-[15px] py-[10px]">
-          <div className="max-w-[1200px] mx-auto">
-            <div className="bg-white rounded-[15px] px-4 sm:px-[15px] flex items-center justify-between h-[50px] shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+        <header className="sticky top-0 z-50 px-[4vw] py-[10px]">
+          <div>
+            <div className="bg-white rounded-[15px] px-4 sm:px-[15px] flex items-center justify-between h-[50px] backdrop-blur-[10px]">
               {/* Left: logo + Admin label + nav */}
               <div className="flex items-center gap-4">
                 <Link href="/admin/jobs" className="flex items-center gap-2 shrink-0">
