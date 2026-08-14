@@ -236,8 +236,8 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
         </div>
       )}
 
-      {/* Table */}
-      <div className="overflow-x-auto">
+      {/* Table — desktop */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-100">
@@ -308,6 +308,74 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Cards — mobile. Same data, same badge variants, same action logic
+          and selection state as the table above — bulk select-and-deactivate
+          works identically here, not a reduced feature set. */}
+      <div className="md:hidden divide-y divide-slate-50">
+        {filteredJobs.length > 0 && (
+          <div className="px-5 py-2.5 flex items-center gap-2 bg-slate-50 border-b border-slate-100">
+            <input
+              type="checkbox"
+              checked={selectedJobs.size === filteredJobs.length && filteredJobs.length > 0}
+              onChange={handleSelectAll}
+              className="rounded border-slate-300"
+            />
+            <span className="text-[11px] uppercase tracking-wide text-slate-500 font-medium">
+              Select all
+            </span>
+          </div>
+        )}
+        {filteredJobs.map((job) => (
+          <div key={job.id} className="px-5 py-4 flex gap-3">
+            <input
+              type="checkbox"
+              checked={selectedJobs.has(job.id)}
+              onChange={() => handleToggleSelect(job.id)}
+              className="rounded border-slate-300 mt-1 shrink-0"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-medium text-slate-800">{job.title}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">{job.company}</p>
+                </div>
+                <Badge variant={job.source === 'manual' ? 'secondary' : 'outline'} className="rounded-full shrink-0">
+                  {job.source}
+                </Badge>
+              </div>
+
+              <div className="flex flex-wrap gap-1 mt-2">
+                <Badge variant={job.is_active ? 'success' : 'destructive'} className="rounded-full">
+                  {job.is_active ? 'Active' : 'Inactive'}
+                </Badge>
+                {job.is_featured && <Badge variant="warning" className="rounded-full">Featured</Badge>}
+                {job.is_sponsored && <Badge variant="default" className="rounded-full">Sponsored</Badge>}
+              </div>
+
+              <div className="flex items-center justify-between mt-3">
+                <span className="text-xs text-slate-400">
+                  {formatDate(job.posted_at || job.created_at)}
+                </span>
+                <div className="flex gap-1">
+                  <Link href={`/admin/jobs/${job.id}/edit`}>
+                    <Button variant="ghost" size="sm">Edit</Button>
+                  </Link>
+                  {job.is_active ? (
+                    <Button variant="ghost" size="sm" onClick={() => handleDeactivate(job.id)}>
+                      Deactivate
+                    </Button>
+                  ) : (
+                    <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDelete(job.id)}>
+                      Delete
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {filteredJobs.length === 0 && (
