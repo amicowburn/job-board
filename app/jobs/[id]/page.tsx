@@ -3,7 +3,6 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { createServerClient } from '@/lib/supabase/server'
 import { Button, Badge } from '@/components/ui'
-import { FeedbackForm } from '@/components/jobs'
 import { ApplyLink } from '@/components/jobs/apply-link'
 import { ApplyConfirmPrompt } from '@/components/jobs/apply-confirm-prompt'
 import { formatDate, daysUntilClosing, isJobExpired } from '@/lib/utils'
@@ -134,11 +133,6 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                 </div>
               </section>
             )}
-
-            {/* Feedback Section */}
-            <section className="border-t pt-8">
-              <FeedbackForm jobId={job.id} />
-            </section>
           </div>
 
           {/* Sidebar */}

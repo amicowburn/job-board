@@ -6,9 +6,8 @@ A modern job board built for the Monash Marketing Students' Society (MMSS) using
 
 - **Public Job Board**: Browse, search, and filter job listings
 - **HR Self-Serve Submissions**: Employers submit listings for admin review without an account
-- **Admin Dashboard**: Manage jobs, review submissions/feedback, bulk import
+- **Admin Dashboard**: Manage jobs, review submissions, bulk import
 - **AI-Assisted Prefill**: Paste a job posting URL and auto-fill the listing form
-- **User Feedback**: Anonymous feedback system for job listings
 - **Modern UI**: Responsive design with customizable theme
 
 ## Tech Stack
@@ -185,13 +184,11 @@ Set these in Vercel Dashboard > Settings > Environment Variables:
 ### Tables
 
 - **jobs**: Job listings
-- **job_feedback**: User feedback on jobs
 - **admin_users**: Admin user permissions
 
 ### Row Level Security (RLS)
 
 - Public users can only read active jobs
-- Public users can submit feedback
 - Admin operations require authentication + admin role
 
 ## Admin Operations
@@ -200,11 +197,6 @@ Set these in Vercel Dashboard > Settings > Environment Variables:
 - Create/Edit/Delete jobs
 - Soft delete (deactivate) or hard delete
 - Bulk deactivate old jobs
-
-### Feedback Moderation
-- View all feedback
-- Mark as reviewed
-- Delete inappropriate feedback
 
 ## API Endpoints
 

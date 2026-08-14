@@ -16,7 +16,6 @@ Last reviewed: 2026-08-09.
 |---|---|---|
 | Public job browsing (search/filter/paginate, sponsored pinned) | ⚠️ Works, but implemented twice — see [Known duplication](#known-duplication) | `app/page.tsx`, `app/jobs/page.tsx` |
 | Job detail panel + deep link + share | ✅ Working | `app/jobs/[id]/`, `components/jobs/job-detail-panel.tsx` |
-| Public job reporting/feedback | ✅ Working | `components/jobs/feedback-form.tsx` → `job_feedback` table |
 | HR self-serve submission | ✅ Working | `app/submit/` → `POST /api/submit-job` |
 | Submitter edit-by-token | ✅ Working | `app/submit/edit/` → `PATCH /api/submit-job/[token]` |
 | Admin review queue (approve/reject + emails) | ✅ Working | `POST /api/admin/submissions/[id]/approve|reject` |

@@ -92,13 +92,7 @@ Requirements:
   'hybrid',
   'casual',
   'https://example.com/apply/4',
-  'Casual position supporting our digital marketing efforts. Flexible hours to fit around your studies.
-
-Tasks include:
-- SEO optimization
-- Email marketing support
-- Content updates
-- Performance tracking',
+  'Casual digital marketing support — SEO, email marketing and content updates, flexible hours.',
   ARRAY['SEO', 'email marketing', 'digital marketing'],
   NOW() - INTERVAL '2 days',
   NULL,
@@ -113,13 +107,7 @@ Tasks include:
   'onsite',
   'internship',
   'https://example.com/apply/5',
-  'Internship focused on marketing analytics and data-driven decision making.
-
-You will learn:
-- Google Analytics
-- Data visualization
-- A/B testing
-- Report creation',
+  'Internship in marketing analytics — Google Analytics, data visualization and A/B testing.',
   ARRAY['analytics', 'data analysis', 'google analytics', 'reporting'],
   NOW() - INTERVAL '10 days',
   NOW() + INTERVAL '5 days',
@@ -134,30 +122,13 @@ You will learn:
   'remote',
   'contract',
   'https://example.com/apply/6',
-  '3-month contract for a talented content writer. Work remotely and build your portfolio.',
+  '3-month remote contract for a content writer looking to build their portfolio.',
   ARRAY['content writing', 'copywriting', 'blogging'],
   NOW() - INTERVAL '1 day',
   NOW() + INTERVAL '45 days',
   TRUE,
   FALSE,
   'manual'
-);
-
--- Insert sample feedback
-INSERT INTO job_feedback (job_id, type, message, email, status) VALUES
-(
-  (SELECT id FROM jobs WHERE title = 'Marketing Intern' LIMIT 1),
-  'other',
-  'Great opportunity! Applied and got an interview.',
-  'student@example.com',
-  'new'
-),
-(
-  (SELECT id FROM jobs WHERE title = 'Social Media Specialist' LIMIT 1),
-  'incorrect_info',
-  'The location should be updated - they moved offices.',
-  NULL,
-  'new'
 );
 
 -- Note: To create an admin user, first create a user via Supabase Auth,

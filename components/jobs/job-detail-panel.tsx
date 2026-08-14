@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
-import { FeedbackForm } from './feedback-form'
 import { trackEvent } from '@/lib/analytics/track'
 import { handleApplyClick } from './apply-link'
 import type { Job } from '@/lib/types'
@@ -20,7 +19,6 @@ const pillVariants = {
 }
 
 export function JobDetailPanel({ job, isMainView = false, onBack }: JobDetailPanelProps) {
-  const [showFeedback, setShowFeedback] = useState(false)
   const [copied, setCopied] = useState(false)
 
   const getInitials = (company: string) => {
@@ -158,30 +156,6 @@ export function JobDetailPanel({ job, isMainView = false, onBack }: JobDetailPan
             </div>
           )}
 
-          {/* Feedback */}
-          <div className="mt-6 pt-4 border-t border-slate-100">
-            <AnimatePresence mode="wait">
-              {showFeedback ? (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                >
-                  <FeedbackForm jobId={job.id} />
-                </motion.div>
-              ) : (
-                <motion.button
-                  onClick={() => setShowFeedback(true)}
-                  whileHover={{ x: 2 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1.5 transition-colors"
-                >
-                  <FlagIcon className="w-3.5 h-3.5" />
-                  Report an issue with this listing
-                </motion.button>
-              )}
-            </AnimatePresence>
-          </div>
         </div>
 
         {/* Sticky Apply Button */}
@@ -318,15 +292,6 @@ function OnsiteIcon({ className }: { className?: string }) {
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
       <circle cx="12" cy="10" r="3" />
-    </svg>
-  )
-}
-
-function FlagIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-      <line x1="4" y1="22" x2="4" y2="15" />
     </svg>
   )
 }

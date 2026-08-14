@@ -55,7 +55,7 @@ Middleware (`middleware.ts` → `lib/supabase/middleware.ts`) refreshes auth tok
 
 **Public:** `/` and `/jobs` (identical — known duplication, refactor candidate), `/jobs/[id]`, `/submit`, `/submit/edit?token=<edit-token>`
 
-**Admin (requires `is_admin`):** `/admin/login`, `/admin/jobs`, `/admin/submissions`, `/admin/feedback`, `/admin/users`
+**Admin (requires `is_admin`):** `/admin/login`, `/admin/jobs`, `/admin/submissions`, `/admin/users`
 
 **API routes:** `GET /api/prefill-job?url=` · `POST /api/submit-job` · `PATCH /api/submit-job/[token]` · `POST /api/admin/submissions/[id]/approve` · `POST /api/admin/submissions/[id]/reject` · `GET|POST /api/admin/users` · `DELETE /api/admin/users/[id]` · `POST /api/auth/signout`
 
@@ -72,7 +72,7 @@ Middleware (`middleware.ts` → `lib/supabase/middleware.ts`) refreshes auth tok
 
 ## Database Schema
 
-Main tables: `jobs`, `job_submissions` (pending HR queue), `job_feedback` (issue reports), `admin_users` (FK to `auth.users`).
+Main tables: `jobs`, `job_submissions` (pending HR queue), `admin_users` (FK to `auth.users`).
 
 `jobs` key fields: `title`, `company`, `url`, `description` (HTML), `tags` (TEXT[]), `work_mode` (remote|hybrid|onsite), `job_type` (internship|graduate|part-time|full-time|casual|contract), `is_active`, `is_featured`, `is_sponsored`, `source` (manual|external_api|submission), `external_id`.
 
