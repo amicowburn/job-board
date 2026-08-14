@@ -37,7 +37,7 @@ export default async function AdminLayout({
   return (
     <div className="min-h-screen flex flex-col bg-[#e8e8e8]">
       {user && (
-        <header className="sticky top-0 z-50 px-[4vw] py-[10px]">
+        <header className="sticky top-0 z-50 px-[4vw] py-[15px]">
           <div>
             <div className="bg-white rounded-[15px] px-4 sm:px-[15px] flex items-center justify-between h-[50px] backdrop-blur-[10px]">
               {/* Left: logo + Admin label + nav */}
