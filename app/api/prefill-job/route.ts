@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server'
 import dns from 'dns/promises'
-import { normalizeJobType } from '@/lib/utils'
+import { normalizeJobType, truncateText } from '@/lib/utils'
 
 interface PrefillData {
   title?: string
   company?: string
   company_logo_url?: string
   description?: string
+  /** Short 1-2 line card-preview summary. AI-only — no other tier produces this. */
+  summary?: string
   location?: string
   job_type?: string
   closing_at?: string
@@ -327,6 +329,7 @@ Extract the following fields and return ONLY a valid JSON object with no markdow
 - "company": the hiring company name — must be the specific employer, NOT a job board or recruitment agency
 - "tags": array of up to 4 short skill or work-area phrases (e.g. ["marketing", "social media", "Excel", "data analysis"]). 1–3 words each. Return an empty array if unclear.
 - "description": the full job description as clean HTML using only <p> <ul> <ol> <li> <strong> <em> <br> tags. Preserve all substantive content including responsibilities, requirements, and about-the-company sections.
+- "summary": ONE plain-text sentence, no more than 140 characters, no HTML or markdown, capturing the core responsibility or opportunity in plain language. This is shown as a 1-2 line preview on a small card, not the full posting — be concrete and specific, not a generic restatement of the job title.
 
 Rules:
 - Omit any field you cannot find with confidence (do not use null or empty string values).
@@ -361,6 +364,12 @@ function parseAIResponse(raw: string): Partial<PrefillData> {
   }
   if (typeof parsed.description === 'string' && parsed.description.trim()) {
     result.description = parsed.description.trim()
+  }
+  if (typeof parsed.summary === 'string' && parsed.summary.trim()) {
+    // Backstop against the model ignoring the 140-char instruction — cut at
+    // a word boundary rather than trusting raw length, same fix as the
+    // card's own fallback truncation (see truncateText in lib/utils.ts).
+    result.summary = truncateText(parsed.summary.trim(), 140)
   }
   if (Array.isArray(parsed.tags)) {
     const tags = (parsed.tags as unknown[])
@@ -544,6 +553,11 @@ export async function GET(request: Request) {
     company,
     company_logo_url,
     description,
+    // AI-only — JSON-LD/embedded-state/OG tags don't carry a ready-made
+    // short summary distinct from the full description, so there's nothing
+    // to fall back to. Stays undefined whenever the AI tier didn't run
+    // (tier 1 already found title+company) or found nothing.
+    summary: ai.summary,
     location: jsonLd.location || embedded.location || undefined,
     job_type: jsonLd.job_type || embedded.job_type || undefined,
     closing_at: closingAt,
