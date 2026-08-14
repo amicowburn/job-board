@@ -1,13 +1,14 @@
 import type { Metadata } from 'next'
 import { Inter, Outfit, Montserrat, Roboto } from 'next/font/google'
 import { Navbar } from '@/components/navbar'
+import { SiteMain } from '@/components/site-main'
 import { Footer } from '@/components/footer'
 import { SmoothScroll } from '@/components/smooth-scroll'
 import { BottomBlur } from '@/components/bottom-blur'
 import './globals.css'
 import { cn } from "@/lib/utils";
 
-const roboto = Roboto({subsets:['latin'],variable:'--font-sans'});
+const roboto = Roboto({subsets:['latin'],weight:['400','500','700'],variable:'--font-sans'});
 
 const inter = Inter({ subsets: ['latin'] })
 const outfit = Outfit({
@@ -32,9 +33,7 @@ export default function RootLayout({
       <body className={`${inter.className} ${outfit.variable}`}>
         <SmoothScroll />
         <Navbar />
-        <main className="min-h-screen pt-20">
-          {children}
-        </main>
+        <SiteMain>{children}</SiteMain>
         <Footer />
         <BottomBlur />
       </body>
