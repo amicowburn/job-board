@@ -48,6 +48,7 @@ export async function PATCH(
       job_type: body.job_type ?? null,
       url: body.url,
       description: body.description ?? null,
+      summary: body.summary ?? null,
       company_logo_url: body.company_logo_url ?? null,
       tags: body.tags ?? null,
       closing_at: body.closing_at ?? null,
