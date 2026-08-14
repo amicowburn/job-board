@@ -2,8 +2,6 @@
 
 export type WorkMode = 'remote' | 'hybrid' | 'onsite'
 export type JobType = 'internship' | 'graduate' | 'part-time' | 'full-time' | 'casual' | 'contract'
-export type FeedbackType = 'scam' | 'expired' | 'broken_link' | 'incorrect_info' | 'other'
-export type FeedbackStatus = 'new' | 'reviewed' | 'removed'
 export type JobSource = 'manual' | 'external_api' | string
 
 // Database row types
@@ -18,6 +16,8 @@ export interface Job {
   job_type: JobType | null
   url: string
   description: string | null
+  /** Short 1-2 line card-preview text, distinct from `description`. NULL falls back to a truncated description on the card. */
+  summary: string | null
   company_logo_url: string | null
   tags: string[] | null
   posted_at: string | null
@@ -27,16 +27,6 @@ export interface Job {
   is_sponsored: boolean
   created_at: string
   updated_at: string
-}
-
-export interface JobFeedback {
-  id: string
-  job_id: string
-  type: FeedbackType
-  message: string | null
-  email: string | null
-  status: FeedbackStatus
-  created_at: string
 }
 
 export interface AdminUser {
@@ -57,6 +47,7 @@ export interface JobInsert {
   job_type?: JobType | null
   url: string
   description?: string | null
+  summary?: string | null
   company_logo_url?: string | null
   tags?: string[] | null
   posted_at?: string | null
@@ -64,15 +55,6 @@ export interface JobInsert {
   is_active?: boolean
   is_featured?: boolean
   is_sponsored?: boolean
-}
-
-export interface JobFeedbackInsert {
-  id?: string
-  job_id: string
-  type: FeedbackType
-  message?: string | null
-  email?: string | null
-  status?: FeedbackStatus
 }
 
 // Update types (for updating existing records)
@@ -86,6 +68,7 @@ export interface JobUpdate {
   job_type?: JobType | null
   url?: string
   description?: string | null
+  summary?: string | null
   company_logo_url?: string | null
   tags?: string[] | null
   posted_at?: string | null
@@ -93,13 +76,6 @@ export interface JobUpdate {
   is_active?: boolean
   is_featured?: boolean
   is_sponsored?: boolean
-}
-
-export interface JobFeedbackUpdate {
-  type?: FeedbackType
-  message?: string | null
-  email?: string | null
-  status?: FeedbackStatus
 }
 
 // =====================
@@ -120,6 +96,8 @@ export interface JobSubmission {
   job_type: JobType | null
   url: string
   description: string | null
+  /** AI-suggested (or hand-written) short summary; carried to jobs.summary on approval. NULL if AI prefill did not run or found nothing. */
+  summary: string | null
   company_logo_url: string | null
   tags: string[] | null
   closing_at: string | null
@@ -143,12 +121,24 @@ export interface JobSubmissionInsert {
   job_type?: JobType | null
   url: string
   description?: string | null
+  summary?: string | null
   company_logo_url?: string | null
   tags?: string[] | null
   closing_at?: string | null
 }
 
 export interface JobSubmissionUpdate {
+  title?: string
+  company?: string
+  location?: string | null
+  work_mode?: WorkMode | null
+  job_type?: JobType | null
+  url?: string
+  description?: string | null
+  summary?: string | null
+  company_logo_url?: string | null
+  tags?: string[] | null
+  closing_at?: string | null
   status?: SubmissionStatus
   admin_note?: string | null
   archived_at?: string | null
@@ -256,19 +246,6 @@ export type Database = {
         Insert: JobInsert
         Update: JobUpdate
         Relationships: []
-      }
-      job_feedback: {
-        Row: JobFeedback
-        Insert: JobFeedbackInsert
-        Update: JobFeedbackUpdate
-        Relationships: [
-          {
-            foreignKeyName: 'job_feedback_job_id_fkey'
-            columns: ['job_id']
-            referencedRelation: 'jobs'
-            referencedColumns: ['id']
-          }
-        ]
       }
       job_submissions: {
         Row: JobSubmission
