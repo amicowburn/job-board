@@ -7,10 +7,28 @@ import { JobDetailPanel } from '@/components/jobs/job-detail-panel'
 import { JobsHeader } from '@/components/jobs/jobs-header'
 import { JobCard } from '@/components/jobs/job-card'
 import { ApplyConfirmPrompt } from '@/components/jobs/apply-confirm-prompt'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { trackEvent } from '@/lib/analytics/track'
 import type { Job } from '@/lib/types'
 
 const JOBS_PER_PAGE = 25
+
+/**
+ * Shared by the two filters. Sides are padded separately to clear the chevron.
+ *
+ * Background/border/ring-width now come from `NativeSelect`'s own palette
+ * (matched to `components/shadcn/select.tsx`) rather than being repeated
+ * here — only the brand-primary focus color stays as an explicit override,
+ * a deliberate difference from the header's slate-toned `FILTER_PILL`
+ * (see `components/jobs/jobs-header.tsx`), not something to reconcile away.
+ *
+ * Focus rules use `focus-visible:` to match the variant the component's own
+ * ring uses — a `focus:` override would not replace it, it would draw on top
+ * of it, leaving two rings and an offset halo.
+ */
+const FILTER_FIELD =
+  'h-9 pl-3 pr-8 text-sm rounded-lg ' +
+  'focus-visible:ring-primary/20 focus-visible:border-primary cursor-pointer'
 
 export default function JobsPage() {
   const [jobs, setJobs] = useState<Job[]>([])
@@ -134,29 +152,29 @@ export default function JobsPage() {
           {/* Left Panel - Job Cards */}
           <div className="w-[420px] shrink-0">
             <div className="flex items-center gap-2 mb-4 flex-wrap">
-              <select
+              <NativeSelect
                 value={filters.job_type}
                 onChange={(e) => handleFilterChange('job_type', e.target.value)}
-                className="h-9 px-3 text-sm text-slate-600 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer"
+                className={FILTER_FIELD}
               >
-                <option value="">All Categories</option>
-                <option value="internship">Internship</option>
-                <option value="graduate">Graduate</option>
-                <option value="part-time">Part-time</option>
-                <option value="full-time">Full-time</option>
-                <option value="casual">Casual</option>
-                <option value="contract">Contract</option>
-              </select>
-              <select
+                <NativeSelectOption value="">All Categories</NativeSelectOption>
+                <NativeSelectOption value="internship">Internship</NativeSelectOption>
+                <NativeSelectOption value="graduate">Graduate</NativeSelectOption>
+                <NativeSelectOption value="part-time">Part-time</NativeSelectOption>
+                <NativeSelectOption value="full-time">Full-time</NativeSelectOption>
+                <NativeSelectOption value="casual">Casual</NativeSelectOption>
+                <NativeSelectOption value="contract">Contract</NativeSelectOption>
+              </NativeSelect>
+              <NativeSelect
                 value={filters.work_mode}
                 onChange={(e) => handleFilterChange('work_mode', e.target.value)}
-                className="h-9 px-3 text-sm text-slate-600 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer"
+                className={FILTER_FIELD}
               >
-                <option value="">All Locations</option>
-                <option value="remote">Remote</option>
-                <option value="hybrid">Hybrid</option>
-                <option value="onsite">On-site</option>
-              </select>
+                <NativeSelectOption value="">All Locations</NativeSelectOption>
+                <NativeSelectOption value="remote">Remote</NativeSelectOption>
+                <NativeSelectOption value="hybrid">Hybrid</NativeSelectOption>
+                <NativeSelectOption value="onsite">On-site</NativeSelectOption>
+              </NativeSelect>
               <button
                 onClick={handleSponsoredToggle}
                 className={`h-9 px-4 text-sm font-medium rounded-lg transition-all ${
@@ -169,7 +187,7 @@ export default function JobsPage() {
               </button>
             </div>
 
-            <div className="space-y-3">
+            <div data-job-feed className="space-y-3">
               {isLoading ? (
                 <div className="bg-white rounded-xl p-8 text-center text-slate-500">
                   <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-3 animate-spin" />

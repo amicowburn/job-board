@@ -178,7 +178,7 @@ export default function HomePage() {
                 exit={{ opacity: 0, x: -40 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 32 }}
               >
-                <div data-lenis-prevent className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1 min-h-0">
+                <div data-lenis-prevent data-job-feed className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1 min-h-0">
                   {isLoading ? (
                     <div className="bg-white rounded-xl p-8 text-center text-slate-500">
                       <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-3 animate-spin" />
@@ -238,7 +238,7 @@ export default function HomePage() {
 
         {/* Desktop: side-by-side panels */}
         <div className="hidden md:flex md:w-[380px] md:shrink-0 flex-col min-h-0">
-          <div data-lenis-prevent className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1 min-h-0">
+          <div data-lenis-prevent data-job-feed className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1 min-h-0">
             {isLoading ? (
               <div className="bg-white rounded-xl p-8 text-center text-slate-500">
                 <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-3 animate-spin" />

@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { trackEvent } from '@/lib/analytics/track'
 import {
   clearPendingApply,
@@ -28,6 +28,25 @@ import {
  */
 export function ApplyConfirmPrompt() {
   const [pending, setPending] = useState<PendingApply | null>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  // Keeps the toast from sitting on top of the last job card: while it's
+  // visible, pad any feed container by exactly this panel's own rendered
+  // height (plus a small clearance) rather than a guessed fixed value.
+  useEffect(() => {
+    const feeds = document.querySelectorAll<HTMLElement>('[data-job-feed]')
+
+    if (pending && panelRef.current) {
+      const clearance = panelRef.current.offsetHeight + 24
+      feeds.forEach((feed) => { feed.style.paddingBottom = `${clearance}px` })
+    } else {
+      feeds.forEach((feed) => { feed.style.paddingBottom = '' })
+    }
+
+    return () => {
+      feeds.forEach((feed) => { feed.style.paddingBottom = '' })
+    }
+  }, [pending])
 
   const check = useCallback(() => {
     // Never replace a prompt that is already on screen — swapping the question
@@ -67,12 +86,23 @@ export function ApplyConfirmPrompt() {
 
   return (
     <div
+      ref={panelRef}
       role="dialog"
       aria-label="Confirm application"
-      className="fixed z-50 bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:w-[340px] bg-white rounded-2xl border border-slate-200 shadow-lg p-4 motion-safe:animate-apply-prompt-in"
+      className="fixed z-50 bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:w-[380px] bg-white rounded-2xl border border-slate-200 shadow-lg p-4 motion-safe:animate-apply-prompt-in"
     >
+      <button
+        onClick={() => answer(false)}
+        aria-label="Dismiss"
+        className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 transition-colors"
+      >
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
       <p
-        className="text-sm font-semibold text-slate-800"
+        className="text-sm font-semibold text-slate-800 pr-6"
         style={{ fontFamily: 'var(--font-outfit)' }}
       >
         Did you finish applying?
