@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { formatDate } from '@/lib/utils'
+import { formatDate, truncateText } from '@/lib/utils'
 import type { Job } from '@/lib/types'
 
 interface JobCardProps {
@@ -31,9 +31,7 @@ export function JobCard({ job, isSelected, onClick }: JobCardProps) {
 
   const truncateDescription = (desc: string | null, maxLength: number = 100) => {
     if (!desc) return null
-    const plain = stripHtml(desc)
-    if (plain.length <= maxLength) return plain
-    return plain.substring(0, maxLength).trim() + '...'
+    return truncateText(stripHtml(desc), maxLength)
   }
 
   const expiryDate = (() => {
@@ -96,10 +94,13 @@ export function JobCard({ job, isSelected, onClick }: JobCardProps) {
             )}
           </div>
 
-          {/* Description Preview */}
-          {job.description && (
+          {/* Description Preview — prefer the short card summary (AI-suggested
+              on submission or hand-written by an admin) over a truncated cut
+              of the full description, which reads worse the longer the
+              source text runs. */}
+          {(job.summary || job.description) && (
             <p className="text-xs mt-1.5 leading-relaxed line-clamp-2 text-slate-400">
-              {truncateDescription(job.description, 120)}
+              {job.summary || truncateDescription(job.description, 120)}
             </p>
           )}
 
