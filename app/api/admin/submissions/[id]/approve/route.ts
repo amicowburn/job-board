@@ -43,6 +43,7 @@ export async function POST(
     job_type: submission.job_type,
     url: submission.url,
     description: submission.description,
+    summary: submission.summary,
     company_logo_url: submission.company_logo_url,
     tags: submission.tags,
     posted_at: new Date().toISOString(),
