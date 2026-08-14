@@ -17,6 +17,10 @@ export function Navbar() {
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
 
+  // Admin routes render their own sticky header (app/admin/layout.tsx) —
+  // without this, both it and this fixed header stack on top of each other.
+  if (pathname?.startsWith('/admin')) return null
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 p-2.5 sm:p-[15px]">
       <nav className="max-w-[1200px] mx-auto">
