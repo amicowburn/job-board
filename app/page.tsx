@@ -154,6 +154,7 @@ export default function HomePage() {
   }
 
   return (
+    <>
     <div className="h-[calc(100vh-80px)] bg-[#e8e8e8] flex flex-col overflow-hidden">
       {/* Header - fixed at top */}
       <JobsHeader
@@ -308,11 +309,17 @@ export default function HomePage() {
           </AnimatePresence>
         </div>
       </div>
-
-      {/* Asks returning visitors whether an apply click became a real
-          application — the only application signal this board can observe,
-          since applying itself happens on the employer's site. */}
-      <ApplyConfirmPrompt />
     </div>
+
+    {/* Asks returning visitors whether an apply click became a real
+        application — the only application signal this board can observe,
+        since applying itself happens on the employer's site.
+        Deliberately outside the overflow-hidden shell above: nesting a
+        `fixed` element inside an `overflow: hidden` ancestor is a known
+        iOS Safari trap — the element can get clipped/trapped by that
+        ancestor's bounds there even though desktop browsers render it
+        correctly fixed to the true viewport regardless of nesting. */}
+    <ApplyConfirmPrompt />
+    </>
   )
 }
