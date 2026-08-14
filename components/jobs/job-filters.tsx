@@ -2,7 +2,13 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useTransition } from 'react'
-import { Button, Input, Select, type SelectOption } from '@/components/ui'
+import {
+  Button,
+  Input,
+  NativeSelect,
+  NativeSelectOption,
+  type SelectOption,
+} from '@/components/ui'
 import type { JobType, WorkMode } from '@/lib/types'
 
 const JOB_TYPE_OPTIONS: SelectOption[] = [
@@ -105,42 +111,57 @@ export function JobFilters({ className }: JobFiltersProps) {
           <label className="text-sm font-medium text-foreground block mb-1.5">
             Job Type
           </label>
-          <Select
-            options={JOB_TYPE_OPTIONS}
+          <NativeSelect
             value={jobType}
             onChange={(e) => {
               setJobType(e.target.value as JobType | '')
               updateFilters({ type: e.target.value })
             }}
-          />
+          >
+            {JOB_TYPE_OPTIONS.map((option) => (
+              <NativeSelectOption key={option.value} value={option.value}>
+                {option.label}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
         </div>
 
         <div>
           <label className="text-sm font-medium text-foreground block mb-1.5">
             Work Mode
           </label>
-          <Select
-            options={WORK_MODE_OPTIONS}
+          <NativeSelect
             value={workMode}
             onChange={(e) => {
               setWorkMode(e.target.value as WorkMode | '')
               updateFilters({ work_mode: e.target.value })
             }}
-          />
+          >
+            {WORK_MODE_OPTIONS.map((option) => (
+              <NativeSelectOption key={option.value} value={option.value}>
+                {option.label}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
         </div>
 
         <div>
           <label className="text-sm font-medium text-foreground block mb-1.5">
             Sort By
           </label>
-          <Select
-            options={SORT_OPTIONS}
+          <NativeSelect
             value={sort}
             onChange={(e) => {
               setSort(e.target.value)
               updateFilters({ sort: e.target.value })
             }}
-          />
+          >
+            {SORT_OPTIONS.map((option) => (
+              <NativeSelectOption key={option.value} value={option.value}>
+                {option.label}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
         </div>
 
         {hasFilters && (

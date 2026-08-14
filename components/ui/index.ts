@@ -1,7 +1,13 @@
 export { Button, type ButtonProps } from './button'
 export { Input, type InputProps } from './input'
 export { Textarea, type TextareaProps } from './textarea'
-export { Select, type SelectProps, type SelectOption } from './select'
+export {
+  NativeSelect,
+  NativeSelectOption,
+  type NativeSelectProps,
+  type NativeSelectOptionProps,
+  type SelectOption,
+} from './native-select'
 export { Badge, type BadgeProps } from './badge'
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './card'
 export { Pagination, type PaginationProps } from './pagination'

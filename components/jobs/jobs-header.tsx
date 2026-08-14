@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { formatDate } from '@/lib/utils'
 
 interface JobsHeaderProps {
@@ -16,6 +17,26 @@ interface JobsHeaderProps {
   onFilterChange: (key: string, value: string) => void
   onSponsoredToggle: () => void
 }
+
+/**
+ * The compact pill shape both filters share, overriding the field defaults.
+ *
+ * Background/border/ring-width now come from `NativeSelect`'s own palette
+ * (matched to `components/shadcn/select.tsx`) rather than being repeated
+ * here — only the slate focus color stays as an explicit override, to match
+ * the neighboring search bar's `focus-within:ring-slate-200`/`border-slate-300`
+ * above. That's a deliberate difference from the page body's brand-primary
+ * `FILTER_FIELD` (see `app/jobs/page.tsx`), not something to reconcile away.
+ *
+ * The focus rules say `focus-visible:`, not `focus:`, because that is the
+ * variant the component's own focus ring uses. Different variants do not
+ * cancel each other out — they stack — so a `focus:ring-1` here would leave
+ * the default `focus-visible:ring-3` drawn underneath, and the pill would
+ * pick up a heavy double halo the moment it was clicked.
+ */
+const FILTER_PILL =
+  'h-8 pl-2 sm:pl-3 pr-7 text-xs rounded-full ' +
+  'focus-visible:ring-slate-300 focus-visible:border-slate-300 cursor-pointer'
 
 export function JobsHeader({ totalJobs, lastUpdated, filters, onFilterChange, onSponsoredToggle }: JobsHeaderProps) {
   return (
@@ -50,29 +71,31 @@ export function JobsHeader({ totalJobs, lastUpdated, filters, onFilterChange, on
           {totalJobs.toLocaleString()} {totalJobs === 1 ? 'Result' : 'Results'}
         </span>
         <div className="flex items-center gap-2">
-          <select
+          {/* Left and right padding are set separately, not as `px-*`: the
+              right side is holding the chevron's space. */}
+          <NativeSelect
             value={filters.job_type}
             onChange={(e) => onFilterChange('job_type', e.target.value)}
-            className="h-8 px-2 sm:px-3 text-xs text-slate-600 bg-white border border-slate-200 rounded-full focus:ring-1 focus:ring-slate-200 focus:border-slate-300 cursor-pointer"
+            className={FILTER_PILL}
           >
-            <option value="">All Types</option>
-            <option value="internship">Internship</option>
-            <option value="graduate">Graduate</option>
-            <option value="part-time">Part-time</option>
-            <option value="full-time">Full-time</option>
-            <option value="casual">Casual</option>
-            <option value="contract">Contract</option>
-          </select>
-          <select
+            <NativeSelectOption value="">All Types</NativeSelectOption>
+            <NativeSelectOption value="internship">Internship</NativeSelectOption>
+            <NativeSelectOption value="graduate">Graduate</NativeSelectOption>
+            <NativeSelectOption value="part-time">Part-time</NativeSelectOption>
+            <NativeSelectOption value="full-time">Full-time</NativeSelectOption>
+            <NativeSelectOption value="casual">Casual</NativeSelectOption>
+            <NativeSelectOption value="contract">Contract</NativeSelectOption>
+          </NativeSelect>
+          <NativeSelect
             value={filters.work_mode}
             onChange={(e) => onFilterChange('work_mode', e.target.value)}
-            className="h-8 px-2 sm:px-3 text-xs text-slate-600 bg-white border border-slate-200 rounded-full focus:ring-1 focus:ring-slate-200 focus:border-slate-300 cursor-pointer"
+            className={FILTER_PILL}
           >
-            <option value="">All Locations</option>
-            <option value="remote">Remote</option>
-            <option value="hybrid">Hybrid</option>
-            <option value="onsite">On-site</option>
-          </select>
+            <NativeSelectOption value="">All Locations</NativeSelectOption>
+            <NativeSelectOption value="remote">Remote</NativeSelectOption>
+            <NativeSelectOption value="hybrid">Hybrid</NativeSelectOption>
+            <NativeSelectOption value="onsite">On-site</NativeSelectOption>
+          </NativeSelect>
         </div>
       </div>
     </header>
