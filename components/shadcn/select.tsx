@@ -1,5 +1,9 @@
 "use client"
 
+// Currently unwired: no importer in the app. Kept as the deliberate escape
+// hatch for options needing rich markup a native <option> can't hold — see
+// the rationale in components/ui/native-select.tsx.
+
 import * as React from "react"
 import { Select as SelectPrimitive } from "radix-ui"
 

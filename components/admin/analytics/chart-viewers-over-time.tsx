@@ -14,7 +14,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
-} from '@/components/shadcn/chart'
+} from '@/components/ui/chart'
 import type { FilledBucket } from '@/lib/analytics/buckets'
 
 export const description = 'An area chart of total visitors over the reporting period'

@@ -13,7 +13,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
-} from '@/components/shadcn/chart'
+} from '@/components/ui/chart'
 import {
   COLUMN_CHART_HEIGHT,
   InterestTable,

@@ -13,7 +13,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
-} from '@/components/shadcn/chart'
+} from '@/components/ui/chart'
 import { InterestTable, formatCount, rowChartHeight, truncateLabel } from './interest-shared'
 import { InsightBadge } from './insight-treatments'
 import type { InterestSlice } from '@/lib/analytics/buckets'
