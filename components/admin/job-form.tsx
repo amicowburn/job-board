@@ -2,7 +2,16 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button, Input, Select, Label, Alert, AlertDescription, type SelectOption } from '@/components/ui'
+import {
+  Button,
+  Input,
+  NativeSelect,
+  NativeSelectOption,
+  Label,
+  Alert,
+  AlertDescription,
+  type SelectOption,
+} from '@/components/ui'
 import { RichTextEditor } from './rich-text-editor'
 import { createClient } from '@/lib/supabase/client'
 import type { Job, JobInsert, JobUpdate } from '@/lib/types'
@@ -43,6 +52,7 @@ export function JobForm({ job, isEditing = false }: JobFormProps) {
     job_type: job?.job_type || '',
     url: job?.url || '',
     description: job?.description || '',
+    summary: job?.summary || '',
     tags: job?.tags?.join(', ') || '',
     posted_at: job?.posted_at ? job.posted_at.split('T')[0] : '',
     closing_at: job?.closing_at ? job.closing_at.split('T')[0] : '',
@@ -83,6 +93,7 @@ export function JobForm({ job, isEditing = false }: JobFormProps) {
         job_type: (formData.job_type as Job['job_type']) || null,
         url: formData.url,
         description: formData.description || null,
+        summary: formData.summary || null,
         tags: tags.length > 0 ? tags : null,
         posted_at: formData.posted_at ? new Date(formData.posted_at).toISOString() : null,
         closing_at: formData.closing_at ? new Date(formData.closing_at).toISOString() : null,
@@ -189,26 +200,41 @@ export function JobForm({ job, isEditing = false }: JobFormProps) {
 
         <div>
           <Label htmlFor="work_mode">Work Mode</Label>
-          <Select
-            id="work_mode"
-            name="work_mode"
-            value={formData.work_mode}
-            onChange={handleChange}
-            options={WORK_MODE_OPTIONS}
-            className="mt-1.5"
-          />
+          {/* The gap sits on a wrapper rather than on the field: a margin on
+              the select itself would grow the box the chevron is centred in,
+              and drop the icon below the text by half that margin. */}
+          <div className="mt-1.5">
+            <NativeSelect
+              id="work_mode"
+              name="work_mode"
+              value={formData.work_mode}
+              onChange={handleChange}
+            >
+              {WORK_MODE_OPTIONS.map((option) => (
+                <NativeSelectOption key={option.value} value={option.value}>
+                  {option.label}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          </div>
         </div>
 
         <div>
           <Label htmlFor="job_type">Job Type</Label>
-          <Select
-            id="job_type"
-            name="job_type"
-            value={formData.job_type}
-            onChange={handleChange}
-            options={JOB_TYPE_OPTIONS}
-            className="mt-1.5"
-          />
+          <div className="mt-1.5">
+            <NativeSelect
+              id="job_type"
+              name="job_type"
+              value={formData.job_type}
+              onChange={handleChange}
+            >
+              {JOB_TYPE_OPTIONS.map((option) => (
+                <NativeSelectOption key={option.value} value={option.value}>
+                  {option.label}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          </div>
         </div>
 
         <div className="md:col-span-2">
@@ -235,6 +261,22 @@ export function JobForm({ job, isEditing = false }: JobFormProps) {
           </div>
           <p className="text-xs text-muted-foreground mt-1">
             Use the toolbar to format text, add links, and insert images by URL.
+          </p>
+        </div>
+
+        <div className="md:col-span-2">
+          <Label htmlFor="summary">Short summary</Label>
+          <Input
+            id="summary"
+            name="summary"
+            value={formData.summary}
+            onChange={handleChange}
+            placeholder="e.g. Support brand campaigns and social content for a growing retail team."
+            maxLength={140}
+            className="mt-1.5"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            One sentence shown on the job card in place of a truncated description. Optional — falls back automatically if left blank.
           </p>
         </div>
 
