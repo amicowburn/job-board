@@ -1,7 +1,16 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Button, Input, Select, Label, Alert, AlertDescription, type SelectOption } from '@/components/ui'
+import {
+  Button,
+  Input,
+  NativeSelect,
+  NativeSelectOption,
+  Label,
+  Alert,
+  AlertDescription,
+  type SelectOption,
+} from '@/components/ui'
 import { RichTextEditor, type RichTextEditorRef } from '@/components/admin/rich-text-editor'
 import { isValidEmail } from '@/lib/utils'
 import type { JobSubmissionInsert, WorkMode, JobType } from '@/lib/types'
@@ -36,11 +45,14 @@ interface JobSubmissionFormProps {
     url: string
     company_logo_url: string | null
     description: string | null
+    summary: string | null
     tags: string[] | null
     closing_at: string | null
   }
   editToken?: string
 }
+
+const SUMMARY_MAX_LENGTH = 140
 
 export function JobSubmissionForm({ existingSubmission, editToken }: JobSubmissionFormProps) {
   const isEditing = !!editToken
@@ -57,6 +69,7 @@ export function JobSubmissionForm({ existingSubmission, editToken }: JobSubmissi
     url: existingSubmission?.url || '',
     company_logo_url: existingSubmission?.company_logo_url || '',
     description: existingSubmission?.description || '',
+    summary: existingSubmission?.summary || '',
     tags: existingSubmission?.tags?.join(', ') || '',
     closing_at: existingSubmission?.closing_at
       ? existingSubmission.closing_at.split('T')[0]
@@ -88,7 +101,7 @@ export function JobSubmissionForm({ existingSubmission, editToken }: JobSubmissi
 
     const PREFILLABLE_FIELDS = [
       'title', 'company', 'company_logo_url',
-      'location', 'job_type', 'closing_at', 'tags',
+      'location', 'job_type', 'closing_at', 'tags', 'summary',
     ] as const
 
     setIsPrefilling(true)
@@ -168,6 +181,7 @@ export function JobSubmissionForm({ existingSubmission, editToken }: JobSubmissi
       job_type: (formData.job_type as JobType) || null,
       url: formData.url,
       description: formData.description || null,
+      summary: formData.summary || null,
       company_logo_url: formData.company_logo_url || null,
       tags: tags.length > 0 ? tags : null,
       closing_at: formData.closing_at
@@ -300,6 +314,27 @@ export function JobSubmissionForm({ existingSubmission, editToken }: JobSubmissi
             />
           </div>
 
+          <div className="sm:col-span-2">
+            <div className="flex items-baseline justify-between">
+              <Label htmlFor="summary">Short summary</Label>
+              <span className="text-xs text-slate-400">
+                {formData.summary.length}/{SUMMARY_MAX_LENGTH}
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5 mb-1.5">
+              One sentence shown on the job card — auto-filled from the URL below, editable.
+            </p>
+            <Input
+              id="summary"
+              name="summary"
+              value={formData.summary}
+              onChange={handleChange}
+              placeholder="e.g. Support brand campaigns and social content for a growing retail team."
+              maxLength={SUMMARY_MAX_LENGTH}
+              className="mt-1.5"
+            />
+          </div>
+
           {/* Application URL — triggers prefill on blur */}
           <div className="sm:col-span-2">
             <Label htmlFor="url" required>Application URL</Label>
@@ -350,25 +385,40 @@ export function JobSubmissionForm({ existingSubmission, editToken }: JobSubmissi
           </div>
           <div>
             <Label htmlFor="work_mode">Work mode</Label>
-            <Select
-              id="work_mode"
-              name="work_mode"
-              value={formData.work_mode}
-              onChange={handleChange}
-              options={WORK_MODE_OPTIONS}
-              className="mt-1.5"
-            />
+            {/* The gap sits on a wrapper rather than on the field: a margin on
+                the select itself would grow the box the chevron is centred in,
+                and drop the icon below the text by half that margin. */}
+            <div className="mt-1.5">
+              <NativeSelect
+                id="work_mode"
+                name="work_mode"
+                value={formData.work_mode}
+                onChange={handleChange}
+              >
+                {WORK_MODE_OPTIONS.map((option) => (
+                  <NativeSelectOption key={option.value} value={option.value}>
+                    {option.label}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </div>
           </div>
           <div>
             <Label htmlFor="job_type">Job type</Label>
-            <Select
-              id="job_type"
-              name="job_type"
-              value={formData.job_type}
-              onChange={handleChange}
-              options={JOB_TYPE_OPTIONS}
-              className="mt-1.5"
-            />
+            <div className="mt-1.5">
+              <NativeSelect
+                id="job_type"
+                name="job_type"
+                value={formData.job_type}
+                onChange={handleChange}
+              >
+                {JOB_TYPE_OPTIONS.map((option) => (
+                  <NativeSelectOption key={option.value} value={option.value}>
+                    {option.label}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </div>
           </div>
           <div>
             <Label htmlFor="closing_at">Application closing date</Label>
