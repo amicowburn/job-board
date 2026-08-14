@@ -309,6 +309,11 @@ export default function HomePage() {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Asks returning visitors whether an apply click became a real
+          application — the only application signal this board can observe,
+          since applying itself happens on the employer's site. */}
+      <ApplyConfirmPrompt />
     </div>
 
     {/* Asks returning visitors whether an apply click became a real
