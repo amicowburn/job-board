@@ -64,7 +64,8 @@ export default async function AdminLayout({
                 <span className="text-xs text-slate-400 hidden md:block truncate max-w-[180px]">
                   {user.email}
                 </span>
-                <form action="/api/auth/signout" method="POST">
+                {/* Below md this moves into AdminNav's mobile dropdown instead. */}
+                <form action="/api/auth/signout" method="POST" className="hidden md:block">
                   <button
                     type="submit"
                     className="text-xs text-slate-500 hover:text-slate-800 px-2 py-1 rounded-md hover:bg-slate-100 transition-colors whitespace-nowrap"
