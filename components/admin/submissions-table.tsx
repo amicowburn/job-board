@@ -176,33 +176,39 @@ export function SubmissionsTable({
 
   return (
     <>
-      {/* Toolbar */}
-      <div className="px-5 py-4 border-b border-slate-100 flex flex-wrap gap-2">
-        {(['all', 'pending', 'approved', 'rejected'] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors capitalize ${
-              filter === f
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-            style={{ fontFamily: 'var(--font-outfit)' }}
-          >
-            {f}
-          </button>
-        ))}
+      {/* Toolbar — chips scroll as one row rather than wrapping to a second
+          line; "View archive" stays put outside the scroll area so it's
+          always reachable at the right rather than sliding out of view. */}
+      <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-100 flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto min-w-0">
+          {(['all', 'pending', 'approved', 'rejected'] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors capitalize ${
+                filter === f
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+              style={{ fontFamily: 'var(--font-outfit)' }}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
 
         <Link
           href={showArchived ? '/admin/submissions' : '/admin/submissions?view=archived'}
-          className="ml-auto self-center text-xs text-slate-500 hover:text-slate-800 underline underline-offset-2"
+          className="ml-auto shrink-0 text-xs text-slate-500 hover:text-slate-800 underline underline-offset-2 whitespace-nowrap"
         >
           {showArchived ? '← Back to queue' : 'View archive'}
         </Link>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto">
+      {/* Table — desktop and up. Below md this clipped (DETAILS cut mid-word,
+          POSTED/ACTIONS off-screen) rather than usefully scrolling, so it's
+          replaced there by the card list below instead of made to scroll. */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-100">
@@ -276,6 +282,88 @@ export function SubmissionsTable({
         </table>
       </div>
 
+      {/* Cards — below md. Same fields as the table, same card pattern
+          (border/radius, 12px gaps via space-y-3) as the admin job list,
+          so a submitter's name/email, org, job, and the location/type/
+          closing badges read as one record instead of a clipped row. */}
+      <div className="md:hidden p-4 space-y-3">
+        {filtered.map((submission) => (
+          <div key={submission.id} className="rounded-xl border border-slate-100 p-3 space-y-2">
+            {/* Submitter + status */}
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="font-medium text-slate-800 leading-tight">{submission.submitter_name}</p>
+                <a href={`mailto:${submission.submitter_email}`} className="text-xs text-primary hover:underline break-all">
+                  {submission.submitter_email}
+                </a>
+                <p className="text-xs text-slate-400 mt-0.5">{submission.submitter_company_name}</p>
+              </div>
+              <Badge variant={STATUS_VARIANTS[submission.status] || 'secondary'} className="rounded-full capitalize shrink-0">
+                {submission.status}
+              </Badge>
+            </div>
+
+            {/* Job title + company */}
+            <div>
+              <p className="text-sm font-medium text-slate-700 leading-tight">{submission.title}</p>
+              <p className="text-xs text-slate-400 mt-0.5">{submission.company}</p>
+            </div>
+
+            {/* Location/type/mode/closing as small badges */}
+            {(submission.location || submission.job_type || submission.work_mode || submission.closing_at) && (
+              <div className="flex flex-wrap gap-1">
+                {submission.location && (
+                  <Badge variant="outline" className="rounded-full text-[11px] font-normal">{submission.location}</Badge>
+                )}
+                {submission.job_type && (
+                  <Badge variant="outline" className="rounded-full text-[11px] font-normal capitalize">{submission.job_type}</Badge>
+                )}
+                {submission.work_mode && (
+                  <Badge variant="outline" className="rounded-full text-[11px] font-normal capitalize">{submission.work_mode}</Badge>
+                )}
+                {submission.closing_at && (
+                  <Badge variant="outline" className="rounded-full text-[11px] font-normal">Closes {formatDate(submission.closing_at)}</Badge>
+                )}
+              </div>
+            )}
+
+            {submission.admin_note && (
+              <p className="text-xs text-destructive">Sent to submitter: {submission.admin_note}</p>
+            )}
+
+            {/* View link + submitted date */}
+            <div className="flex items-center justify-between">
+              <a href={submission.url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
+                View link ↗
+              </a>
+              <span className="text-xs text-slate-400">{formatDate(submission.created_at)}</span>
+            </div>
+
+            {/* Approve/reject (+ archive), one bottom row */}
+            <div className="flex items-center gap-1 pt-1 border-t border-slate-100">
+              {submission.status === 'pending' && !showArchived && (
+                <>
+                  <Button variant="ghost" size="sm" className="text-success" onClick={() => handleApprove(submission.id)}>
+                    Approve
+                  </Button>
+                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleReject(submission.id)}>
+                    Reject
+                  </Button>
+                </>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-slate-500 ml-auto"
+                onClick={() => handleArchive(submission.id)}
+              >
+                {showArchived ? 'Restore' : 'Archive'}
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {filtered.length === 0 && (
         <div className="text-center py-12 text-slate-400 text-sm">
           {showArchived
@@ -287,7 +375,7 @@ export function SubmissionsTable({
       )}
 
       {/* Footer */}
-      <div className="px-5 py-4 flex items-center justify-between border-t border-slate-100">
+      <div className="px-4 sm:px-5 py-3 sm:py-4 flex items-center justify-between border-t border-slate-100">
         <p className="text-xs text-slate-400">
           Showing {filtered.length} of {totalCount} submissions
         </p>

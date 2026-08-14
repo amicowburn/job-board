@@ -1,10 +1,10 @@
-import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Toaster } from 'sonner'
 import { getUser, isCurrentUserAdmin } from '@/lib/supabase/server'
 import { getPendingSubmissionCount } from '@/lib/admin-data'
-import { AdminNav } from '@/components/admin/admin-nav'
+import { AdminNavDesktop, AdminNavMobile } from '@/components/admin/admin-nav'
+import { Logo } from '@/components/Logo'
 
 export const metadata = {
   title: 'Admin | MMSS Job Board',
@@ -38,42 +38,24 @@ export default async function AdminLayout({
     <div className="min-h-screen flex flex-col bg-[#e8e8e8]">
       {user && (
         <header className="sticky top-0 z-50 px-[4vw] py-[15px]">
-          <div>
-            <div className="bg-white rounded-[15px] px-4 sm:px-[15px] flex items-center justify-between h-[50px] backdrop-blur-[10px]">
-              {/* Left: logo + Admin label + nav */}
-              <div className="flex items-center gap-4">
-                <Link href="/admin/jobs" className="flex items-center gap-2 shrink-0">
-                  <Image
-                    src="/mmss-logo.png"
-                    alt="MMSS"
-                    width={80}
-                    height={33}
-                    className="h-[28px] w-auto object-contain"
-                  />
-                  <span
-                    className="text-[11px] uppercase tracking-widest text-slate-400 font-medium hidden sm:block"
-                    style={{ fontFamily: 'var(--font-outfit)' }}
-                  >
-                    Admin
-                  </span>
-                </Link>
-                <AdminNav pendingSubmissions={pendingSubmissions} />
-              </div>
-              {/* Right: email + sign out */}
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-slate-400 hidden md:block truncate max-w-[180px]">
-                  {user.email}
-                </span>
-                {/* Below md this moves into AdminNav's mobile dropdown instead. */}
-                <form action="/api/auth/signout" method="POST" className="hidden md:block">
-                  <button
-                    type="submit"
-                    className="text-xs text-slate-500 hover:text-slate-800 px-2 py-1 rounded-md hover:bg-slate-100 transition-colors whitespace-nowrap"
-                  >
-                    Sign out
-                  </button>
-                </form>
-              </div>
+          {/* relative: the mobile dropdown (rendered from AdminNavMobile,
+              nested inside the pill below) is absolutely positioned against
+              this wrapper rather than the viewport, so it inherits the
+              pill's actual width instead of re-deriving its own 4vw inset —
+              see components/admin/admin-nav.tsx. */}
+          <div className="relative">
+            <div className="bg-white rounded-[15px] px-3 sm:px-[15px] flex items-center justify-between h-[50px] backdrop-blur-[10px]">
+              {/* Logo, nav, and the mobile toggle are direct pill children
+                  now — same structure components/navbar.tsx uses. No email/
+                  sign-out cluster on desktop any more (sign-out is still in
+                  AdminNavMobile's dropdown below md): matching the home
+                  nav's placement exactly means matching that it has nothing
+                  else on the right, just the nav flush against the edge. */}
+              <Link href="/admin/jobs" className="flex items-center shrink-0">
+                <Logo variant="admin" />
+              </Link>
+              <AdminNavDesktop pendingSubmissions={pendingSubmissions} />
+              <AdminNavMobile pendingSubmissions={pendingSubmissions} />
             </div>
           </div>
         </header>

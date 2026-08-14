@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import Image from 'next/image'
+import { Logo } from '@/components/Logo'
 
 const footerNavItems = [
   { href: 'https://monashmss.com/events', label: 'EVENTS' },
@@ -28,13 +28,7 @@ export function Footer() {
               </p>
             </div>
             <div className="pt-1">
-              <Image
-                src="/mmss-logo.png"
-                alt="MMSS"
-                width={140}
-                height={50}
-                className="h-[50px] w-auto object-contain"
-              />
+              <Logo className="h-[50px] w-auto object-contain" />
             </div>
           </div>
 

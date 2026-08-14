@@ -190,7 +190,7 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
   return (
     <>
       {/* Toolbar */}
-      <div className="px-5 py-4 border-b border-slate-100 flex flex-col sm:flex-row gap-3 justify-between">
+      <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-100 flex flex-col sm:flex-row gap-3 justify-between">
         <Input
           type="search"
           placeholder="Search this page..."
@@ -312,10 +312,16 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
 
       {/* Cards — mobile. Same data, same badge variants, same action logic
           and selection state as the table above — bulk select-and-deactivate
-          works identically here, not a reduced feature set. */}
-      <div className="md:hidden divide-y divide-slate-50">
+          works identically here, not a reduced feature set.
+          Each job is one record, not three stacked rows: title/company +
+          checkbox share a baseline-aligned top row, source+status badges
+          sit together directly below, and date+actions close it out. Cards
+          get their own border/radius and 12px gaps (space-y-3) rather than
+          divide-y, so more than two fit on screen without reading as a
+          single dense strip. */}
+      <div className="md:hidden p-4 space-y-3">
         {filteredJobs.length > 0 && (
-          <div className="px-5 py-2.5 flex items-center gap-2 bg-slate-50 border-b border-slate-100">
+          <div className="flex items-center gap-2 px-1">
             <input
               type="checkbox"
               checked={selectedJobs.size === filteredJobs.length && filteredJobs.length > 0}
@@ -328,50 +334,51 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
           </div>
         )}
         {filteredJobs.map((job) => (
-          <div key={job.id} className="px-5 py-4 flex gap-3">
-            <input
-              type="checkbox"
-              checked={selectedJobs.has(job.id)}
-              onChange={() => handleToggleSelect(job.id)}
-              className="rounded border-slate-300 mt-1 shrink-0"
-            />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="font-medium text-slate-800">{job.title}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{job.company}</p>
-                </div>
-                <Badge variant={job.source === 'manual' ? 'secondary' : 'outline'} className="rounded-full shrink-0">
-                  {job.source}
-                </Badge>
+          <div key={job.id} className="rounded-xl border border-slate-100 p-3 space-y-2">
+            {/* Title + company, checkbox aligned with the title's own line */}
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="font-medium text-slate-800 leading-tight">{job.title}</p>
+                <p className="text-xs text-slate-400 mt-0.5">{job.company}</p>
               </div>
+              <input
+                type="checkbox"
+                checked={selectedJobs.has(job.id)}
+                onChange={() => handleToggleSelect(job.id)}
+                className="rounded border-slate-300 shrink-0"
+              />
+            </div>
 
-              <div className="flex flex-wrap gap-1 mt-2">
-                <Badge variant={job.is_active ? 'success' : 'destructive'} className="rounded-full">
-                  {job.is_active ? 'Active' : 'Inactive'}
-                </Badge>
-                {job.is_featured && <Badge variant="warning" className="rounded-full">Featured</Badge>}
-                {job.is_sponsored && <Badge variant="default" className="rounded-full">Sponsored</Badge>}
-              </div>
+            {/* Source + status together, one row */}
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant={job.source === 'manual' ? 'secondary' : 'outline'} className="rounded-full">
+                {job.source}
+              </Badge>
+              <Badge variant={job.is_active ? 'success' : 'destructive'} className="rounded-full">
+                {job.is_active ? 'Active' : 'Inactive'}
+              </Badge>
+              {job.is_featured && <Badge variant="warning" className="rounded-full">Featured</Badge>}
+              {job.is_sponsored && <Badge variant="default" className="rounded-full">Sponsored</Badge>}
+            </div>
 
-              <div className="flex items-center justify-between mt-3">
-                <span className="text-xs text-slate-400">
-                  {formatDate(job.posted_at || job.created_at)}
-                </span>
-                <div className="flex gap-1">
-                  <Link href={`/admin/jobs/${job.id}/edit`}>
-                    <Button variant="ghost" size="sm">Edit</Button>
-                  </Link>
-                  {job.is_active ? (
-                    <Button variant="ghost" size="sm" onClick={() => handleDeactivate(job.id)}>
-                      Deactivate
-                    </Button>
-                  ) : (
-                    <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDelete(job.id)}>
-                      Delete
-                    </Button>
-                  )}
-                </div>
+            {/* Date + actions, one row */}
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-slate-400">
+                {formatDate(job.posted_at || job.created_at)}
+              </span>
+              <div className="flex gap-1">
+                <Link href={`/admin/jobs/${job.id}/edit`}>
+                  <Button variant="ghost" size="sm">Edit</Button>
+                </Link>
+                {job.is_active ? (
+                  <Button variant="ghost" size="sm" onClick={() => handleDeactivate(job.id)}>
+                    Deactivate
+                  </Button>
+                ) : (
+                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDelete(job.id)}>
+                    Delete
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -385,7 +392,7 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
       )}
 
       {/* Footer */}
-      <div className="px-5 py-4 flex items-center justify-between border-t border-slate-100">
+      <div className="px-4 sm:px-5 py-3 sm:py-4 flex items-center justify-between border-t border-slate-100">
         <p className="text-xs text-slate-400">
           Showing {filteredJobs.length} of {totalJobs} jobs
         </p>

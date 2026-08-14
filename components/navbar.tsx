@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname } from 'next/navigation'
+import { Logo } from '@/components/Logo'
 
 const navItems = [
   { href: 'https://monashmss.com/events', label: 'EVENTS' },
@@ -22,22 +22,15 @@ export function Navbar() {
   if (pathname?.startsWith('/admin')) return null
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 p-2.5 sm:p-[15px]">
-      <nav className="max-w-[1200px] mx-auto">
+    <header className="fixed top-0 left-0 right-0 z-50 py-2.5 sm:py-[15px] px-[4vw]">
+      <nav>
         <div className="bg-white rounded-[15px] px-3 sm:px-[15px] flex items-center justify-between h-[50px] shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
           {/* Logo */}
           <Link
             href="https://monashmss.com"
             className="flex items-center shrink-0 px-[5px] h-[50px]"
           >
-            <Image
-              src="/mmss-logo.png"
-              alt="MMSS"
-              width={94}
-              height={39}
-              className="h-[32px] sm:h-[39px] w-auto object-contain"
-              priority
-            />
+            <Logo className="h-[32px] sm:h-[39px] w-auto object-contain" priority />
           </Link>
 
           {/* Navigation Links - Desktop */}

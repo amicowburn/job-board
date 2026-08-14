@@ -1,7 +1,6 @@
-export { AdminNav } from './admin-nav'
+export { AdminNavDesktop, AdminNavMobile } from './admin-nav'
 export { JobForm } from './job-form'
 export { JobTable } from './job-table'
-export { FeedbackTable } from './feedback-table'
 export { BulkImport } from './bulk-import'
 export { RangeTabs } from './analytics/range-tabs'
 export { MetricCards } from './analytics/metric-cards'
