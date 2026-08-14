@@ -78,8 +78,10 @@
   --radius: 0.45rem;
 
   /* shadcn tokens that mirror the brand */
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: var(--mmss-primary);
+  --primary-foreground: var(--mmss-primary-foreground);
+  --background: var(--mmss-background);
+  --foreground: var(--mmss-foreground);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -130,12 +132,18 @@
   --chart-2: oklch(0.627 0.265 303.9); /* orange — job views */
   --chart-3: oklch(0.558 0.288 302.321); /* blue — interest by job type */
   --chart-4: oklch(0.496 0.265 301.924); /* aqua — interest by tag */
-  --chart-5: oklch(0.438 0.218 303.724); /* yellow — spare */ --background: oklch(1 0 0); --foreground: oklch(0.145 0 0);
+  --chart-5: oklch(0.438 0.218 303.724); /* yellow — spare */
 }
 
 /*
  * Defined but never activated — nothing toggles `.dark`. It exists so shadcn
  * components carry sane values if the app ever opts in.
+ *
+ * --background/--foreground/--primary intentionally stay on the imported
+ * neutral oklch() values here, not --mmss-*: the brand palette only defines
+ * light-mode colors. Repointing --primary alone would be safe, but there's
+ * no dark-tuned --mmss-background/--mmss-foreground yet, so this block is
+ * left un-migrated rather than half-done. Follow-up, not bundled here.
  */
 .dark {
   --background: oklch(0.145 0 0);
