@@ -4,11 +4,19 @@ import { useOptimistic, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { ArrowSquareOutIcon } from '@phosphor-icons/react'
+import { ArrowSquareOutIcon, CheckIcon, XIcon, DotsThreeVerticalIcon } from '@phosphor-icons/react'
 import { Button, Badge, useConfirmDialog } from '@/components/ui'
 import { Pagination } from '@/components/ui/pagination'
 import { segmentedTabsListClassName, segmentedTabsTriggerClassName } from '@/components/ui/segmented-tabs'
-import { ButtonGroup, ButtonGroupSeparator } from '@/components/shadcn/button-group'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/shadcn/dropdown-menu'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/shadcn/tooltip'
 import { formatDate } from '@/lib/utils'
 import type { JobSubmission } from '@/lib/types'
 
@@ -254,7 +262,7 @@ export function SubmissionsTable({
       <div className="hidden lg:block">
         <div
           role="row"
-          className="grid grid-cols-[minmax(0,1fr)_84px_96px_240px] bg-slate-50 border-b border-slate-100"
+          className="grid grid-cols-[minmax(0,1fr)_84px_96px_76px] bg-slate-50 border-b border-slate-100"
         >
           <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Submission</div>
           <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Closes</div>
@@ -280,7 +288,7 @@ export function SubmissionsTable({
             <div
               key={submission.id}
               role="row"
-              className="grid grid-cols-[minmax(0,1fr)_84px_96px_240px] border-b border-slate-50 last:border-b-0 hover:bg-slate-50/60 transition-colors"
+              className="grid grid-cols-[minmax(0,1fr)_84px_96px_76px] border-b border-slate-50 last:border-b-0 hover:bg-slate-50/60 transition-colors"
             >
               {/* Submission — 30px initials avatar + a two-line text block
                   (job title with an inline external-link icon, then
@@ -459,10 +467,15 @@ export function SubmissionsTable({
 }
 
 /**
- * Approve/Reject/Archive as one pill: a single outer border+shadow rather
- * than a border per button, with a hairline `ButtonGroupSeparator` — not a
- * per-button border — marking the join between segments. That's what keeps
- * it reading as one control instead of three buttons that happen to touch.
+ * Pending: two 28px icon buttons (Approve/Reject) + the overflow ellipsis.
+ * Non-pending: the ellipsis alone, still right-aligned in the same column —
+ * a lone icon button, not a lone icon button plus two icon-sized gaps where
+ * Approve/Reject would have been.
+ *
+ * The ellipsis is where everything Phase 2/3 took off the row lands:
+ * Archive/Restore, submitter email/company, job type/work mode, the
+ * submitted date, and — when present — the full rejection note (the row
+ * only ever shows a truncated line of it).
  */
 function SubmissionActionsMenu({
   submission,
@@ -478,39 +491,81 @@ function SubmissionActionsMenu({
   onArchive: (id: string) => void
 }) {
   const showPendingActions = submission.status === 'pending' && !showArchived
+  const jobMeta = [submission.job_type, submission.work_mode].filter(Boolean).join(' · ')
 
   return (
-    <ButtonGroup className="rounded-full border border-slate-200 bg-white shadow-sm overflow-hidden">
+    <div className="flex items-center justify-end gap-1">
       {showPendingActions && (
         <>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="rounded-none text-success hover:text-success hover:bg-success/10"
-            onClick={() => onApprove(submission.id)}
-          >
-            Approve
-          </Button>
-          <ButtonGroupSeparator />
-          <Button
-            variant="ghost"
-            size="sm"
-            className="rounded-none text-destructive hover:text-destructive hover:bg-destructive/10"
-            onClick={() => onReject(submission.id)}
-          >
-            Reject
-          </Button>
-          <ButtonGroupSeparator />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7 text-success hover:text-success hover:bg-success/10"
+                aria-label="Approve"
+                onClick={() => onApprove(submission.id)}
+              >
+                <CheckIcon weight="bold" className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Approve</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                aria-label="Reject"
+                onClick={() => onReject(submission.id)}
+              >
+                <XIcon weight="bold" className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Reject</TooltipContent>
+          </Tooltip>
         </>
       )}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="rounded-none text-slate-600"
-        onClick={() => onArchive(submission.id)}
-      >
-        {showArchived ? 'Restore' : 'Archive'}
-      </Button>
-    </ButtonGroup>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7 text-muted-foreground"
+            aria-label="More options"
+          >
+            <DotsThreeVerticalIcon weight="bold" className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-64">
+          <DropdownMenuItem onClick={() => onArchive(submission.id)}>
+            {showArchived ? 'Restore' : 'Archive'}
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel>Submitted by</DropdownMenuLabel>
+          <div className="px-3 pb-2 -mt-1 space-y-0.5">
+            <p className="text-sm font-medium text-popover-foreground">{submission.submitter_name}</p>
+            <p className="text-xs text-muted-foreground truncate">{submission.submitter_email}</p>
+            <p className="text-xs text-muted-foreground truncate">{submission.submitter_company_name}</p>
+          </div>
+
+          <div className="px-3 pb-2 text-xs text-muted-foreground">
+            {jobMeta && <span className="capitalize">{jobMeta} · </span>}
+            Submitted {formatDate(submission.created_at)}
+          </div>
+
+          {submission.admin_note && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Sent to submitter</DropdownMenuLabel>
+              <p className="px-3 pb-2 -mt-1 text-xs text-muted-foreground">{submission.admin_note}</p>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   )
 }
