@@ -92,7 +92,7 @@ Optional (graceful fallback if missing): `GEMINI_API_KEY`, `RESEND_API_KEY`
 
 ## Styling
 
-Tailwind CSS. Brand colors defined as CSS variables in `app/globals.css` (`--mmss-primary: #3d1472`, `--mmss-secondary: #5b2d8e`). Fonts: Inter (body), Outfit (headers). Custom UI primitives in `components/ui/` — no external component library.
+Tailwind CSS. Brand colors defined as CSS variables in `app/globals.css` (`--mmss-primary: #3d1472`, `--mmss-secondary: #5b2d8e`). Fonts: Inter (body), Outfit (headers). Custom UI primitives in `components/ui/` — no external component library. Popover-style components pulled from the shadcn CLI (`components/shadcn/`) ship with a literal `dark` class on their Content element — not a `dark:` variant, the actual class — which force-activates every `dark:` rule regardless of theme; since this app never turns dark mode on, that renders as a solid near-black panel. Strip the literal `dark` token (leave `dark:`-prefixed rules alone) from any newly-added `*Content`/`*SubContent` component before using it.
 
 ## Known Issues
 
