@@ -89,6 +89,14 @@
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
+  /* Amber — chroma 0.188 vs. --accent's 0, i.e. an actual hue, not another
+     shade of grey. Badge/Alert's `warning` variant still maps to --accent
+     (see components/ui/badge.tsx) and isn't touched here — this is scoped to
+     the admin submissions status dot that needed it. Worth migrating those
+     too if a real warning color is wanted app-wide, but that's a wider
+     change than this task asked for. */
+  --warning: oklch(0.769 0.188 70.08);
+  --warning-foreground: oklch(0.205 0 0);
   --border: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
 
@@ -161,6 +169,8 @@
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
+  --warning: oklch(0.666 0.179 58.318);
+  --warning-foreground: oklch(0.985 0 0);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
@@ -213,6 +223,8 @@
   --color-destructive-foreground: var(--mmss-destructive-foreground);
   --color-success: var(--mmss-success);
   --color-success-foreground: var(--mmss-success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
 
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);

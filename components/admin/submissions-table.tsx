@@ -20,18 +20,24 @@ const STATUS_VARIANTS: Record<string, 'warning' | 'success' | 'destructive'> = {
 
 /**
  * Dot + label colors for the grid's status column (STATUS_VARIANTS above
- * still feeds the mobile card's Badge, untouched by this pass). Rejected
- * deliberately isn't `destructive`/red here — a rejected submission is a
- * resolved, non-actionable state, not something that needs an alarm, so it
- * gets the same `muted` treatment as a closed date rather than red. Pending
- * uses `accent`/`accent-foreground`, this codebase's existing stand-in for
- * "warning" (see Badge's `warning` variant) — there's no dedicated warning
- * hue, so the dot reads as neutral gray by design, not a missing color.
+ * still feeds the mobile card's Badge, untouched by this pass). All three
+ * statuses need to read as distinct at a glance, so all three get an
+ * actual hue: warning/success/destructive, no muted state among them — the
+ * "mute what's inactive" idea belongs to the jobs page's Inactive listings,
+ * not a moderation decision here.
+ *
+ * Pending uses the new `--warning` token (app/globals.css), not `--accent`:
+ * `--accent` is chroma 0 in both light and dark — literally grayscale, not
+ * a shade-picking problem — so it can't carry a "needs attention" signal
+ * regardless of which shade is used. `--warning` is a real amber hue.
+ * Badge/Alert's `warning` variant still maps to `--accent` elsewhere in the
+ * app (e.g. the "Featured" job badge) — worth migrating too, but wider than
+ * this task.
  */
 const STATUS_DOT_STYLES: Record<JobSubmission['status'], { dot: string; text: string }> = {
-  pending: { dot: 'bg-accent-foreground', text: 'text-accent-foreground' },
+  pending: { dot: 'bg-warning', text: 'text-warning' },
   approved: { dot: 'bg-success', text: 'text-success' },
-  rejected: { dot: 'bg-muted-foreground', text: 'text-muted-foreground' },
+  rejected: { dot: 'bg-destructive', text: 'text-destructive' },
 }
 
 /** First letter of the first and last name; a single name just takes its first two letters. */
@@ -297,44 +303,43 @@ export function SubmissionsTable({
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label="Open original listing"
-                      className="shrink-0 text-slate-400 hover:text-primary transition-colors"
+                      className="shrink-0 text-muted-foreground hover:text-primary transition-colors"
                     >
                       <ArrowSquareOutIcon className="size-3.5" />
                     </a>
                   </div>
                   {secondaryLine && (
-                    <p className="text-xs text-slate-400 truncate">{secondaryLine}</p>
+                    <p className="text-xs text-muted-foreground truncate">{secondaryLine}</p>
                   )}
                   {submission.admin_note && (
                     // Muted, not destructive-red: the one field a moderator
                     // needs at a glance, but not an alarm. Truncated to one
                     // line — full text moves to the Phase 4 overflow menu,
                     // not a title tooltip.
-                    <p className="text-xs text-slate-400 truncate">
+                    <p className="text-xs text-muted-foreground truncate">
                       Sent to submitter: {submission.admin_note}
                     </p>
                   )}
                 </div>
               </div>
 
-              {/* Closes — right-aligned so it doesn't run up against Status;
-                  null and past-due dates both mute further than an open date,
-                  since neither is what needs an admin's attention right now. */}
+              {/* Closes — right-aligned so it doesn't run up against Status.
+                  Null and past-due both mute further than an open date, since
+                  neither needs an admin's attention right now — reduced
+                  opacity on muted-foreground rather than a separate slate
+                  shade, since there's no dedicated "extra-muted" token. */}
               <div className="pr-5 py-3 flex items-center justify-end text-xs">
                 {submission.closing_at ? (
-                  <span className={closed ? 'text-slate-300' : 'text-slate-400'}>
+                  <span className={closed ? 'text-muted-foreground/60' : 'text-muted-foreground'}>
                     {formatDate(submission.closing_at)}
                   </span>
                 ) : (
-                  <span className="text-slate-300">—</span>
+                  <span className="text-muted-foreground/60">—</span>
                 )}
               </div>
 
               {/* Status — fixed width on every row including pending, so the
-                  dot lands at the same x-position all the way down. Rejected
-                  mutes the dot AND the label together, not just the dot —
-                  a half-muted row (gray dot, dark label) would read as a
-                  rendering bug, not a deliberate "this is resolved" signal. */}
+                  dot lands at the same x-position all the way down. */}
               <div className="px-5 py-3 flex items-center gap-1.5">
                 <span className={`size-1.5 rounded-full shrink-0 ${statusStyle.dot}`} aria-hidden="true" />
                 <span className={`text-xs font-medium capitalize ${statusStyle.text}`}>
