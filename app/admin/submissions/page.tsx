@@ -1,5 +1,6 @@
 import { createServerClient } from '@/lib/supabase/server'
 import { SubmissionsTable } from '@/components/admin/submissions-table'
+import { getSubmissionStatusCounts } from '@/lib/admin-data'
 import type { JobSubmission } from '@/lib/types'
 
 export const metadata = {
@@ -29,11 +30,33 @@ export default async function AdminSubmissionsPage({ searchParams }: PageProps) 
     .order('created_at', { ascending: false })
     .range(from, to)
 
-  const { data: submissions, count } = await (showArchived
+  const submissionsQuery = showArchived
     ? query.not('archived_at', 'is', null)
-    : query.is('archived_at', null)) as { data: JobSubmission[] | null; count: number | null }
+    : query.is('archived_at', null)
+
+  // Run alongside the page query rather than after it — independent reads,
+  // no reason to wait on one to start the other.
+  const [submissionsResult, statusCounts] = await Promise.all([
+    submissionsQuery,
+    // `count` below is already an exact total for the unfiltered set
+    // (PostgREST computes it over the full match, not just the returned
+    // range), so only the three per-status counts need a separate query.
+    // Failure here drops the tab counts entirely rather than falling back
+    // to counting just the current page — a number that looks like a total
+    // but silently isn't one is worse than no number.
+    getSubmissionStatusCounts(showArchived).catch(() => null),
+  ])
+
+  const { data: submissions, count } = submissionsResult as {
+    data: JobSubmission[] | null
+    count: number | null
+  }
 
   const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE)
+
+  const counts = statusCounts
+    ? { all: count ?? 0, ...statusCounts }
+    : undefined
 
   return (
     <div>
@@ -58,6 +81,7 @@ export default async function AdminSubmissionsPage({ searchParams }: PageProps) 
           currentPage={currentPage}
           totalPages={totalPages}
           showArchived={showArchived}
+          counts={counts}
         />
       </div>
     </div>

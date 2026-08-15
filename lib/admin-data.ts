@@ -30,3 +30,46 @@ export const getPendingSubmissionCount = unstable_cache(
   ['pending-submission-count'],
   { tags: [SUBMISSIONS_TAG], revalidate: 300 }
 )
+
+/**
+ * Per-status totals for the submissions queue's filter tabs — true counts
+ * over the whole table, not just the current page. The page's own paginated
+ * query (`app/admin/submissions/page.tsx`) already returns an exact total
+ * for the unfiltered set via `count: 'exact'`, so that one is reused for
+ * "all" rather than duplicated here; this only covers the three statuses.
+ *
+ * `head: true` on each — three lightweight COUNT-only queries in parallel,
+ * same shape as `getPendingSubmissionCount` above, not one row fetched.
+ * Same service-role-client-plus-tag-invalidation reasoning as that one: the
+ * cache is shared across admins, so it can't depend on whose session ran it,
+ * and every submission mutation route already calls
+ * `revalidateTag(SUBMISSIONS_TAG)`.
+ */
+export const getSubmissionStatusCounts = unstable_cache(
+  async (archived: boolean) => {
+    const client = createAdminClient()
+
+    const countFor = (status: 'pending' | 'approved' | 'rejected') => {
+      const query = client
+        .from('job_submissions')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', status)
+
+      return archived ? query.not('archived_at', 'is', null) : query.is('archived_at', null)
+    }
+
+    const [pending, approved, rejected] = await Promise.all([
+      countFor('pending'),
+      countFor('approved'),
+      countFor('rejected'),
+    ])
+
+    return {
+      pending: pending.count ?? 0,
+      approved: approved.count ?? 0,
+      rejected: rejected.count ?? 0,
+    }
+  },
+  ['submission-status-counts'],
+  { tags: [SUBMISSIONS_TAG], revalidate: 300 }
+)

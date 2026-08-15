@@ -4,7 +4,7 @@ import { useOptimistic, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { ArrowSquareOutIcon, CheckIcon, XIcon, DotsThreeVerticalIcon } from '@phosphor-icons/react'
+import { ArrowSquareOutIcon, CheckIcon, XIcon, DotsThreeVerticalIcon, ArchiveIcon } from '@phosphor-icons/react'
 import { Button, Badge, useConfirmDialog } from '@/components/ui'
 import { Pagination } from '@/components/ui/pagination'
 import { segmentedTabsListClassName, segmentedTabsTriggerClassName } from '@/components/ui/segmented-tabs'
@@ -70,6 +70,13 @@ interface SubmissionsTableProps {
   totalPages: number
   /** Viewing the archive rather than the live queue. */
   showArchived?: boolean
+  /**
+   * True per-status totals for the filter tabs (not just this page).
+   * Undefined — not zeros — means the count query failed or was skipped;
+   * the tabs render without numbers rather than showing zeros that would
+   * read as "nothing here."
+   */
+  counts?: { all: number; pending: number; approved: number; rejected: number }
 }
 
 export function SubmissionsTable({
@@ -78,6 +85,7 @@ export function SubmissionsTable({
   currentPage,
   totalPages,
   showArchived = false,
+  counts,
 }: SubmissionsTableProps) {
   const router = useRouter()
   const [, startTransition] = useTransition()
@@ -101,10 +109,20 @@ export function SubmissionsTable({
           )
   )
 
-  const filtered =
-    filter === 'all'
-      ? optimisticSubmissions
-      : optimisticSubmissions.filter((s) => s.status === filter)
+  // Pending first (the thing waiting on a decision), then newest-submitted
+  // first within each group. The server orders by created_at alone across
+  // the whole table; this re-sorts within the fetched/filtered page only,
+  // the same client-side scope the status filter above already works in —
+  // it doesn't pull pending rows forward from a later page.
+  const filtered = (
+    filter === 'all' ? optimisticSubmissions : optimisticSubmissions.filter((s) => s.status === filter)
+  )
+    .slice()
+    .sort((a, b) => {
+      if (a.status === 'pending' && b.status !== 'pending') return -1
+      if (a.status !== 'pending' && b.status === 'pending') return 1
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    })
 
   const handleApprove = async (id: string) => {
     const { confirmed } = await confirm({
@@ -233,19 +251,25 @@ export function SubmissionsTable({
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={segmentedTabsTriggerClassName(filter === f)}
+              className={segmentedTabsTriggerClassName(filter === f, 'inline-flex items-center gap-1.5')}
               style={{ fontFamily: 'var(--font-outfit)' }}
             >
               {f}
+              {counts && (
+                <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-medium normal-case rounded-full bg-slate-200 text-slate-600 leading-none">
+                  {counts[f] > 99 ? '99+' : counts[f]}
+                </span>
+              )}
             </button>
           ))}
         </div>
 
         <Link
           href={showArchived ? '/admin/submissions' : '/admin/submissions?view=archived'}
-          className="ml-auto shrink-0 text-xs text-slate-500 hover:text-slate-800 underline underline-offset-2 whitespace-nowrap"
+          className="ml-auto shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors whitespace-nowrap"
         >
-          {showArchived ? '← Back to queue' : 'View archive'}
+          <ArchiveIcon weight={showArchived ? 'fill' : 'regular'} className="size-3.5" />
+          {showArchived ? 'Back to queue' : 'View archive'}
         </Link>
       </div>
 
