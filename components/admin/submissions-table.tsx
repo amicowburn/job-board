@@ -160,21 +160,20 @@ export function SubmissionsTable({
   }
 
   const handleReject = async (id: string) => {
+    // One muted line under the textarea carries everything the description,
+    // the amber warning, and the old helper text used to say separately —
+    // the note is rendered as a "Reviewer note" block in the rejection email
+    // (lib/email-templates.ts), so "sent in the email" already covers the
+    // old warning's point about not recording internal notes here.
     const { confirmed, note } = await confirm({
       title: 'Reject this submission?',
-      description:
-        'The submitter is emailed to let them know their listing was not approved.',
-      confirmLabel: 'Reject submission',
+      confirmLabel: 'Reject',
       destructive: true,
       note: {
         label: 'Reason for rejection (optional)',
-        placeholder: 'e.g. This role is not relevant to marketing students.',
-        helper: 'Leave blank to send the standard rejection message.',
+        placeholder: 'This role is not relevant to marketing students',
+        helper: 'Sent to the submitter in the rejection email. Leave blank for the standard message.',
       },
-      // The note is rendered as a "Reviewer note" block in the rejection email
-      // (lib/email-templates.ts). The old prompt claimed it was admin-only.
-      warning:
-        'Anything you write here is included in the email sent to the submitter. Do not record internal notes here.',
     })
     if (!confirmed) return
 

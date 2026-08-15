@@ -96,7 +96,7 @@ export function Modal({
         </div>
 
         {footer && (
-          <div className="px-5 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+          <div className="px-5 py-4 flex justify-end gap-2">
             {footer}
           </div>
         )}
