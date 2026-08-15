@@ -4,6 +4,7 @@ import { useOptimistic, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { ArrowSquareOutIcon } from '@phosphor-icons/react'
 import { Button, Badge, useConfirmDialog } from '@/components/ui'
 import { Pagination } from '@/components/ui/pagination'
 import { segmentedTabsListClassName, segmentedTabsTriggerClassName } from '@/components/ui/segmented-tabs'
@@ -15,6 +16,14 @@ const STATUS_VARIANTS: Record<string, 'warning' | 'success' | 'destructive'> = {
   pending: 'warning',
   approved: 'success',
   rejected: 'destructive',
+}
+
+/** First letter of the first and last name; a single name just takes its first two letters. */
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return '?'
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
 interface SubmissionsTableProps {
@@ -218,79 +227,97 @@ export function SubmissionsTable({
           <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Actions</div>
         </div>
 
-        {filtered.map((submission) => (
-          <div
-            key={submission.id}
-            role="row"
-            className="grid grid-cols-[minmax(0,1fr)_84px_96px_76px] border-b border-slate-50 last:border-b-0 hover:bg-slate-50/60 transition-colors"
-          >
-            {/* Submission — submitter + job merged into one cell for now;
-                Phase 2 condenses this into the avatar/title/company-location
-                layout and moves submitter email/company off the row. */}
-            <div className="min-w-0 px-5 py-4">
-              <div className="min-w-0">
-                <p className="font-medium text-slate-800">{submission.submitter_name}</p>
-                <a href={`mailto:${submission.submitter_email}`} className="text-xs text-primary hover:underline">
-                  {submission.submitter_email}
-                </a>
-                <p className="text-xs text-slate-400 mt-0.5">{submission.submitter_company_name}</p>
+        {filtered.map((submission) => {
+          // company/location: skip null segments instead of rendering a
+          // dangling " · " when one side is missing.
+          const secondaryLine = [submission.company, submission.location].filter(Boolean).join(' · ')
 
-                <p className="font-medium text-slate-800 mt-2">{submission.title}</p>
-                <p className="text-xs text-slate-400 mt-0.5">{submission.company}</p>
-                {(submission.location || submission.job_type || submission.work_mode) && (
-                  <div className="flex flex-wrap gap-1 mt-1.5">
-                    {submission.location && (
-                      <Badge variant="outline" className="rounded-full text-[11px] font-normal">{submission.location}</Badge>
-                    )}
-                    {submission.job_type && (
-                      <Badge variant="outline" className="rounded-full text-[11px] font-normal capitalize">{submission.job_type}</Badge>
-                    )}
-                    {submission.work_mode && (
-                      <Badge variant="outline" className="rounded-full text-[11px] font-normal capitalize">{submission.work_mode}</Badge>
-                    )}
+          // Submitter email/company and job type/work mode lose their row
+          // spot in this pass. Phase 4 is where the real overflow menu (the
+          // ellipsis DropdownMenu) lands, gated on you reviewing one working
+          // instance first — so until then this is a native title tooltip on
+          // the avatar, not a menu. Same bridge covers the submitted date,
+          // which had its own column in the old table and has no slot here.
+          const overflowDetail = [
+            `${submission.submitter_name} · ${submission.submitter_email}`,
+            submission.submitter_company_name,
+            [submission.job_type, submission.work_mode].filter(Boolean).join(' · '),
+            `Submitted ${formatDate(submission.created_at)}`,
+          ].filter(Boolean).join('\n')
+
+          return (
+            <div
+              key={submission.id}
+              role="row"
+              className="grid grid-cols-[minmax(0,1fr)_84px_96px_76px] border-b border-slate-50 last:border-b-0 hover:bg-slate-50/60 transition-colors"
+            >
+              {/* Submission — 30px initials avatar + a two-line text block
+                  (job title with an inline external-link icon, then
+                  company · location). ~56px tall in the common case; a
+                  rejection note (rare, only on rejected rows) adds a third
+                  truncated line rather than being dropped silently. */}
+              <div className="min-w-0 px-5 py-3 flex items-center gap-2.5">
+                <div
+                  className="shrink-0 size-[30px] rounded-full bg-slate-100 text-slate-600 text-[11px] font-medium flex items-center justify-center select-none"
+                  title={overflowDetail}
+                  aria-label={`Submitted by ${submission.submitter_name}, ${submission.submitter_email}`}
+                >
+                  {getInitials(submission.submitter_name)}
+                </div>
+
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1">
+                    <p className="text-sm font-medium text-slate-800 truncate">{submission.title}</p>
+                    <a
+                      href={submission.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Open original listing"
+                      className="shrink-0 text-slate-400 hover:text-primary transition-colors"
+                    >
+                      <ArrowSquareOutIcon className="size-3.5" />
+                    </a>
                   </div>
-                )}
-                <a href={submission.url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline mt-1 inline-block">
-                  View link ↗
-                </a>
-                {submission.admin_note && (
-                  <p className="text-xs text-destructive mt-0.5">Sent to submitter: {submission.admin_note}</p>
-                )}
-                {/* Submitted date had its own column in the old table; there's no
-                    column left for it in the 4-up grid, so it's folded in here
-                    until Phase 2/4 settle where it lives behind the overflow menu. */}
-                <p className="text-xs text-slate-400 mt-1">Submitted {formatDate(submission.created_at)}</p>
+                  {secondaryLine && (
+                    <p className="text-xs text-slate-400 truncate">{secondaryLine}</p>
+                  )}
+                  {submission.admin_note && (
+                    <p className="text-xs text-destructive truncate" title={submission.admin_note}>
+                      Sent to submitter: {submission.admin_note}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Closes */}
+              <div className="px-5 py-3 flex items-center text-xs text-slate-400">
+                {submission.closing_at ? formatDate(submission.closing_at) : '—'}
+              </div>
+
+              {/* Status — same width on every row regardless of content, so
+                  whatever marks it (badge now, dot in Phase 3) lines up going
+                  down the page. */}
+              <div className="px-5 py-3 flex items-center">
+                <Badge variant={STATUS_VARIANTS[submission.status] || 'secondary'} className="rounded-full capitalize">
+                  {submission.status}
+                </Badge>
+              </div>
+
+              {/* Actions — fixed width regardless of which/how many actions this
+                  row has; the pill group is wider than 76px until Phase 4 swaps
+                  it for icon buttons, so it overflows the column for now. */}
+              <div className="px-5 py-3 flex items-center">
+                <SubmissionActionsMenu
+                  submission={submission}
+                  showArchived={showArchived}
+                  onApprove={handleApprove}
+                  onReject={handleReject}
+                  onArchive={handleArchive}
+                />
               </div>
             </div>
-
-            {/* Closes */}
-            <div className="px-5 py-4 text-xs text-slate-400">
-              {submission.closing_at ? formatDate(submission.closing_at) : '—'}
-            </div>
-
-            {/* Status — same width on every row regardless of content, so
-                whatever marks it (badge now, dot in Phase 3) lines up going
-                down the page. */}
-            <div className="px-5 py-4 flex items-center">
-              <Badge variant={STATUS_VARIANTS[submission.status] || 'secondary'} className="rounded-full capitalize">
-                {submission.status}
-              </Badge>
-            </div>
-
-            {/* Actions — fixed width regardless of which/how many actions this
-                row has; the pill group is wider than 76px until Phase 4 swaps
-                it for icon buttons, so it overflows the column for now. */}
-            <div className="px-5 py-4 flex items-center">
-              <SubmissionActionsMenu
-                submission={submission}
-                showArchived={showArchived}
-                onApprove={handleApprove}
-                onReject={handleReject}
-                onArchive={handleArchive}
-              />
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* Cards — below lg. Same fields as the grid, same card pattern
