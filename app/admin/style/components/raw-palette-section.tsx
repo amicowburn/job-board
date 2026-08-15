@@ -1,0 +1,79 @@
+import type { RawPaletteReport } from '../lib/scan'
+
+export function RawPaletteSection({ report }: { report: RawPaletteReport }) {
+  return (
+    <section className="space-y-4">
+      <header>
+        <h2 className="text-2xl font-semibold text-foreground">2. Raw palette usage</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Computed at request time by scanning <code>app/</code>, <code>components/</code>, and{' '}
+          <code>lib/</code> for raw Tailwind palette classes (<code>slate-*</code>, <code>zinc-*</code>,{' '}
+          <code>red-*</code>, etc.) — anything that names a color directly instead of going through a{' '}
+          semantic token from <code>app/globals.css</code>. This is the point of the page: every row
+          here is a place the token layer is being bypassed.
+        </p>
+      </header>
+
+      <div className="flex flex-wrap gap-4 rounded-md border border-border bg-muted/40 p-4 text-sm">
+        <Stat label="Instances" value={report.totalInstances} />
+        <Stat label="Files" value={report.totalFiles} />
+        <div className="min-w-0 flex-1">
+          <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            By family
+          </div>
+          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            {report.byFamily.map((f) => (
+              <span key={f.family}>
+                <span className="font-medium text-foreground">{f.family}</span> ×{f.count}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="max-h-[32rem] overflow-y-auto rounded-md border border-border">
+        <table className="w-full text-left text-sm">
+          <thead className="sticky top-0 bg-muted text-xs uppercase tracking-wide text-muted-foreground">
+            <tr>
+              <th className="px-3 py-2 font-medium">File</th>
+              <th className="px-3 py-2 font-medium">Classes</th>
+              <th className="px-3 py-2 text-right font-medium">Total</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {report.files.map((f) => (
+              <tr key={f.file} className="align-top">
+                <td className="whitespace-nowrap px-3 py-2 font-mono text-xs text-foreground">
+                  {f.file}
+                </td>
+                <td className="px-3 py-2">
+                  <div className="flex flex-wrap gap-1.5">
+                    {f.classes.map((c) => (
+                      <code
+                        key={c.className}
+                        className="rounded bg-muted px-1.5 py-0.5 text-xs text-foreground"
+                        title={`${c.count} occurrence${c.count === 1 ? '' : 's'}`}
+                      >
+                        {c.className} ×{c.count}
+                      </code>
+                    ))}
+                  </div>
+                </td>
+                <td className="px-3 py-2 text-right text-xs text-muted-foreground">{f.total}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )
+}
+
+function Stat({ label, value }: { label: string; value: number }) {
+  return (
+    <div>
+      <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="text-xl font-semibold text-foreground">{value}</div>
+    </div>
+  )
+}
