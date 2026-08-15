@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Button, Badge, useConfirmDialog } from '@/components/ui'
 import { Pagination } from '@/components/ui/pagination'
+import { segmentedTabsListClassName, segmentedTabsTriggerClassName } from '@/components/ui/segmented-tabs'
+import { ButtonGroup, ButtonGroupSeparator } from '@/components/shadcn/button-group'
 import { formatDate } from '@/lib/utils'
 import type { JobSubmission } from '@/lib/types'
 
@@ -180,16 +182,12 @@ export function SubmissionsTable({
           line; "View archive" stays put outside the scroll area so it's
           always reachable at the right rather than sliding out of view. */}
       <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-100 flex items-center gap-2">
-        <div className="flex items-center gap-2 overflow-x-auto min-w-0">
+        <div className={`${segmentedTabsListClassName} overflow-x-auto min-w-0`}>
           {(['all', 'pending', 'approved', 'rejected'] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors capitalize ${
-                filter === f
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
+              className={segmentedTabsTriggerClassName(filter === f)}
               style={{ fontFamily: 'var(--font-outfit)' }}
             >
               {f}
@@ -214,7 +212,7 @@ export function SubmissionsTable({
             <tr className="bg-slate-50 border-b border-slate-100">
               <th className="px-5 py-3 text-left text-[11px] uppercase tracking-wide text-slate-500 font-medium">Submitter</th>
               <th className="px-5 py-3 text-left text-[11px] uppercase tracking-wide text-slate-500 font-medium">Job</th>
-              <th className="px-5 py-3 text-left text-[11px] uppercase tracking-wide text-slate-500 font-medium">Details</th>
+              <th className="px-5 py-3 text-left text-[11px] uppercase tracking-wide text-slate-500 font-medium">Closes</th>
               <th className="px-5 py-3 text-left text-[11px] uppercase tracking-wide text-slate-500 font-medium">Status</th>
               <th className="px-5 py-3 text-left text-[11px] uppercase tracking-wide text-slate-500 font-medium">Submitted</th>
               <th className="px-5 py-3 text-left text-[11px] uppercase tracking-wide text-slate-500 font-medium">Actions</th>
@@ -233,18 +231,28 @@ export function SubmissionsTable({
                 <td className="px-5 py-4">
                   <p className="font-medium text-slate-800">{submission.title}</p>
                   <p className="text-xs text-slate-400 mt-0.5">{submission.company}</p>
-                  <a href={submission.url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">
+                  {(submission.location || submission.job_type || submission.work_mode) && (
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {submission.location && (
+                        <Badge variant="outline" className="rounded-full text-[11px] font-normal">{submission.location}</Badge>
+                      )}
+                      {submission.job_type && (
+                        <Badge variant="outline" className="rounded-full text-[11px] font-normal capitalize">{submission.job_type}</Badge>
+                      )}
+                      {submission.work_mode && (
+                        <Badge variant="outline" className="rounded-full text-[11px] font-normal capitalize">{submission.work_mode}</Badge>
+                      )}
+                    </div>
+                  )}
+                  <a href={submission.url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline mt-1 inline-block">
                     View link ↗
                   </a>
-                </td>
-                <td className="px-5 py-4 text-xs text-slate-400 space-y-0.5">
-                  {submission.location && <p>{submission.location}</p>}
-                  {submission.job_type && <p className="capitalize">{submission.job_type}</p>}
-                  {submission.work_mode && <p className="capitalize">{submission.work_mode}</p>}
-                  {submission.closing_at && <p>Closes {formatDate(submission.closing_at)}</p>}
                   {submission.admin_note && (
-                    <p className="text-destructive">Sent to submitter: {submission.admin_note}</p>
+                    <p className="text-xs text-destructive mt-0.5">Sent to submitter: {submission.admin_note}</p>
                   )}
+                </td>
+                <td className="px-5 py-4 text-xs text-slate-400">
+                  {submission.closing_at ? formatDate(submission.closing_at) : '—'}
                 </td>
                 <td className="px-5 py-4">
                   <Badge variant={STATUS_VARIANTS[submission.status] || 'secondary'} className="rounded-full capitalize">
@@ -255,26 +263,13 @@ export function SubmissionsTable({
                   {formatDate(submission.created_at)}
                 </td>
                 <td className="px-5 py-4">
-                  <div className="flex gap-1">
-                    {submission.status === 'pending' && !showArchived && (
-                      <>
-                        <Button variant="ghost" size="sm" className="text-success" onClick={() => handleApprove(submission.id)}>
-                          Approve
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleReject(submission.id)}>
-                          Reject
-                        </Button>
-                      </>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-slate-500"
-                      onClick={() => handleArchive(submission.id)}
-                    >
-                      {showArchived ? 'Restore' : 'Archive'}
-                    </Button>
-                  </div>
+                  <SubmissionActionsMenu
+                    submission={submission}
+                    showArchived={showArchived}
+                    onApprove={handleApprove}
+                    onReject={handleReject}
+                    onArchive={handleArchive}
+                  />
                 </td>
               </tr>
             ))}
@@ -339,26 +334,15 @@ export function SubmissionsTable({
               <span className="text-xs text-slate-400">{formatDate(submission.created_at)}</span>
             </div>
 
-            {/* Approve/reject (+ archive), one bottom row */}
-            <div className="flex items-center gap-1 pt-1 border-t border-slate-100">
-              {submission.status === 'pending' && !showArchived && (
-                <>
-                  <Button variant="ghost" size="sm" className="text-success" onClick={() => handleApprove(submission.id)}>
-                    Approve
-                  </Button>
-                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleReject(submission.id)}>
-                    Reject
-                  </Button>
-                </>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-slate-500 ml-auto"
-                onClick={() => handleArchive(submission.id)}
-              >
-                {showArchived ? 'Restore' : 'Archive'}
-              </Button>
+            {/* Actions, right-aligned in its own row */}
+            <div className="flex items-center justify-end pt-1 border-t border-slate-100">
+              <SubmissionActionsMenu
+                submission={submission}
+                showArchived={showArchived}
+                onApprove={handleApprove}
+                onReject={handleReject}
+                onArchive={handleArchive}
+              />
             </div>
           </div>
         ))}
@@ -384,5 +368,62 @@ export function SubmissionsTable({
 
       {dialog}
     </>
+  )
+}
+
+/**
+ * Approve/Reject/Archive as one pill: a single outer border+shadow rather
+ * than a border per button, with a hairline `ButtonGroupSeparator` — not a
+ * per-button border — marking the join between segments. That's what keeps
+ * it reading as one control instead of three buttons that happen to touch.
+ */
+function SubmissionActionsMenu({
+  submission,
+  showArchived,
+  onApprove,
+  onReject,
+  onArchive,
+}: {
+  submission: JobSubmission
+  showArchived: boolean
+  onApprove: (id: string) => void
+  onReject: (id: string) => void
+  onArchive: (id: string) => void
+}) {
+  const showPendingActions = submission.status === 'pending' && !showArchived
+
+  return (
+    <ButtonGroup className="rounded-full border border-slate-200 bg-white shadow-sm overflow-hidden">
+      {showPendingActions && (
+        <>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="rounded-none text-success hover:text-success hover:bg-success/10"
+            onClick={() => onApprove(submission.id)}
+          >
+            Approve
+          </Button>
+          <ButtonGroupSeparator />
+          <Button
+            variant="ghost"
+            size="sm"
+            className="rounded-none text-destructive hover:text-destructive hover:bg-destructive/10"
+            onClick={() => onReject(submission.id)}
+          >
+            Reject
+          </Button>
+          <ButtonGroupSeparator />
+        </>
+      )}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="rounded-none text-slate-600"
+        onClick={() => onArchive(submission.id)}
+      >
+        {showArchived ? 'Restore' : 'Archive'}
+      </Button>
+    </ButtonGroup>
   )
 }
