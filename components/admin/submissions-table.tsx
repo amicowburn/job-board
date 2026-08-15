@@ -18,12 +18,35 @@ const STATUS_VARIANTS: Record<string, 'warning' | 'success' | 'destructive'> = {
   rejected: 'destructive',
 }
 
+/**
+ * Dot + label colors for the grid's status column (STATUS_VARIANTS above
+ * still feeds the mobile card's Badge, untouched by this pass). Rejected
+ * deliberately isn't `destructive`/red here — a rejected submission is a
+ * resolved, non-actionable state, not something that needs an alarm, so it
+ * gets the same `muted` treatment as a closed date rather than red. Pending
+ * uses `accent`/`accent-foreground`, this codebase's existing stand-in for
+ * "warning" (see Badge's `warning` variant) — there's no dedicated warning
+ * hue, so the dot reads as neutral gray by design, not a missing color.
+ */
+const STATUS_DOT_STYLES: Record<JobSubmission['status'], { dot: string; text: string }> = {
+  pending: { dot: 'bg-accent-foreground', text: 'text-accent-foreground' },
+  approved: { dot: 'bg-success', text: 'text-success' },
+  rejected: { dot: 'bg-muted-foreground', text: 'text-muted-foreground' },
+}
+
 /** First letter of the first and last name; a single name just takes its first two letters. */
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean)
   if (parts.length === 0) return '?'
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+}
+
+/** Local-date comparison: a closing date of "today" isn't past yet. */
+function isPastDate(isoDate: string): boolean {
+  const closing = new Date(isoDate)
+  closing.setHours(23, 59, 59, 999)
+  return closing.getTime() < Date.now()
 }
 
 interface SubmissionsTableProps {
@@ -215,11 +238,17 @@ export function SubmissionsTable({
       {/* Grid — lg and up only. A fixed 4-column template (submission /
           closes / status / actions) needs real width to breathe; below lg
           it's replaced by the card list rather than squeezed, same as the
-          table this replaced was swapped out below md. */}
+          table this replaced was swapped out below md.
+
+          Actions is 240px, not the target 76px, until Phase 4 swaps the
+          Approve/Reject/Archive pill for 28px icon buttons — that pill needs
+          real room (three ghost buttons + two separators) and 76px would
+          just move the overflow from "visibly broken" to "silently clipped".
+          240px is sized to the pill's actual rendered width, not a guess. */}
       <div className="hidden lg:block">
         <div
           role="row"
-          className="grid grid-cols-[minmax(0,1fr)_84px_96px_76px] bg-slate-50 border-b border-slate-100"
+          className="grid grid-cols-[minmax(0,1fr)_84px_96px_240px] bg-slate-50 border-b border-slate-100"
         >
           <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Submission</div>
           <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Closes</div>
@@ -232,24 +261,20 @@ export function SubmissionsTable({
           // dangling " · " when one side is missing.
           const secondaryLine = [submission.company, submission.location].filter(Boolean).join(' · ')
 
-          // Submitter email/company and job type/work mode lose their row
-          // spot in this pass. Phase 4 is where the real overflow menu (the
-          // ellipsis DropdownMenu) lands, gated on you reviewing one working
-          // instance first — so until then this is a native title tooltip on
-          // the avatar, not a menu. Same bridge covers the submitted date,
-          // which had its own column in the old table and has no slot here.
-          const overflowDetail = [
-            `${submission.submitter_name} · ${submission.submitter_email}`,
-            submission.submitter_company_name,
-            [submission.job_type, submission.work_mode].filter(Boolean).join(' · '),
-            `Submitted ${formatDate(submission.created_at)}`,
-          ].filter(Boolean).join('\n')
+          // Submitter email/company and job type/work mode have no row spot
+          // as of Phase 2, and stay that way — no tooltip bridge. They're
+          // still reachable from the detail view / edit-token flow elsewhere
+          // in the app, and none of them are what a moderator scans a queue
+          // for, per the redesign's premise. Phase 4's overflow menu is
+          // where they'll actually resurface, once that menu exists.
+          const closed = submission.closing_at ? isPastDate(submission.closing_at) : false
+          const statusStyle = STATUS_DOT_STYLES[submission.status]
 
           return (
             <div
               key={submission.id}
               role="row"
-              className="grid grid-cols-[minmax(0,1fr)_84px_96px_76px] border-b border-slate-50 last:border-b-0 hover:bg-slate-50/60 transition-colors"
+              className="grid grid-cols-[minmax(0,1fr)_84px_96px_240px] border-b border-slate-50 last:border-b-0 hover:bg-slate-50/60 transition-colors"
             >
               {/* Submission — 30px initials avatar + a two-line text block
                   (job title with an inline external-link icon, then
@@ -259,8 +284,7 @@ export function SubmissionsTable({
               <div className="min-w-0 px-5 py-3 flex items-center gap-2.5">
                 <div
                   className="shrink-0 size-[30px] rounded-full bg-slate-100 text-slate-600 text-[11px] font-medium flex items-center justify-center select-none"
-                  title={overflowDetail}
-                  aria-label={`Submitted by ${submission.submitter_name}, ${submission.submitter_email}`}
+                  aria-label={`Submitted by ${submission.submitter_name}`}
                 >
                   {getInitials(submission.submitter_name)}
                 </div>
@@ -282,30 +306,45 @@ export function SubmissionsTable({
                     <p className="text-xs text-slate-400 truncate">{secondaryLine}</p>
                   )}
                   {submission.admin_note && (
-                    <p className="text-xs text-destructive truncate" title={submission.admin_note}>
+                    // Muted, not destructive-red: the one field a moderator
+                    // needs at a glance, but not an alarm. Truncated to one
+                    // line — full text moves to the Phase 4 overflow menu,
+                    // not a title tooltip.
+                    <p className="text-xs text-slate-400 truncate">
                       Sent to submitter: {submission.admin_note}
                     </p>
                   )}
                 </div>
               </div>
 
-              {/* Closes */}
-              <div className="px-5 py-3 flex items-center text-xs text-slate-400">
-                {submission.closing_at ? formatDate(submission.closing_at) : '—'}
+              {/* Closes — right-aligned so it doesn't run up against Status;
+                  null and past-due dates both mute further than an open date,
+                  since neither is what needs an admin's attention right now. */}
+              <div className="pr-5 py-3 flex items-center justify-end text-xs">
+                {submission.closing_at ? (
+                  <span className={closed ? 'text-slate-300' : 'text-slate-400'}>
+                    {formatDate(submission.closing_at)}
+                  </span>
+                ) : (
+                  <span className="text-slate-300">—</span>
+                )}
               </div>
 
-              {/* Status — same width on every row regardless of content, so
-                  whatever marks it (badge now, dot in Phase 3) lines up going
-                  down the page. */}
-              <div className="px-5 py-3 flex items-center">
-                <Badge variant={STATUS_VARIANTS[submission.status] || 'secondary'} className="rounded-full capitalize">
+              {/* Status — fixed width on every row including pending, so the
+                  dot lands at the same x-position all the way down. Rejected
+                  mutes the dot AND the label together, not just the dot —
+                  a half-muted row (gray dot, dark label) would read as a
+                  rendering bug, not a deliberate "this is resolved" signal. */}
+              <div className="px-5 py-3 flex items-center gap-1.5">
+                <span className={`size-1.5 rounded-full shrink-0 ${statusStyle.dot}`} aria-hidden="true" />
+                <span className={`text-xs font-medium capitalize ${statusStyle.text}`}>
                   {submission.status}
-                </Badge>
+                </span>
               </div>
 
-              {/* Actions — fixed width regardless of which/how many actions this
-                  row has; the pill group is wider than 76px until Phase 4 swaps
-                  it for icon buttons, so it overflows the column for now. */}
+              {/* Actions — 240px for now (see the grid comment above); still
+                  fixed width regardless of which/how many actions this row
+                  has, so it never absorbs space at the status column's expense. */}
               <div className="px-5 py-3 flex items-center">
                 <SubmissionActionsMenu
                   submission={submission}
