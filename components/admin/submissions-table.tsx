@@ -278,20 +278,28 @@ export function SubmissionsTable({
           it's replaced by the card list rather than squeezed, same as the
           table this replaced was swapped out below md.
 
-          Actions is 240px, not the target 76px, until Phase 4 swaps the
-          Approve/Reject/Archive pill for 28px icon buttons — that pill needs
-          real room (three ghost buttons + two separators) and 76px would
-          just move the overflow from "visibly broken" to "silently clipped".
-          240px is sized to the pill's actual rendered width, not a guess. */}
+          Actions is 104px: three 28px icon buttons (size-7) + two 4px gaps
+          is 92px of content, and 76px clipped the ellipsis off pending rows
+          — it fit fine on approved/rejected rows (ellipsis alone, ~28px)
+          which is how that got past review the first time.
+
+          The 92px of content plus a real 20px (pr-5) of edge breathing room
+          is 112px, more than the 104px column itself — so pr-5 isn't on the
+          Actions cell, it's on an inner grid wrapper nested inside each
+          row's outer div. Background/border/hover live on the outer div and
+          span the row's true full width; only the grid (and everything
+          inside it) is inset by pr-5. Padding the outer div directly would
+          have shrunk the header's bg-slate-50 and each row's border-b short
+          of the card's actual right edge, leaving a blank sliver — the
+          nesting is what avoids that seam. */}
       <div className="hidden lg:block">
-        <div
-          role="row"
-          className="grid grid-cols-[minmax(0,1fr)_112px_96px_76px] bg-slate-50 border-b border-slate-100"
-        >
-          <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Submission</div>
-          <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Closes</div>
-          <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Status</div>
-          <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Actions</div>
+        <div role="row" className="bg-slate-50 border-b border-slate-100">
+          <div className="grid grid-cols-[minmax(0,1fr)_112px_96px_104px] pr-5">
+            <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Submission</div>
+            <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Closes</div>
+            <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Status</div>
+            <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Actions</div>
+          </div>
         </div>
 
         {filtered.map((submission) => {
@@ -312,89 +320,105 @@ export function SubmissionsTable({
             <div
               key={submission.id}
               role="row"
-              className="grid grid-cols-[minmax(0,1fr)_112px_96px_76px] border-b border-slate-50 last:border-b-0 hover:bg-slate-50/60 transition-colors"
+              className="border-b border-slate-50 last:border-b-0 hover:bg-slate-50/60 transition-colors"
             >
-              {/* Submission — 30px initials avatar + a two-line text block
-                  (job title with an inline external-link icon, then
-                  company · location). ~56px tall in the common case; a
-                  rejection note (rare, only on rejected rows) adds a third
-                  truncated line rather than being dropped silently. */}
-              <div className="min-w-0 px-5 py-3 flex items-center gap-2.5">
-                <div
-                  className="shrink-0 size-[30px] rounded-full bg-slate-100 text-slate-600 text-[11px] font-medium flex items-center justify-center select-none"
-                  aria-label={`Submitted by ${submission.submitter_name}`}
-                >
-                  {getInitials(submission.submitter_name)}
-                </div>
-
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1">
-                    <p className="text-sm font-medium text-slate-800 truncate">{decodeHtmlEntities(submission.title)}</p>
-                    <a
-                      href={submission.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label="Open original listing"
-                      className="shrink-0 text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      <ArrowSquareOutIcon className="size-3.5" />
-                    </a>
+              <div className="grid grid-cols-[minmax(0,1fr)_112px_96px_104px] pr-5">
+                {/* Submission — 30px initials avatar + a two-line text block
+                    (job title with an inline external-link icon, then
+                    company · location). ~56px tall in the common case; a
+                    rejection note (rare, only on rejected rows) adds a third
+                    truncated line rather than being dropped silently. */}
+                <div className="min-w-0 px-5 py-3 flex items-center gap-2.5">
+                  <div
+                    className="shrink-0 size-[30px] rounded-full bg-slate-100 text-slate-600 text-[11px] font-medium flex items-center justify-center select-none"
+                    aria-label={`Submitted by ${submission.submitter_name}`}
+                  >
+                    {getInitials(submission.submitter_name)}
                   </div>
-                  {secondaryLine && (
-                    <p className="text-xs text-muted-foreground truncate">{secondaryLine}</p>
-                  )}
-                  {submission.admin_note && (
-                    // Muted, not destructive-red: the one field a moderator
-                    // needs at a glance, but not an alarm. Truncated to one
-                    // line — full text moves to the Phase 4 overflow menu,
-                    // not a title tooltip.
-                    <p className="text-xs text-muted-foreground truncate">
-                      Sent to submitter: {submission.admin_note}
-                    </p>
+
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1">
+                      <p className="text-sm font-medium text-slate-800 truncate">{decodeHtmlEntities(submission.title)}</p>
+                      <a
+                        href={submission.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Open original listing"
+                        className="shrink-0 text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        <ArrowSquareOutIcon className="size-3.5" />
+                      </a>
+                    </div>
+                    {secondaryLine && (
+                      <p className="text-xs text-muted-foreground truncate">{secondaryLine}</p>
+                    )}
+                    {submission.admin_note && (
+                      // Muted, not destructive-red: the one field a moderator
+                      // needs at a glance, but not an alarm. Truncated to one
+                      // line — full text moves to the Phase 4 overflow menu,
+                      // not a title tooltip.
+                      <p className="text-xs text-muted-foreground truncate">
+                        Sent to submitter: {submission.admin_note}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Closes — right-aligned so it doesn't run up against Status.
+                    `whitespace-nowrap` + a 112px (not 84px) column: dates like
+                    "31 Dec 2026" or "5 Sept 2026" were wrapping onto a second
+                    line in the narrower column, which is what was throwing off
+                    row height/alignment down the page — every other cell is
+                    one line, so a wrapped date was the only row that grew.
+                    Null and past-due both mute further than an open date,
+                    since neither needs an admin's attention right now —
+                    reduced opacity on muted-foreground rather than a separate
+                    slate shade, since there's no dedicated "extra-muted" token. */}
+                <div className="pr-5 py-3 flex items-center justify-end text-xs whitespace-nowrap">
+                  {submission.closing_at ? (
+                    <span className={closed ? 'text-muted-foreground/60' : 'text-muted-foreground'}>
+                      {formatDate(submission.closing_at)}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground/60">—</span>
                   )}
                 </div>
-              </div>
 
-              {/* Closes — right-aligned so it doesn't run up against Status.
-                  `whitespace-nowrap` + a 112px (not 84px) column: dates like
-                  "31 Dec 2026" or "5 Sept 2026" were wrapping onto a second
-                  line in the narrower column, which is what was throwing off
-                  row height/alignment down the page — every other cell is
-                  one line, so a wrapped date was the only row that grew.
-                  Null and past-due both mute further than an open date,
-                  since neither needs an admin's attention right now —
-                  reduced opacity on muted-foreground rather than a separate
-                  slate shade, since there's no dedicated "extra-muted" token. */}
-              <div className="pr-5 py-3 flex items-center justify-end text-xs whitespace-nowrap">
-                {submission.closing_at ? (
-                  <span className={closed ? 'text-muted-foreground/60' : 'text-muted-foreground'}>
-                    {formatDate(submission.closing_at)}
+                {/* Status — fixed width on every row including pending, so the
+                    dot lands at the same x-position all the way down. */}
+                <div className="px-5 py-3 flex items-center gap-1.5">
+                  <span className={`size-1.5 rounded-full shrink-0 ${statusStyle.dot}`} aria-hidden="true" />
+                  <span className={`text-xs font-medium capitalize ${statusStyle.text}`}>
+                    {submission.status}
                   </span>
-                ) : (
-                  <span className="text-muted-foreground/60">—</span>
-                )}
-              </div>
+                </div>
 
-              {/* Status — fixed width on every row including pending, so the
-                  dot lands at the same x-position all the way down. */}
-              <div className="px-5 py-3 flex items-center gap-1.5">
-                <span className={`size-1.5 rounded-full shrink-0 ${statusStyle.dot}`} aria-hidden="true" />
-                <span className={`text-xs font-medium capitalize ${statusStyle.text}`}>
-                  {submission.status}
-                </span>
-              </div>
+                {/* Actions — fixed 104px width regardless of which/how many
+                    actions this row has, so it never absorbs space at the
+                    status column's expense. No horizontal padding of its own:
+                    the 92px of button content needs the track's full width,
+                    and the right-edge breathing room is the grid wrapper's
+                    pr-5 above, not padding here.
 
-              {/* Actions — 240px for now (see the grid comment above); still
-                  fixed width regardless of which/how many actions this row
-                  has, so it never absorbs space at the status column's expense. */}
-              <div className="px-5 py-3 flex items-center">
-                <SubmissionActionsMenu
-                  submission={submission}
-                  showArchived={showArchived}
-                  onApprove={handleApprove}
-                  onReject={handleReject}
-                  onArchive={handleArchive}
-                />
+                    justify-end here, not just inside SubmissionActionsMenu:
+                    that inner div's own justify-end only centers/aligns
+                    within ITS OWN box, and a flex item with no flex-grow
+                    sizes to its content by default — without justify-end on
+                    THIS wrapper too, a 1-button row (28px) and a 3-button row
+                    (92px) both sat flush at the track's LEFT edge instead of
+                    its right, so the ellipsis landed at a different x on
+                    every row depending on how many buttons preceded it.
+                    Caught by measuring actual DOM rects, not by eyeballing a
+                    screenshot — the two looked visually "close enough". */}
+                <div className="py-3 flex items-center justify-end">
+                  <SubmissionActionsMenu
+                    submission={submission}
+                    showArchived={showArchived}
+                    onApprove={handleApprove}
+                    onReject={handleReject}
+                    onArchive={handleArchive}
+                  />
+                </div>
               </div>
             </div>
           )
