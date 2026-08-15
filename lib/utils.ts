@@ -34,6 +34,34 @@ export function generateJobHash(
   return crypto.createHash('sha256').update(data).digest('hex').substring(0, 32)
 }
 
+const NAMED_HTML_ENTITIES: Record<string, string> = {
+  amp: '&',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  apos: "'",
+  nbsp: ' ',
+}
+
+/**
+ * Decode HTML entities in scraped/AI-prefilled text (job titles in
+ * particular — source pages sometimes hand back `Title &#124; Company`
+ * instead of `Title | Company`). Presentation-only: doesn't touch stored
+ * data, just what's rendered. Covers named entities from the table above,
+ * decimal (`&#124;`), and hex (`&#x7c;`) numeric entities — not a full
+ * HTML-entity table, but the handful that actually show up in titles/company
+ * names rather than markup.
+ */
+export function decodeHtmlEntities(text: string): string {
+  return text.replace(/&(#\d+|#x[0-9a-fA-F]+|[a-zA-Z]+);/g, (match, code: string) => {
+    if (code[0] === '#') {
+      const codePoint = code[1] === 'x' || code[1] === 'X' ? parseInt(code.slice(2), 16) : parseInt(code.slice(1), 10)
+      return Number.isNaN(codePoint) ? match : String.fromCodePoint(codePoint)
+    }
+    return NAMED_HTML_ENTITIES[code] ?? match
+  })
+}
+
 /**
  * Format a date for display
  */

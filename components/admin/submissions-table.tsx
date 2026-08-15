@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/shadcn/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/shadcn/tooltip'
-import { formatDate } from '@/lib/utils'
+import { formatDate, decodeHtmlEntities } from '@/lib/utils'
 import type { JobSubmission } from '@/lib/types'
 
 const STATUS_VARIANTS: Record<string, 'warning' | 'success' | 'destructive'> = {
@@ -286,7 +286,7 @@ export function SubmissionsTable({
       <div className="hidden lg:block">
         <div
           role="row"
-          className="grid grid-cols-[minmax(0,1fr)_84px_96px_76px] bg-slate-50 border-b border-slate-100"
+          className="grid grid-cols-[minmax(0,1fr)_112px_96px_76px] bg-slate-50 border-b border-slate-100"
         >
           <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Submission</div>
           <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Closes</div>
@@ -312,7 +312,7 @@ export function SubmissionsTable({
             <div
               key={submission.id}
               role="row"
-              className="grid grid-cols-[minmax(0,1fr)_84px_96px_76px] border-b border-slate-50 last:border-b-0 hover:bg-slate-50/60 transition-colors"
+              className="grid grid-cols-[minmax(0,1fr)_112px_96px_76px] border-b border-slate-50 last:border-b-0 hover:bg-slate-50/60 transition-colors"
             >
               {/* Submission — 30px initials avatar + a two-line text block
                   (job title with an inline external-link icon, then
@@ -329,7 +329,7 @@ export function SubmissionsTable({
 
                 <div className="min-w-0">
                   <div className="flex items-center gap-1">
-                    <p className="text-sm font-medium text-slate-800 truncate">{submission.title}</p>
+                    <p className="text-sm font-medium text-slate-800 truncate">{decodeHtmlEntities(submission.title)}</p>
                     <a
                       href={submission.url}
                       target="_blank"
@@ -356,11 +356,16 @@ export function SubmissionsTable({
               </div>
 
               {/* Closes — right-aligned so it doesn't run up against Status.
-                  Null and past-due both mute further than an open date, since
-                  neither needs an admin's attention right now — reduced
-                  opacity on muted-foreground rather than a separate slate
-                  shade, since there's no dedicated "extra-muted" token. */}
-              <div className="pr-5 py-3 flex items-center justify-end text-xs">
+                  `whitespace-nowrap` + a 112px (not 84px) column: dates like
+                  "31 Dec 2026" or "5 Sept 2026" were wrapping onto a second
+                  line in the narrower column, which is what was throwing off
+                  row height/alignment down the page — every other cell is
+                  one line, so a wrapped date was the only row that grew.
+                  Null and past-due both mute further than an open date,
+                  since neither needs an admin's attention right now —
+                  reduced opacity on muted-foreground rather than a separate
+                  slate shade, since there's no dedicated "extra-muted" token. */}
+              <div className="pr-5 py-3 flex items-center justify-end text-xs whitespace-nowrap">
                 {submission.closing_at ? (
                   <span className={closed ? 'text-muted-foreground/60' : 'text-muted-foreground'}>
                     {formatDate(submission.closing_at)}
@@ -419,7 +424,7 @@ export function SubmissionsTable({
 
             {/* Job title + company */}
             <div>
-              <p className="text-sm font-medium text-slate-700 leading-tight">{submission.title}</p>
+              <p className="text-sm font-medium text-slate-700 leading-tight">{decodeHtmlEntities(submission.title)}</p>
               <p className="text-xs text-slate-400 mt-0.5">{submission.company}</p>
             </div>
 
