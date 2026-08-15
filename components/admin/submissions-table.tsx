@@ -203,85 +203,101 @@ export function SubmissionsTable({
         </Link>
       </div>
 
-      {/* Table — desktop and up. Below md this clipped (DETAILS cut mid-word,
-          POSTED/ACTIONS off-screen) rather than usefully scrolling, so it's
-          replaced there by the card list below instead of made to scroll. */}
-      <div className="hidden md:block overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-slate-50 border-b border-slate-100">
-              <th className="px-5 py-3 text-left text-[11px] uppercase tracking-wide text-slate-500 font-medium">Submitter</th>
-              <th className="px-5 py-3 text-left text-[11px] uppercase tracking-wide text-slate-500 font-medium">Job</th>
-              <th className="px-5 py-3 text-left text-[11px] uppercase tracking-wide text-slate-500 font-medium">Closes</th>
-              <th className="px-5 py-3 text-left text-[11px] uppercase tracking-wide text-slate-500 font-medium">Status</th>
-              <th className="px-5 py-3 text-left text-[11px] uppercase tracking-wide text-slate-500 font-medium">Submitted</th>
-              <th className="px-5 py-3 text-left text-[11px] uppercase tracking-wide text-slate-500 font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {filtered.map((submission) => (
-              <tr key={submission.id} className="hover:bg-slate-50/60 transition-colors">
-                <td className="px-5 py-4">
-                  <p className="font-medium text-slate-800">{submission.submitter_name}</p>
-                  <a href={`mailto:${submission.submitter_email}`} className="text-xs text-primary hover:underline">
-                    {submission.submitter_email}
-                  </a>
-                  <p className="text-xs text-slate-400 mt-0.5">{submission.submitter_company_name}</p>
-                </td>
-                <td className="px-5 py-4">
-                  <p className="font-medium text-slate-800">{submission.title}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{submission.company}</p>
-                  {(submission.location || submission.job_type || submission.work_mode) && (
-                    <div className="flex flex-wrap gap-1 mt-1.5">
-                      {submission.location && (
-                        <Badge variant="outline" className="rounded-full text-[11px] font-normal">{submission.location}</Badge>
-                      )}
-                      {submission.job_type && (
-                        <Badge variant="outline" className="rounded-full text-[11px] font-normal capitalize">{submission.job_type}</Badge>
-                      )}
-                      {submission.work_mode && (
-                        <Badge variant="outline" className="rounded-full text-[11px] font-normal capitalize">{submission.work_mode}</Badge>
-                      )}
-                    </div>
-                  )}
-                  <a href={submission.url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline mt-1 inline-block">
-                    View link ↗
-                  </a>
-                  {submission.admin_note && (
-                    <p className="text-xs text-destructive mt-0.5">Sent to submitter: {submission.admin_note}</p>
-                  )}
-                </td>
-                <td className="px-5 py-4 text-xs text-slate-400">
-                  {submission.closing_at ? formatDate(submission.closing_at) : '—'}
-                </td>
-                <td className="px-5 py-4">
-                  <Badge variant={STATUS_VARIANTS[submission.status] || 'secondary'} className="rounded-full capitalize">
-                    {submission.status}
-                  </Badge>
-                </td>
-                <td className="px-5 py-4 text-xs text-slate-400">
-                  {formatDate(submission.created_at)}
-                </td>
-                <td className="px-5 py-4">
-                  <SubmissionActionsMenu
-                    submission={submission}
-                    showArchived={showArchived}
-                    onApprove={handleApprove}
-                    onReject={handleReject}
-                    onArchive={handleArchive}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Grid — lg and up only. A fixed 4-column template (submission /
+          closes / status / actions) needs real width to breathe; below lg
+          it's replaced by the card list rather than squeezed, same as the
+          table this replaced was swapped out below md. */}
+      <div className="hidden lg:block">
+        <div
+          role="row"
+          className="grid grid-cols-[minmax(0,1fr)_84px_96px_76px] bg-slate-50 border-b border-slate-100"
+        >
+          <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Submission</div>
+          <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Closes</div>
+          <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Status</div>
+          <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Actions</div>
+        </div>
+
+        {filtered.map((submission) => (
+          <div
+            key={submission.id}
+            role="row"
+            className="grid grid-cols-[minmax(0,1fr)_84px_96px_76px] border-b border-slate-50 last:border-b-0 hover:bg-slate-50/60 transition-colors"
+          >
+            {/* Submission — submitter + job merged into one cell for now;
+                Phase 2 condenses this into the avatar/title/company-location
+                layout and moves submitter email/company off the row. */}
+            <div className="min-w-0 px-5 py-4">
+              <div className="min-w-0">
+                <p className="font-medium text-slate-800">{submission.submitter_name}</p>
+                <a href={`mailto:${submission.submitter_email}`} className="text-xs text-primary hover:underline">
+                  {submission.submitter_email}
+                </a>
+                <p className="text-xs text-slate-400 mt-0.5">{submission.submitter_company_name}</p>
+
+                <p className="font-medium text-slate-800 mt-2">{submission.title}</p>
+                <p className="text-xs text-slate-400 mt-0.5">{submission.company}</p>
+                {(submission.location || submission.job_type || submission.work_mode) && (
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {submission.location && (
+                      <Badge variant="outline" className="rounded-full text-[11px] font-normal">{submission.location}</Badge>
+                    )}
+                    {submission.job_type && (
+                      <Badge variant="outline" className="rounded-full text-[11px] font-normal capitalize">{submission.job_type}</Badge>
+                    )}
+                    {submission.work_mode && (
+                      <Badge variant="outline" className="rounded-full text-[11px] font-normal capitalize">{submission.work_mode}</Badge>
+                    )}
+                  </div>
+                )}
+                <a href={submission.url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline mt-1 inline-block">
+                  View link ↗
+                </a>
+                {submission.admin_note && (
+                  <p className="text-xs text-destructive mt-0.5">Sent to submitter: {submission.admin_note}</p>
+                )}
+                {/* Submitted date had its own column in the old table; there's no
+                    column left for it in the 4-up grid, so it's folded in here
+                    until Phase 2/4 settle where it lives behind the overflow menu. */}
+                <p className="text-xs text-slate-400 mt-1">Submitted {formatDate(submission.created_at)}</p>
+              </div>
+            </div>
+
+            {/* Closes */}
+            <div className="px-5 py-4 text-xs text-slate-400">
+              {submission.closing_at ? formatDate(submission.closing_at) : '—'}
+            </div>
+
+            {/* Status — same width on every row regardless of content, so
+                whatever marks it (badge now, dot in Phase 3) lines up going
+                down the page. */}
+            <div className="px-5 py-4 flex items-center">
+              <Badge variant={STATUS_VARIANTS[submission.status] || 'secondary'} className="rounded-full capitalize">
+                {submission.status}
+              </Badge>
+            </div>
+
+            {/* Actions — fixed width regardless of which/how many actions this
+                row has; the pill group is wider than 76px until Phase 4 swaps
+                it for icon buttons, so it overflows the column for now. */}
+            <div className="px-5 py-4 flex items-center">
+              <SubmissionActionsMenu
+                submission={submission}
+                showArchived={showArchived}
+                onApprove={handleApprove}
+                onReject={handleReject}
+                onArchive={handleArchive}
+              />
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Cards — below md. Same fields as the table, same card pattern
+      {/* Cards — below lg. Same fields as the grid, same card pattern
           (border/radius, 12px gaps via space-y-3) as the admin job list,
           so a submitter's name/email, org, job, and the location/type/
-          closing badges read as one record instead of a clipped row. */}
-      <div className="md:hidden p-4 space-y-3">
+          closing badges read as one record instead of a squeezed row. */}
+      <div className="lg:hidden p-4 space-y-3">
         {filtered.map((submission) => (
           <div key={submission.id} className="rounded-xl border border-slate-100 p-3 space-y-2">
             {/* Submitter + status */}
