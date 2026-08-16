@@ -74,8 +74,11 @@
   --mmss-success: #059669;
   --mmss-success-foreground: #ffffff;
 
-  /* From the imported theme — slightly softer than the previous 0.375rem. */
-  --radius: 0.45rem;
+  /* Matches shadcn preset b4NJ4tdAJ's "Large" radius. Every derived radius
+     (sm/md/lg/xl/2xl/3xl/4xl, in the @theme inline block below) is a calc()
+     off this one value, so changing it is the whole change — nothing else
+     should ever hard-code a radius that could instead derive from this. */
+  --radius: 0.875rem;
 
   /* shadcn tokens that mirror the brand */
   --primary: var(--mmss-primary);
