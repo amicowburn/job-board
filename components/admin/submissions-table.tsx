@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ArrowSquareOutIcon, CheckIcon, XIcon, DotsThreeVerticalIcon, ArchiveIcon } from '@phosphor-icons/react'
-import { Button, Badge, useConfirmDialog } from '@/components/ui'
+import { Badge, useConfirmDialog } from '@/components/ui'
 import { Pagination } from '@/components/ui/pagination'
 import { segmentedTabsListClassName, segmentedTabsTriggerClassName } from '@/components/ui/segmented-tabs'
 import {
@@ -16,9 +16,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/shadcn/dropdown-menu'
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/shadcn/tooltip'
+import { GridRow, StatusDot, IconActionButton, type StatusDotRole } from './table'
 import { formatDate, decodeHtmlEntities } from '@/lib/utils'
 import type { JobSubmission } from '@/lib/types'
+
+/** Literal so Tailwind's JIT scanner can see it — a class built from a
+ *  runtime string never gets generated. Shared by the header and every
+ *  body row via GridRow so the two can never drift out of alignment. */
+const SUBMISSION_GRID_COLUMNS = 'grid-cols-[minmax(0,1fr)_112px_96px_104px]'
 
 const STATUS_VARIANTS: Record<string, 'warning' | 'success' | 'destructive'> = {
   pending: 'warning',
@@ -27,25 +32,24 @@ const STATUS_VARIANTS: Record<string, 'warning' | 'success' | 'destructive'> = {
 }
 
 /**
- * Dot + label colors for the grid's status column (STATUS_VARIANTS above
- * still feeds the mobile card's Badge, untouched by this pass). All three
- * statuses need to read as distinct at a glance, so all three get an
- * actual hue: warning/success/destructive, no muted state among them — the
- * "mute what's inactive" idea belongs to the jobs page's Inactive listings,
- * not a moderation decision here.
+ * Status role for the grid's StatusDot (STATUS_VARIANTS above still feeds
+ * the mobile card's Badge, untouched by this pass). All three statuses need
+ * to read as distinct at a glance, so all three map to an actual hue —
+ * `muted` is deliberately unused here: that's the jobs page's Inactive
+ * state, not a moderation decision.
  *
- * Pending uses the new `--warning` token (app/globals.css), not `--accent`:
- * `--accent` is chroma 0 in both light and dark — literally grayscale, not
- * a shade-picking problem — so it can't carry a "needs attention" signal
+ * Pending uses `success`/`warning`/`destructive`'s `warning` role, backed by
+ * the `--warning` token (app/globals.css), not `--accent`: `--accent` is
+ * chroma 0 in both light and dark — literally grayscale, not a
+ * shade-picking problem — so it can't carry a "needs attention" signal
  * regardless of which shade is used. `--warning` is a real amber hue.
  * Badge/Alert's `warning` variant still maps to `--accent` elsewhere in the
- * app (e.g. the "Featured" job badge) — worth migrating too, but wider than
- * this task.
+ * app — worth migrating too, but wider than this task.
  */
-const STATUS_DOT_STYLES: Record<JobSubmission['status'], { dot: string; text: string }> = {
-  pending: { dot: 'bg-warning', text: 'text-warning' },
-  approved: { dot: 'bg-success', text: 'text-success' },
-  rejected: { dot: 'bg-destructive', text: 'text-destructive' },
+const STATUS_ROLE: Record<JobSubmission['status'], StatusDotRole> = {
+  pending: 'warning',
+  approved: 'success',
+  rejected: 'destructive',
 }
 
 /** First letter of the first and last name; a single name just takes its first two letters. */
@@ -291,14 +295,12 @@ export function SubmissionsTable({
           of the card's actual right edge, leaving a blank sliver — the
           nesting is what avoids that seam. */}
       <div className="hidden lg:block">
-        <div role="row" className="bg-slate-50 border-b border-slate-100">
-          <div className="grid grid-cols-[minmax(0,1fr)_112px_96px_104px] pr-5">
-            <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Submission</div>
-            <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Closes</div>
-            <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Status</div>
-            <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Actions</div>
-          </div>
-        </div>
+        <GridRow header columnsClassName={SUBMISSION_GRID_COLUMNS}>
+          <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Submission</div>
+          <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Closes</div>
+          <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Status</div>
+          <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Actions</div>
+        </GridRow>
 
         {filtered.map((submission) => {
           // company/location: skip null segments instead of rendering a
@@ -312,113 +314,103 @@ export function SubmissionsTable({
           // for, per the redesign's premise. Phase 4's overflow menu is
           // where they'll actually resurface, once that menu exists.
           const closed = submission.closing_at ? isPastDate(submission.closing_at) : false
-          const statusStyle = STATUS_DOT_STYLES[submission.status]
 
           return (
-            <div
-              key={submission.id}
-              role="row"
-              className="border-b border-slate-50 last:border-b-0 hover:bg-slate-50/60 transition-colors"
-            >
-              <div className="grid grid-cols-[minmax(0,1fr)_112px_96px_104px] pr-5">
-                {/* Submission — 30px initials avatar + a two-line text block
-                    (job title with an inline external-link icon, then
-                    company · location). ~56px tall in the common case; a
-                    rejection note (rare, only on rejected rows) adds a third
-                    truncated line rather than being dropped silently. */}
-                <div className="min-w-0 px-5 py-3 flex items-center gap-2.5">
-                  <div
-                    className="shrink-0 size-[30px] rounded-full bg-slate-100 text-slate-600 text-[11px] font-medium flex items-center justify-center select-none"
-                    aria-label={`Submitted by ${submission.submitter_name}`}
-                  >
-                    {getInitials(submission.submitter_name)}
-                  </div>
-
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1">
-                      <p className="text-sm font-medium text-slate-800 truncate">{decodeHtmlEntities(submission.title)}</p>
-                      <a
-                        href={submission.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label="Open original listing"
-                        className="shrink-0 text-muted-foreground hover:text-primary transition-colors"
-                      >
-                        <ArrowSquareOutIcon className="size-3.5" />
-                      </a>
-                    </div>
-                    {secondaryLine && (
-                      <p className="text-xs text-muted-foreground truncate">{secondaryLine}</p>
-                    )}
-                    {submission.admin_note && (
-                      // Muted, not destructive-red: the one field a moderator
-                      // needs at a glance, but not an alarm. Truncated to one
-                      // line — full text moves to the Phase 4 overflow menu,
-                      // not a title tooltip.
-                      <p className="text-xs text-muted-foreground truncate">
-                        Sent to submitter: {submission.admin_note}
-                      </p>
-                    )}
-                  </div>
+            <GridRow key={submission.id} columnsClassName={SUBMISSION_GRID_COLUMNS}>
+              {/* Submission — 30px initials avatar + a two-line text block
+                  (job title with an inline external-link icon, then
+                  company · location). ~56px tall in the common case; a
+                  rejection note (rare, only on rejected rows) adds a third
+                  truncated line rather than being dropped silently. */}
+              <div className="min-w-0 px-5 py-3 flex items-center gap-2.5">
+                <div
+                  className="shrink-0 size-[30px] rounded-full bg-slate-100 text-slate-600 text-[11px] font-medium flex items-center justify-center select-none"
+                  aria-label={`Submitted by ${submission.submitter_name}`}
+                >
+                  {getInitials(submission.submitter_name)}
                 </div>
 
-                {/* Closes — right-aligned so it doesn't run up against Status.
-                    `whitespace-nowrap` + a 112px (not 84px) column: dates like
-                    "31 Dec 2026" or "5 Sept 2026" were wrapping onto a second
-                    line in the narrower column, which is what was throwing off
-                    row height/alignment down the page — every other cell is
-                    one line, so a wrapped date was the only row that grew.
-                    Null and past-due both mute further than an open date,
-                    since neither needs an admin's attention right now —
-                    reduced opacity on muted-foreground rather than a separate
-                    slate shade, since there's no dedicated "extra-muted" token. */}
-                <div className="pr-5 py-3 flex items-center justify-end text-xs whitespace-nowrap">
-                  {submission.closing_at ? (
-                    <span className={closed ? 'text-muted-foreground/60' : 'text-muted-foreground'}>
-                      {formatDate(submission.closing_at)}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground/60">—</span>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1">
+                    <p className="text-sm font-medium text-slate-800 truncate">{decodeHtmlEntities(submission.title)}</p>
+                    <a
+                      href={submission.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Open original listing"
+                      className="shrink-0 text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      <ArrowSquareOutIcon className="size-3.5" />
+                    </a>
+                  </div>
+                  {secondaryLine && (
+                    <p className="text-xs text-muted-foreground truncate">{secondaryLine}</p>
+                  )}
+                  {submission.admin_note && (
+                    // Muted, not destructive-red: the one field a moderator
+                    // needs at a glance, but not an alarm. Truncated to one
+                    // line — full text moves to the Phase 4 overflow menu,
+                    // not a title tooltip.
+                    <p className="text-xs text-muted-foreground truncate">
+                      Sent to submitter: {submission.admin_note}
+                    </p>
                   )}
                 </div>
-
-                {/* Status — fixed width on every row including pending, so the
-                    dot lands at the same x-position all the way down. */}
-                <div className="px-5 py-3 flex items-center gap-1.5">
-                  <span className={`size-1.5 rounded-full shrink-0 ${statusStyle.dot}`} aria-hidden="true" />
-                  <span className={`text-xs font-medium capitalize ${statusStyle.text}`}>
-                    {submission.status}
-                  </span>
-                </div>
-
-                {/* Actions — fixed 104px width regardless of which/how many
-                    actions this row has, so it never absorbs space at the
-                    status column's expense. No horizontal padding of its own:
-                    the 92px of button content needs the track's full width,
-                    and the right-edge breathing room is the grid wrapper's
-                    pr-5 above, not padding here.
-
-                    justify-end here, not just inside SubmissionActionsMenu:
-                    that inner div's own justify-end only centers/aligns
-                    within ITS OWN box, and a flex item with no flex-grow
-                    sizes to its content by default — without justify-end on
-                    THIS wrapper too, a 1-button row (28px) and a 3-button row
-                    (92px) both sat flush at the track's LEFT edge instead of
-                    its right, so the ellipsis landed at a different x on
-                    every row depending on how many buttons preceded it.
-                    Caught by measuring actual DOM rects, not by eyeballing a
-                    screenshot — the two looked visually "close enough". */}
-                <div className="py-3 flex items-center justify-end">
-                  <SubmissionActionsMenu
-                    submission={submission}
-                    showArchived={showArchived}
-                    onApprove={handleApprove}
-                    onReject={handleReject}
-                    onArchive={handleArchive}
-                  />
-                </div>
               </div>
-            </div>
+
+              {/* Closes — right-aligned so it doesn't run up against Status.
+                  `whitespace-nowrap` + a 112px (not 84px) column: dates like
+                  "31 Dec 2026" or "5 Sept 2026" were wrapping onto a second
+                  line in the narrower column, which is what was throwing off
+                  row height/alignment down the page — every other cell is
+                  one line, so a wrapped date was the only row that grew.
+                  Null and past-due both mute further than an open date,
+                  since neither needs an admin's attention right now —
+                  reduced opacity on muted-foreground rather than a separate
+                  slate shade, since there's no dedicated "extra-muted" token. */}
+              <div className="pr-5 py-3 flex items-center justify-end text-xs whitespace-nowrap">
+                {submission.closing_at ? (
+                  <span className={closed ? 'text-muted-foreground/60' : 'text-muted-foreground'}>
+                    {formatDate(submission.closing_at)}
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground/60">—</span>
+                )}
+              </div>
+
+              {/* Status — fixed width on every row including pending, so the
+                  dot lands at the same x-position all the way down. */}
+              <div className="px-5 py-3 flex items-center gap-1.5">
+                <StatusDot role={STATUS_ROLE[submission.status]} label={submission.status} />
+              </div>
+
+              {/* Actions — fixed 104px width regardless of which/how many
+                  actions this row has, so it never absorbs space at the
+                  status column's expense. No horizontal padding of its own:
+                  the 92px of button content needs the track's full width,
+                  and the right-edge breathing room is the grid wrapper's
+                  pr-5 above, not padding here.
+
+                  justify-end here, not just inside SubmissionActionsMenu:
+                  that inner div's own justify-end only centers/aligns
+                  within ITS OWN box, and a flex item with no flex-grow
+                  sizes to its content by default — without justify-end on
+                  THIS wrapper too, a 1-button row (28px) and a 3-button row
+                  (92px) both sat flush at the track's LEFT edge instead of
+                  its right, so the ellipsis landed at a different x on
+                  every row depending on how many buttons preceded it.
+                  Caught by measuring actual DOM rects, not by eyeballing a
+                  screenshot — the two looked visually "close enough". */}
+              <div className="py-3 flex items-center justify-end">
+                <SubmissionActionsMenu
+                  submission={submission}
+                  showArchived={showArchived}
+                  onApprove={handleApprove}
+                  onReject={handleReject}
+                  onArchive={handleArchive}
+                />
+              </div>
+            </GridRow>
           )
         })}
       </div>
@@ -548,47 +540,28 @@ function SubmissionActionsMenu({
     <div className="flex items-center justify-end gap-1">
       {showPendingActions && (
         <>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-7 text-success hover:text-success hover:bg-success/10"
-                aria-label="Approve"
-                onClick={() => onApprove(submission.id)}
-              >
-                <CheckIcon weight="bold" className="size-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Approve</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-7 text-destructive hover:text-destructive hover:bg-destructive/10"
-                aria-label="Reject"
-                onClick={() => onReject(submission.id)}
-              >
-                <XIcon weight="bold" className="size-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Reject</TooltipContent>
-          </Tooltip>
+          <IconActionButton
+            label="Approve"
+            className="text-success hover:text-success hover:bg-success/10"
+            onClick={() => onApprove(submission.id)}
+          >
+            <CheckIcon weight="bold" className="size-4" />
+          </IconActionButton>
+          <IconActionButton
+            label="Reject"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            onClick={() => onReject(submission.id)}
+          >
+            <XIcon weight="bold" className="size-4" />
+          </IconActionButton>
         </>
       )}
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7 text-muted-foreground"
-            aria-label="More options"
-          >
+          <IconActionButton label="More options" tooltip={false} className="text-muted-foreground">
             <DotsThreeVerticalIcon weight="bold" className="size-4" />
-          </Button>
+          </IconActionButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64">
           <DropdownMenuItem onClick={() => onArchive(submission.id)}>
