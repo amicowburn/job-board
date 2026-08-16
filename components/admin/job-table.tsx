@@ -4,6 +4,7 @@ import { useOptimistic, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { Search } from 'lucide-react'
 import { Button, Badge, Input, useConfirmDialog } from '@/components/ui'
 import { Pagination } from '@/components/ui/pagination'
 import { createClient } from '@/lib/supabase/client'
@@ -191,15 +192,28 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
     <>
       {/* Toolbar */}
       <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-100 flex flex-col sm:flex-row gap-3 justify-between">
-        <Input
-          type="search"
-          placeholder="Search this page..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full sm:w-64 h-9 text-sm"
-        />
+        <div className="relative w-full sm:w-64">
+          <Input
+            type="search"
+            placeholder="Search this page..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-9 w-full rounded-full border-[0.5px] border-border bg-transparent pr-8 text-sm"
+          />
+          {/* Decorative — the input itself is the whole hit target, this
+              just labels it visually. Not a button: nothing to click here. */}
+          <Search
+            aria-hidden="true"
+            className="pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
+          />
+        </div>
         <div className="flex gap-2 shrink-0">
-          <Button variant="outline" size="sm" onClick={() => setShowBulkActions(!showBulkActions)}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="bg-transparent"
+            onClick={() => setShowBulkActions(!showBulkActions)}
+          >
             Bulk Actions
           </Button>
           <Link href="/admin/jobs/new">
