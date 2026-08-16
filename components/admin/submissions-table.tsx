@@ -250,8 +250,7 @@ export function SubmissionsTable({
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={segmentedTabsTriggerClassName(filter === f, 'inline-flex items-center gap-1.5')}
-              style={{ fontFamily: 'var(--font-outfit)' }}
+              className={segmentedTabsTriggerClassName(filter === f, 'inline-flex items-center gap-1.5 font-heading')}
             >
               {f}
               {counts && (
