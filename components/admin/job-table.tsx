@@ -5,11 +5,17 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Search } from 'lucide-react'
-import { CurrencyCircleDollarIcon } from '@phosphor-icons/react'
+import { CurrencyCircleDollarIcon, PencilSimpleIcon, DotsThreeVerticalIcon } from '@phosphor-icons/react'
 import { Button, Badge, Input, useConfirmDialog } from '@/components/ui'
 import { Pagination } from '@/components/ui/pagination'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/shadcn/tooltip'
-import { GridRow, StatusDot } from './table'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/shadcn/dropdown-menu'
+import { GridRow, StatusDot, IconActionButton } from './table'
 import { createClient } from '@/lib/supabase/client'
 import { cn, formatDate } from '@/lib/utils'
 import { BulkImport } from './bulk-import'
@@ -323,19 +329,8 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
             <div className="pr-4 py-4 flex items-center justify-end text-xs text-muted-foreground whitespace-nowrap">
               {formatDate(job.posted_at || job.created_at)}
             </div>
-            <div className="py-4 flex items-center gap-1">
-              <Link href={`/admin/jobs/${job.id}/edit`}>
-                <Button variant="ghost" size="sm">Edit</Button>
-              </Link>
-              {job.is_active ? (
-                <Button variant="ghost" size="sm" onClick={() => handleDeactivate(job.id)}>
-                  Deactivate
-                </Button>
-              ) : (
-                <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDelete(job.id)}>
-                  Delete
-                </Button>
-              )}
+            <div className="py-4 flex items-center justify-end">
+              <JobActionsMenu job={job} onDeactivate={handleDeactivate} onDelete={handleDelete} />
             </div>
           </GridRow>
         ))}
@@ -413,20 +408,7 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
               <span className="text-xs text-slate-400">
                 {formatDate(job.posted_at || job.created_at)}
               </span>
-              <div className="flex gap-1">
-                <Link href={`/admin/jobs/${job.id}/edit`}>
-                  <Button variant="ghost" size="sm">Edit</Button>
-                </Link>
-                {job.is_active ? (
-                  <Button variant="ghost" size="sm" onClick={() => handleDeactivate(job.id)}>
-                    Deactivate
-                  </Button>
-                ) : (
-                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDelete(job.id)}>
-                    Delete
-                  </Button>
-                )}
-              </div>
+              <JobActionsMenu job={job} onDeactivate={handleDeactivate} onDelete={handleDelete} />
             </div>
           </div>
         ))}
@@ -448,5 +430,56 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
 
       {dialog}
     </>
+  )
+}
+
+/**
+ * Edit (pencil, labelled) + an overflow ellipsis, shared by the desktop grid
+ * and mobile cards — same pairing every row, active or inactive, so the
+ * actions column renders at a fixed width regardless of which single item
+ * the menu holds. Unlike the submissions table's actions menu, there's no
+ * conditional 1-vs-3-button case here to keep aligned: Edit + ellipsis is
+ * the whole set, always.
+ *
+ * The menu itself still branches: Deactivate for an active job, Delete
+ * (destructive) for an inactive one — carried over unchanged from the
+ * table's pre-redesign behavior, confirmation flow included. There's no
+ * "reactivate" mutation to wire an Activate item to; adding one would be a
+ * mutation change, out of scope for a presentation-only pass.
+ */
+function JobActionsMenu({
+  job,
+  onDeactivate,
+  onDelete,
+}: {
+  job: AdminJobRow
+  onDeactivate: (id: string) => void
+  onDelete: (id: string) => void
+}) {
+  return (
+    <div className="flex items-center justify-end gap-1">
+      <Link href={`/admin/jobs/${job.id}/edit`}>
+        <IconActionButton label="Edit">
+          <PencilSimpleIcon className="size-4" />
+        </IconActionButton>
+      </Link>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <IconActionButton label="More options" tooltip={false} className="text-muted-foreground">
+            <DotsThreeVerticalIcon weight="bold" className="size-4" />
+          </IconActionButton>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {job.is_active ? (
+            <DropdownMenuItem onClick={() => onDeactivate(job.id)}>Deactivate</DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem variant="destructive" onClick={() => onDelete(job.id)}>
+              Delete
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   )
 }
