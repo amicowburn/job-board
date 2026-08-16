@@ -7,6 +7,8 @@
     "dev": "next dev",
     "db:start": "supabase start",
     "db:stop": "supabase stop",
+    "audit:style": "node scripts/audit-style-usage.mjs",
+    "prebuild": "node scripts/audit-style-usage.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

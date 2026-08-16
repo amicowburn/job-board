@@ -1,0 +1,1149 @@
+{
+  "generatedAt": "2026-08-16T01:21:04.055Z",
+  "rawPalette": {
+    "files": [
+      {
+        "file": "components/admin/submissions-table.tsx",
+        "classes": [
+          {
+            "className": "text-slate-500",
+            "count": 9
+          },
+          {
+            "className": "text-slate-400",
+            "count": 9
+          },
+          {
+            "className": "border-slate-100",
+            "count": 5
+          },
+          {
+            "className": "text-slate-800",
+            "count": 4
+          },
+          {
+            "className": "bg-slate-50",
+            "count": 2
+          },
+          {
+            "className": "bg-slate-100",
+            "count": 1
+          },
+          {
+            "className": "text-slate-600",
+            "count": 1
+          },
+          {
+            "className": "bg-slate-200",
+            "count": 1
+          },
+          {
+            "className": "divide-slate-50",
+            "count": 1
+          },
+          {
+            "className": "text-slate-700",
+            "count": 1
+          }
+        ],
+        "total": 34
+      },
+      {
+        "file": "components/jobs/job-detail-panel.tsx",
+        "classes": [
+          {
+            "className": "border-slate-200",
+            "count": 7
+          },
+          {
+            "className": "text-slate-500",
+            "count": 4
+          },
+          {
+            "className": "text-slate-600",
+            "count": 4
+          },
+          {
+            "className": "text-slate-800",
+            "count": 4
+          },
+          {
+            "className": "bg-purple-100",
+            "count": 2
+          },
+          {
+            "className": "text-purple-700",
+            "count": 2
+          },
+          {
+            "className": "border-purple-200",
+            "count": 2
+          },
+          {
+            "className": "bg-slate-50",
+            "count": 2
+          },
+          {
+            "className": "text-slate-700",
+            "count": 1
+          },
+          {
+            "className": "text-slate-900",
+            "count": 1
+          },
+          {
+            "className": "border-green-300",
+            "count": 1
+          },
+          {
+            "className": "bg-green-50",
+            "count": 1
+          },
+          {
+            "className": "text-green-700",
+            "count": 1
+          },
+          {
+            "className": "border-slate-100",
+            "count": 1
+          }
+        ],
+        "total": 33
+      },
+      {
+        "file": "components/admin/job-table.tsx",
+        "classes": [
+          {
+            "className": "text-slate-500",
+            "count": 8
+          },
+          {
+            "className": "text-slate-400",
+            "count": 6
+          },
+          {
+            "className": "border-slate-100",
+            "count": 5
+          },
+          {
+            "className": "border-slate-300",
+            "count": 4
+          },
+          {
+            "className": "bg-slate-50",
+            "count": 3
+          },
+          {
+            "className": "text-slate-700",
+            "count": 2
+          },
+          {
+            "className": "text-slate-800",
+            "count": 2
+          },
+          {
+            "className": "border-slate-200",
+            "count": 1
+          },
+          {
+            "className": "divide-slate-50",
+            "count": 1
+          }
+        ],
+        "total": 32
+      },
+      {
+        "file": "app/page.tsx",
+        "classes": [
+          {
+            "className": "border-slate-200",
+            "count": 7
+          },
+          {
+            "className": "text-slate-500",
+            "count": 6
+          },
+          {
+            "className": "text-slate-600",
+            "count": 4
+          },
+          {
+            "className": "bg-slate-50",
+            "count": 4
+          },
+          {
+            "className": "text-slate-400",
+            "count": 1
+          }
+        ],
+        "total": 22
+      },
+      {
+        "file": "app/admin/analytics/loading.tsx",
+        "classes": [
+          {
+            "className": "bg-slate-100",
+            "count": 10
+          },
+          {
+            "className": "bg-slate-200",
+            "count": 5
+          },
+          {
+            "className": "border-slate-200",
+            "count": 4
+          },
+          {
+            "className": "divide-slate-100",
+            "count": 1
+          }
+        ],
+        "total": 20
+      },
+      {
+        "file": "app/admin/jobs/loading.tsx",
+        "classes": [
+          {
+            "className": "bg-slate-100",
+            "count": 11
+          },
+          {
+            "className": "bg-slate-200",
+            "count": 3
+          },
+          {
+            "className": "border-slate-100",
+            "count": 3
+          },
+          {
+            "className": "border-slate-200",
+            "count": 1
+          },
+          {
+            "className": "bg-slate-50",
+            "count": 1
+          },
+          {
+            "className": "border-slate-50",
+            "count": 1
+          }
+        ],
+        "total": 20
+      },
+      {
+        "file": "app/admin/submissions/loading.tsx",
+        "classes": [
+          {
+            "className": "bg-slate-100",
+            "count": 9
+          },
+          {
+            "className": "bg-slate-200",
+            "count": 3
+          },
+          {
+            "className": "border-slate-100",
+            "count": 3
+          },
+          {
+            "className": "border-slate-200",
+            "count": 1
+          },
+          {
+            "className": "bg-slate-50",
+            "count": 1
+          },
+          {
+            "className": "border-slate-50",
+            "count": 1
+          },
+          {
+            "className": "bg-green-100",
+            "count": 1
+          },
+          {
+            "className": "bg-red-100",
+            "count": 1
+          }
+        ],
+        "total": 20
+      },
+      {
+        "file": "app/admin/users/page.tsx",
+        "classes": [
+          {
+            "className": "text-slate-500",
+            "count": 4
+          },
+          {
+            "className": "text-slate-400",
+            "count": 4
+          },
+          {
+            "className": "border-slate-200",
+            "count": 2
+          },
+          {
+            "className": "text-slate-700",
+            "count": 2
+          },
+          {
+            "className": "bg-slate-50",
+            "count": 2
+          },
+          {
+            "className": "text-slate-800",
+            "count": 1
+          },
+          {
+            "className": "border-slate-100",
+            "count": 1
+          },
+          {
+            "className": "divide-slate-50",
+            "count": 1
+          }
+        ],
+        "total": 17
+      },
+      {
+        "file": "components/admin/admin-nav.tsx",
+        "classes": [
+          {
+            "className": "bg-slate-50",
+            "count": 4
+          },
+          {
+            "className": "text-slate-600",
+            "count": 3
+          },
+          {
+            "className": "text-slate-500",
+            "count": 3
+          },
+          {
+            "className": "text-slate-900",
+            "count": 2
+          },
+          {
+            "className": "bg-slate-100",
+            "count": 1
+          },
+          {
+            "className": "border-slate-200",
+            "count": 1
+          },
+          {
+            "className": "ring-slate-200",
+            "count": 1
+          },
+          {
+            "className": "border-slate-100",
+            "count": 1
+          }
+        ],
+        "total": 16
+      },
+      {
+        "file": "components/footer.tsx",
+        "classes": [
+          {
+            "className": "text-slate-700",
+            "count": 9
+          },
+          {
+            "className": "text-slate-500",
+            "count": 4
+          },
+          {
+            "className": "text-slate-400",
+            "count": 2
+          },
+          {
+            "className": "text-slate-900",
+            "count": 1
+          }
+        ],
+        "total": 16
+      },
+      {
+        "file": "components/jobs/jobs-sidebar.tsx",
+        "classes": [
+          {
+            "className": "text-slate-600",
+            "count": 3
+          },
+          {
+            "className": "bg-slate-50",
+            "count": 3
+          },
+          {
+            "className": "text-slate-800",
+            "count": 2
+          },
+          {
+            "className": "border-slate-200",
+            "count": 1
+          },
+          {
+            "className": "text-slate-900",
+            "count": 1
+          },
+          {
+            "className": "border-slate-100",
+            "count": 1
+          },
+          {
+            "className": "bg-slate-100",
+            "count": 1
+          },
+          {
+            "className": "to-blue-400",
+            "count": 1
+          },
+          {
+            "className": "text-slate-500",
+            "count": 1
+          },
+          {
+            "className": "text-slate-400",
+            "count": 1
+          }
+        ],
+        "total": 15
+      },
+      {
+        "file": "app/admin/users/loading.tsx",
+        "classes": [
+          {
+            "className": "bg-slate-100",
+            "count": 6
+          },
+          {
+            "className": "bg-slate-200",
+            "count": 2
+          },
+          {
+            "className": "border-slate-100",
+            "count": 2
+          },
+          {
+            "className": "border-slate-200",
+            "count": 1
+          },
+          {
+            "className": "bg-slate-50",
+            "count": 1
+          },
+          {
+            "className": "border-slate-50",
+            "count": 1
+          }
+        ],
+        "total": 13
+      },
+      {
+        "file": "app/jobs/page.tsx",
+        "classes": [
+          {
+            "className": "border-slate-200",
+            "count": 3
+          },
+          {
+            "className": "text-slate-600",
+            "count": 3
+          },
+          {
+            "className": "text-slate-500",
+            "count": 2
+          },
+          {
+            "className": "bg-slate-50",
+            "count": 2
+          },
+          {
+            "className": "bg-slate-100",
+            "count": 1
+          },
+          {
+            "className": "text-slate-400",
+            "count": 1
+          }
+        ],
+        "total": 12
+      },
+      {
+        "file": "components/admin/analytics/insight-treatments.tsx",
+        "classes": [
+          {
+            "className": "text-slate-800",
+            "count": 2
+          },
+          {
+            "className": "bg-emerald-50",
+            "count": 1
+          },
+          {
+            "className": "text-emerald-700",
+            "count": 1
+          },
+          {
+            "className": "bg-rose-50",
+            "count": 1
+          },
+          {
+            "className": "text-rose-700",
+            "count": 1
+          },
+          {
+            "className": "bg-slate-100",
+            "count": 1
+          },
+          {
+            "className": "text-slate-600",
+            "count": 1
+          },
+          {
+            "className": "text-emerald-600",
+            "count": 1
+          },
+          {
+            "className": "text-rose-600",
+            "count": 1
+          },
+          {
+            "className": "text-slate-500",
+            "count": 1
+          },
+          {
+            "className": "text-slate-400",
+            "count": 1
+          }
+        ],
+        "total": 12
+      },
+      {
+        "file": "components/jobs/job-card.tsx",
+        "classes": [
+          {
+            "className": "border-slate-200",
+            "count": 3
+          },
+          {
+            "className": "text-slate-500",
+            "count": 2
+          },
+          {
+            "className": "text-slate-400",
+            "count": 2
+          },
+          {
+            "className": "border-slate-300",
+            "count": 1
+          },
+          {
+            "className": "bg-purple-100",
+            "count": 1
+          },
+          {
+            "className": "text-purple-700",
+            "count": 1
+          },
+          {
+            "className": "text-slate-900",
+            "count": 1
+          },
+          {
+            "className": "bg-slate-100",
+            "count": 1
+          }
+        ],
+        "total": 12
+      },
+      {
+        "file": "components/jobs/jobs-header.tsx",
+        "classes": [
+          {
+            "className": "border-slate-300",
+            "count": 3
+          },
+          {
+            "className": "ring-slate-200",
+            "count": 2
+          },
+          {
+            "className": "text-slate-800",
+            "count": 2
+          },
+          {
+            "className": "text-slate-400",
+            "count": 2
+          },
+          {
+            "className": "ring-slate-300",
+            "count": 1
+          },
+          {
+            "className": "border-slate-200",
+            "count": 1
+          },
+          {
+            "className": "text-slate-600",
+            "count": 1
+          }
+        ],
+        "total": 12
+      },
+      {
+        "file": "components/jobs/job-list-item.tsx",
+        "classes": [
+          {
+            "className": "text-slate-700",
+            "count": 2
+          },
+          {
+            "className": "text-slate-400",
+            "count": 2
+          },
+          {
+            "className": "bg-slate-600",
+            "count": 1
+          },
+          {
+            "className": "bg-slate-50",
+            "count": 1
+          },
+          {
+            "className": "bg-slate-100",
+            "count": 1
+          },
+          {
+            "className": "bg-slate-700",
+            "count": 1
+          },
+          {
+            "className": "text-slate-800",
+            "count": 1
+          },
+          {
+            "className": "text-slate-500",
+            "count": 1
+          },
+          {
+            "className": "text-slate-300",
+            "count": 1
+          }
+        ],
+        "total": 11
+      },
+      {
+        "file": "components/jobs/apply-confirm-prompt.tsx",
+        "classes": [
+          {
+            "className": "border-slate-200",
+            "count": 2
+          },
+          {
+            "className": "text-slate-400",
+            "count": 2
+          },
+          {
+            "className": "text-slate-600",
+            "count": 2
+          },
+          {
+            "className": "text-slate-800",
+            "count": 1
+          },
+          {
+            "className": "text-slate-500",
+            "count": 1
+          },
+          {
+            "className": "bg-slate-100",
+            "count": 1
+          }
+        ],
+        "total": 9
+      },
+      {
+        "file": "components/jobs/job-submission-form.tsx",
+        "classes": [
+          {
+            "className": "text-slate-400",
+            "count": 4
+          },
+          {
+            "className": "text-slate-700",
+            "count": 2
+          },
+          {
+            "className": "text-green-600",
+            "count": 1
+          }
+        ],
+        "total": 7
+      },
+      {
+        "file": "app/submit/edit/page.tsx",
+        "classes": [
+          {
+            "className": "bg-slate-100",
+            "count": 2
+          },
+          {
+            "className": "text-slate-900",
+            "count": 2
+          },
+          {
+            "className": "text-slate-500",
+            "count": 2
+          }
+        ],
+        "total": 6
+      },
+      {
+        "file": "components/ui/modal.tsx",
+        "classes": [
+          {
+            "className": "bg-slate-900",
+            "count": 1
+          },
+          {
+            "className": "border-slate-200",
+            "count": 1
+          },
+          {
+            "className": "text-slate-800",
+            "count": 1
+          },
+          {
+            "className": "text-slate-500",
+            "count": 1
+          },
+          {
+            "className": "bg-slate-50",
+            "count": 1
+          },
+          {
+            "className": "border-slate-100",
+            "count": 1
+          }
+        ],
+        "total": 6
+      },
+      {
+        "file": "app/admin/analytics/page.tsx",
+        "classes": [
+          {
+            "className": "text-slate-800",
+            "count": 2
+          },
+          {
+            "className": "text-slate-500",
+            "count": 2
+          },
+          {
+            "className": "border-slate-200",
+            "count": 1
+          }
+        ],
+        "total": 5
+      },
+      {
+        "file": "components/admin/analytics/metric-cards.tsx",
+        "classes": [
+          {
+            "className": "border-slate-200",
+            "count": 1
+          },
+          {
+            "className": "divide-slate-100",
+            "count": 1
+          },
+          {
+            "className": "text-slate-500",
+            "count": 1
+          },
+          {
+            "className": "text-slate-800",
+            "count": 1
+          },
+          {
+            "className": "text-slate-400",
+            "count": 1
+          }
+        ],
+        "total": 5
+      },
+      {
+        "file": "components/admin/rich-text-editor.tsx",
+        "classes": [
+          {
+            "className": "bg-slate-200",
+            "count": 1
+          },
+          {
+            "className": "text-slate-900",
+            "count": 1
+          },
+          {
+            "className": "text-slate-600",
+            "count": 1
+          },
+          {
+            "className": "bg-slate-100",
+            "count": 1
+          },
+          {
+            "className": "text-slate-800",
+            "count": 1
+          }
+        ],
+        "total": 5
+      },
+      {
+        "file": "components/navbar.tsx",
+        "classes": [
+          {
+            "className": "text-slate-600",
+            "count": 2
+          },
+          {
+            "className": "bg-slate-100",
+            "count": 1
+          },
+          {
+            "className": "text-slate-900",
+            "count": 1
+          },
+          {
+            "className": "bg-slate-50",
+            "count": 1
+          }
+        ],
+        "total": 5
+      },
+      {
+        "file": "components/ui/confirm-dialog.tsx",
+        "classes": [
+          {
+            "className": "text-slate-600",
+            "count": 1
+          },
+          {
+            "className": "text-slate-400",
+            "count": 1
+          },
+          {
+            "className": "border-amber-200",
+            "count": 1
+          },
+          {
+            "className": "bg-amber-50",
+            "count": 1
+          },
+          {
+            "className": "text-amber-900",
+            "count": 1
+          }
+        ],
+        "total": 5
+      },
+      {
+        "file": "components/admin/analytics/range-tabs.tsx",
+        "classes": [
+          {
+            "className": "text-slate-800",
+            "count": 2
+          },
+          {
+            "className": "bg-slate-100",
+            "count": 1
+          },
+          {
+            "className": "text-slate-500",
+            "count": 1
+          }
+        ],
+        "total": 4
+      },
+      {
+        "file": "app/admin/jobs/[id]/edit/page.tsx",
+        "classes": [
+          {
+            "className": "text-slate-800",
+            "count": 1
+          },
+          {
+            "className": "text-slate-500",
+            "count": 1
+          },
+          {
+            "className": "border-slate-200",
+            "count": 1
+          }
+        ],
+        "total": 3
+      },
+      {
+        "file": "app/admin/jobs/new/page.tsx",
+        "classes": [
+          {
+            "className": "text-slate-800",
+            "count": 1
+          },
+          {
+            "className": "text-slate-500",
+            "count": 1
+          },
+          {
+            "className": "border-slate-200",
+            "count": 1
+          }
+        ],
+        "total": 3
+      },
+      {
+        "file": "app/admin/jobs/page.tsx",
+        "classes": [
+          {
+            "className": "text-slate-800",
+            "count": 1
+          },
+          {
+            "className": "text-slate-500",
+            "count": 1
+          },
+          {
+            "className": "border-slate-200",
+            "count": 1
+          }
+        ],
+        "total": 3
+      },
+      {
+        "file": "app/admin/submissions/page.tsx",
+        "classes": [
+          {
+            "className": "text-slate-800",
+            "count": 1
+          },
+          {
+            "className": "text-slate-500",
+            "count": 1
+          },
+          {
+            "className": "border-slate-200",
+            "count": 1
+          }
+        ],
+        "total": 3
+      },
+      {
+        "file": "app/submit/page.tsx",
+        "classes": [
+          {
+            "className": "bg-slate-100",
+            "count": 1
+          },
+          {
+            "className": "text-slate-900",
+            "count": 1
+          },
+          {
+            "className": "text-slate-500",
+            "count": 1
+          }
+        ],
+        "total": 3
+      },
+      {
+        "file": "components/admin/analytics/chart-bar-job-type.tsx",
+        "classes": [
+          {
+            "className": "border-slate-200",
+            "count": 2
+          }
+        ],
+        "total": 2
+      },
+      {
+        "file": "components/admin/analytics/chart-bar-tag.tsx",
+        "classes": [
+          {
+            "className": "border-slate-200",
+            "count": 2
+          }
+        ],
+        "total": 2
+      },
+      {
+        "file": "components/admin/analytics/chart-viewers-over-time.tsx",
+        "classes": [
+          {
+            "className": "border-slate-200",
+            "count": 1
+          }
+        ],
+        "total": 1
+      },
+      {
+        "file": "components/admin/bulk-import.tsx",
+        "classes": [
+          {
+            "className": "text-amber-600",
+            "count": 1
+          }
+        ],
+        "total": 1
+      },
+      {
+        "file": "components/ui/native-select.tsx",
+        "classes": [
+          {
+            "className": "text-slate-600",
+            "count": 1
+          }
+        ],
+        "total": 1
+      }
+    ],
+    "totalInstances": 396,
+    "totalFiles": 37,
+    "byFamily": [
+      {
+        "family": "slate",
+        "count": 371
+      },
+      {
+        "family": "purple",
+        "count": 8
+      },
+      {
+        "family": "green",
+        "count": 5
+      },
+      {
+        "family": "amber",
+        "count": 4
+      },
+      {
+        "family": "emerald",
+        "count": 3
+      },
+      {
+        "family": "rose",
+        "count": 3
+      },
+      {
+        "family": "red",
+        "count": 1
+      },
+      {
+        "family": "blue",
+        "count": 1
+      }
+    ]
+  },
+  "variantUsage": [
+    {
+      "component": "Button",
+      "prop": "variant",
+      "values": [
+        {
+          "value": "primary",
+          "count": 12,
+          "isDefault": true
+        },
+        {
+          "value": "secondary",
+          "count": 0,
+          "isDefault": false
+        },
+        {
+          "value": "outline",
+          "count": 10,
+          "isDefault": false
+        },
+        {
+          "value": "ghost",
+          "count": 13,
+          "isDefault": false
+        },
+        {
+          "value": "destructive",
+          "count": 0,
+          "isDefault": false
+        },
+        {
+          "value": "link",
+          "count": 0,
+          "isDefault": false
+        }
+      ]
+    },
+    {
+      "component": "Button",
+      "prop": "size",
+      "values": [
+        {
+          "value": "sm",
+          "count": 18,
+          "isDefault": false
+        },
+        {
+          "value": "md",
+          "count": 17,
+          "isDefault": true
+        },
+        {
+          "value": "lg",
+          "count": 0,
+          "isDefault": false
+        },
+        {
+          "value": "icon",
+          "count": 0,
+          "isDefault": false
+        }
+      ]
+    },
+    {
+      "component": "Badge",
+      "prop": "variant",
+      "values": [
+        {
+          "value": "default",
+          "count": 8,
+          "isDefault": true
+        },
+        {
+          "value": "secondary",
+          "count": 0,
+          "isDefault": false
+        },
+        {
+          "value": "outline",
+          "count": 5,
+          "isDefault": false
+        },
+        {
+          "value": "success",
+          "count": 0,
+          "isDefault": false
+        },
+        {
+          "value": "warning",
+          "count": 3,
+          "isDefault": false
+        },
+        {
+          "value": "destructive",
+          "count": 1,
+          "isDefault": false
+        }
+      ]
+    }
+  ]
+}
