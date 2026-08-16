@@ -72,7 +72,16 @@ export default async function AdminSubmissionsPage({ searchParams }: PageProps) 
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        {/* Keyed on showArchived rather than resetting local state (the
+            status filter) via an effect: showArchived is a URL-derived
+            prop, not client state set by a handler here, so there's no
+            single place to fold a setFilter('all') into alongside it. A
+            key remounts the table as one atomic part of the same
+            transition — filter starts at 'all' on the very first render
+            of the new instance, no effect firing on unrelated re-renders,
+            no frame with the stale filter before it corrects. */}
         <SubmissionsTable
+          key={showArchived ? 'archived' : 'live'}
           submissions={submissions ?? []}
           totalCount={count ?? 0}
           currentPage={currentPage}

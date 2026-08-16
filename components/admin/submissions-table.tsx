@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useOptimistic, useState, useTransition } from 'react'
+import { useOptimistic, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -91,16 +91,6 @@ export function SubmissionsTable({
   const [, startTransition] = useTransition()
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
   const { confirm, dialog } = useConfirmDialog()
-
-  // "View archive"/"Back to queue" is a client-side nav, not a remount —
-  // this component instance survives it, so filter would otherwise carry
-  // over from whichever view you were just on. The archive's empty-state
-  // copy invites browsing ("nothing here is deleted"), so landing there
-  // still filtered to e.g. Pending and silently showing "Nothing archived"
-  // reads as broken rather than as "nothing pending is archived."
-  useEffect(() => {
-    setFilter('all')
-  }, [showArchived])
 
   // Status flips to approved/rejected immediately; React drops the optimistic
   // layer if the request fails, restoring the pending row.
