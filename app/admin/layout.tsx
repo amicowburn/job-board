@@ -5,6 +5,7 @@ import { getUser, isCurrentUserAdmin } from '@/lib/supabase/server'
 import { getPendingSubmissionCount } from '@/lib/admin-data'
 import { AdminNavDesktop, AdminNavMobile } from '@/components/admin/admin-nav'
 import { Logo } from '@/components/Logo'
+import { TooltipProvider } from '@/components/shadcn/tooltip'
 
 export const metadata = {
   title: 'Admin | MMSS Job Board',
@@ -61,9 +62,14 @@ export default async function AdminLayout({
         </header>
       )}
 
-      <main className="flex-1 px-4 sm:px-[15px] py-6 w-full max-w-[1200px] mx-auto">
-        {children}
-      </main>
+      {/* Scoped to admin rather than the root app layout — tooltips (the
+          submission row's Approve/Reject buttons) are an admin-only need
+          so far, not a public-site one. */}
+      <TooltipProvider delayDuration={200}>
+        <main className="flex-1 px-4 sm:px-[15px] py-6 w-full max-w-[1200px] mx-auto">
+          {children}
+        </main>
+      </TooltipProvider>
 
       <Toaster position="bottom-right" richColors closeButton />
     </div>
