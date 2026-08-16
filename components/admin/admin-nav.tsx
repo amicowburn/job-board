@@ -38,9 +38,9 @@ export function AdminNavDesktop({ pendingSubmissions = 0 }: AdminNavProps) {
         <Link
           key={item.href}
           href={item.href}
-          style={{ fontFamily: 'var(--font-outfit)', fontWeight: 475 }}
+          style={{ fontWeight: 475 }}
           className={cn(
-            'px-2 py-[5px] rounded-md text-[16px] uppercase tracking-[-0.01em] transition-colors inline-flex items-center gap-1.5 whitespace-nowrap hover:bg-slate-100',
+            'px-2 py-[5px] rounded-md text-[16px] uppercase tracking-[-0.01em] transition-colors inline-flex items-center gap-1.5 whitespace-nowrap hover:bg-slate-100 font-heading',
             pathname.startsWith(item.href) ? 'text-slate-900' : 'text-slate-600'
           )}
         >
@@ -58,8 +58,8 @@ export function AdminNavDesktop({ pendingSubmissions = 0 }: AdminNavProps) {
       <Link
         href="/"
         target="_blank"
-        style={{ fontFamily: 'var(--font-outfit)', fontWeight: 475 }}
-        className="px-2 py-[5px] rounded-md text-[16px] uppercase tracking-[-0.01em] text-slate-500 border border-slate-200 hover:bg-slate-50 transition-colors whitespace-nowrap ml-1 inline-flex items-center gap-1"
+        style={{ fontWeight: 475 }}
+        className="px-2 py-[5px] rounded-md text-[16px] uppercase tracking-[-0.01em] text-slate-500 border border-slate-200 hover:bg-slate-50 transition-colors whitespace-nowrap ml-1 inline-flex items-center gap-1 font-heading"
       >
         View Site
         <ArrowUpRight className="size-3.5" />
@@ -74,9 +74,10 @@ export function AdminNavDesktop({ pendingSubmissions = 0 }: AdminNavProps) {
  *  ends, same mechanism components/navbar.tsx uses, no explicit position
  *  needed. Padding/typography below is copied from that file's mobile
  *  dropdown: px-5 py-3 per item, text-sm font-medium uppercase tracking-wide,
- *  Outfit at weight 475 — that 475 (not the text-sm default weight, and not
- *  Tailwind's font-medium=500) is what navbar.tsx actually ships, so it's
- *  reproduced exactly rather than rounded to a named Tailwind weight. */
+ *  font-heading at weight 475 — that 475 (not the text-sm default weight,
+ *  and not Tailwind's font-medium=500) is what navbar.tsx actually ships,
+ *  so it's reproduced exactly rather than rounded to a named Tailwind
+ *  weight. */
 export function AdminNavMobile({ pendingSubmissions = 0 }: AdminNavProps) {
   const navItems = useNavItems(pendingSubmissions)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -111,8 +112,8 @@ export function AdminNavMobile({ pendingSubmissions = 0 }: AdminNavProps) {
                 key={item.href}
                 href={item.href}
                 onClick={() => setMenuOpen(false)}
-                style={{ fontFamily: 'var(--font-outfit)', fontWeight: 475 }}
-                className="flex items-center justify-between px-5 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 uppercase tracking-wide transition-colors"
+                style={{ fontWeight: 475 }}
+                className="flex items-center justify-between px-5 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 uppercase tracking-wide transition-colors font-heading"
               >
                 {item.label}
                 {item.badge != null && item.badge > 0 && (
@@ -126,13 +127,13 @@ export function AdminNavMobile({ pendingSubmissions = 0 }: AdminNavProps) {
               href="/"
               target="_blank"
               onClick={() => setMenuOpen(false)}
-              style={{ fontFamily: 'var(--font-outfit)', fontWeight: 475 }}
-              className="flex items-center gap-1 px-5 py-3 text-sm font-medium text-slate-500 hover:bg-slate-50 uppercase tracking-wide transition-colors"
+              style={{ fontWeight: 475 }}
+              className="flex items-center gap-1 px-5 py-3 text-sm font-medium text-slate-500 hover:bg-slate-50 uppercase tracking-wide transition-colors font-heading"
             >
               View Site
               <ArrowUpRight className="size-3.5" />
             </Link>
-            {/* Sign out deliberately excluded from the uppercase/Outfit-475
+            {/* Sign out deliberately excluded from the uppercase/font-heading-475
                 treatment above — it isn't one of the public site's nav items
                 and stays visually distinct from the main group, as before. */}
             <form action="/api/auth/signout" method="POST" className="border-t border-slate-100 mt-1 pt-1">

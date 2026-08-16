@@ -253,9 +253,9 @@
 
   --animate-apply-prompt-in: apply-prompt-in 220ms ease-out;
 
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-public-sans);
 
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-public-sans);
 
   --radius-2xl: calc(var(--radius) * 1.8);
 
