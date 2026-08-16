@@ -91,18 +91,43 @@
   --primary-foreground: var(--mmss-primary-foreground);
   --background: var(--mmss-background);
   --foreground: var(--mmss-foreground);
-  --secondary: oklch(0.97 0 0);
+  /* Fill sequence — three names, three jobs, three values (used to be the
+     same oklch(0.97 0 0) for all of secondary/muted/accent):
+       muted     0.97  passive large-area fill (page-wide backgrounds,
+                        toolbar/table-header washes) — unchanged value,
+                        now genuinely distinct rather than coincidentally
+                        matching the other two.
+       secondary 0.90  resting fill for a secondary-styled interactive
+                        element (Badge/Button secondary variant).
+       accent    0.88  hover/focus highlight — small step down from
+                        secondary (same element, next state), not a new
+                        color family. Matches its one existing real use
+                        (the shadcn select's focus:bg-accent). */
+  --secondary: oklch(0.90 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
+  --accent: oklch(0.88 0 0);
   --accent-foreground: oklch(0.205 0 0);
   /* Amber — chroma 0.188 vs. --accent's 0, i.e. an actual hue, not another
      shade of grey. Badge's `warning` variant now points here instead of
      faking itself with --accent. */
   --warning: oklch(0.769 0.188 70.08);
   --warning-foreground: oklch(0.205 0 0);
-  --border: oklch(0.922 0 0);
+  /* border-light (below, in the shadcn-only surfaces block) is oklch(0.922
+     0 0) — the old flat value, kept as-is because it already reads fine
+     against white/card surfaces. --border (DEFAULT, what every existing
+     border-border consumer resolves to) is retuned to 0.85: the page
+     background (--mmss-background #e8e8e8) is itself oklch L 0.931 —
+     *lighter* than the old 0.922 border — so against the page that border
+     had essentially no lightness gap (0.009) versus the 0.078 gap it gets
+     against white. 0.85 reproduces that same ~0.078 gap against the page,
+     which is the actual fix for "borders are invisible outside cards".
+     This flows to every current border-border site automatically; whether
+     any of those should opt back into the lighter tier is a per-component
+     call for later, not a token-layer one — border-light exists for that,
+     unconsumed for now. */
+  --border: oklch(0.85 0 0);
   --ring: oklch(0.708 0 0);
 
   /*
@@ -114,7 +139,13 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --input: oklch(0.922 0 0);
+  /* The old flat border value — see the comment by --border above. Neither
+     --input nor --sidebar-border below is actually consumed anywhere in
+     the app today (no border-input or sidebar-border class in any
+     component); both just point here so they inherit something sane
+     rather than the stale page-blind value if they're ever wired up. */
+  --border-light: oklch(0.922 0 0);
+  --input: var(--border-light);
 
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -122,7 +153,7 @@
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-border: var(--border-light);
   --sidebar-ring: oklch(0.708 0 0);
 
   /*
@@ -224,6 +255,7 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
+  --color-border-light: var(--border-light);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-destructive: var(--mmss-destructive);
