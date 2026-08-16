@@ -165,7 +165,7 @@ export const COLOR_GROUPS: ColorGroup[] = [
   },
   {
     role: 'Semantic state',
-    note: "warning has no --color-warning / --color-warning-foreground in app/globals.css on this branch — bg-warning and text-warning-foreground aren't valid Tailwind utilities here, so that swatch renders unstyled below (shown as '—'). Badge's own \"warning\" variant sidesteps this by reusing bg-accent/text-accent-foreground instead, which is why it doesn't render as a warning color either — see the Components section.",
+    note: "warning's swatch below is read live, not asserted here — if it renders unstyled ('—'), --color-warning/--color-warning-foreground aren't defined in app/globals.css on whatever branch is currently checked out; a real color means they are. Whether Badge's own \"warning\" variant (see Components section) matches, or still fakes itself via bg-accent, is worth checking directly in components/ui/badge.tsx rather than trusting a claim here — this exact pair of facts has been mid-fix across branches, which is precisely the kind of thing static prose gets wrong the moment someone merges.",
     tokens: [
       {
         label: 'success',
