@@ -81,7 +81,7 @@ export function Pagination({
           href={buildUrl(currentPage - 1)}
           className={cn(
             'inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium',
-            'border border-border bg-background hover:bg-muted transition-colors'
+            'border border-border bg-background hover:bg-accent transition-colors'
           )}
           aria-label="Previous page"
         >
@@ -120,7 +120,7 @@ export function Pagination({
                 'border transition-colors',
                 page === currentPage
                   ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border bg-background hover:bg-muted'
+                  : 'border-border bg-background hover:bg-accent'
               )}
               aria-current={page === currentPage ? 'page' : undefined}
             >
@@ -141,7 +141,7 @@ export function Pagination({
           href={buildUrl(currentPage + 1)}
           className={cn(
             'inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium',
-            'border border-border bg-background hover:bg-muted transition-colors'
+            'border border-border bg-background hover:bg-accent transition-colors'
           )}
           aria-label="Next page"
         >

@@ -63,7 +63,7 @@ export function MobileFilterDrawer() {
             <h2 className="font-semibold text-lg">Filters</h2>
             <button
               onClick={() => setIsOpen(false)}
-              className="p-2 hover:bg-muted rounded-md"
+              className="p-2 hover:bg-accent rounded-md"
               aria-label="Close filters"
             >
               <CloseIcon className="h-5 w-5" />

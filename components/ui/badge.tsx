@@ -15,7 +15,7 @@ export function Badge({
     secondary: 'bg-secondary text-secondary-foreground',
     outline: 'border border-border text-foreground',
     success: 'bg-success text-success-foreground',
-    warning: 'bg-accent text-accent-foreground',
+    warning: 'bg-warning text-warning-foreground',
     destructive: 'bg-destructive text-destructive-foreground',
   }
 

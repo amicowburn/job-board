@@ -10,7 +10,7 @@ const Alert = forwardRef<HTMLDivElement, AlertProps>(
     const variants = {
       default: 'bg-muted text-foreground',
       success: 'bg-success/10 text-success border-success/20',
-      warning: 'bg-accent/10 text-accent border-accent/20',
+      warning: 'bg-warning/10 text-warning border-warning/20',
       destructive: 'bg-destructive/10 text-destructive border-destructive/20',
     }
 
