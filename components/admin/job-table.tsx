@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Search } from 'lucide-react'
-import { CurrencyCircleDollarIcon, PencilSimpleIcon, DotsThreeVerticalIcon } from '@phosphor-icons/react'
+import { CurrencyCircleDollarIcon, PencilSimpleIcon, DotsThreeVerticalIcon, PlusIcon } from '@phosphor-icons/react'
 import { Button, Badge, Input, useConfirmDialog } from '@/components/ui'
 import { Pagination } from '@/components/ui/pagination'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/shadcn/tooltip'
@@ -231,7 +231,10 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
             Bulk Actions
           </Button>
           <Link href="/admin/jobs/new">
-            <Button variant="primary" size="sm">Add Job</Button>
+            <Button variant="primary" size="sm" className="gap-1.5">
+              <PlusIcon weight="bold" className="size-3.5" />
+              Add Job
+            </Button>
           </Link>
         </div>
       </div>
