@@ -7,10 +7,16 @@ import { toast } from 'sonner'
 import { Search } from 'lucide-react'
 import { Button, Badge, Input, useConfirmDialog } from '@/components/ui'
 import { Pagination } from '@/components/ui/pagination'
+import { GridRow } from './table'
 import { createClient } from '@/lib/supabase/client'
 import { formatDate } from '@/lib/utils'
 import { BulkImport } from './bulk-import'
 import type { AdminJobRow } from '@/lib/types'
+
+/** Literal so Tailwind's JIT scanner can see it — see components/admin/table/grid-row.tsx.
+ *  checkbox / job / status / posted / actions. No Source track: Phase 3 folds source into
+ *  the job cell's secondary line instead of giving it its own column. */
+const JOB_GRID_COLUMNS = 'grid-cols-[22px_minmax(0,1fr)_96px_84px_76px]'
 
 interface JobTableProps {
   jobs: AdminJobRow[]
@@ -250,78 +256,69 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
         </div>
       )}
 
-      {/* Table — desktop */}
-      <div className="hidden md:block overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-slate-50 border-b border-slate-100">
-              <th className="px-5 py-3 text-left w-10">
-                <input
-                  type="checkbox"
-                  checked={selectedJobs.size === filteredJobs.length && filteredJobs.length > 0}
-                  onChange={handleSelectAll}
-                  className="rounded border-slate-300"
-                />
-              </th>
-              <th className="px-5 py-3 text-left text-[11px] uppercase tracking-wide text-slate-500 font-medium">Job</th>
-              <th className="px-5 py-3 text-left text-[11px] uppercase tracking-wide text-slate-500 font-medium">Source</th>
-              <th className="px-5 py-3 text-left text-[11px] uppercase tracking-wide text-slate-500 font-medium">Status</th>
-              <th className="px-5 py-3 text-left text-[11px] uppercase tracking-wide text-slate-500 font-medium">Posted</th>
-              <th className="px-5 py-3 text-left text-[11px] uppercase tracking-wide text-slate-500 font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {filteredJobs.map((job) => (
-              <tr key={job.id} className="hover:bg-slate-50/60 transition-colors">
-                <td className="px-5 py-4">
-                  <input
-                    type="checkbox"
-                    checked={selectedJobs.has(job.id)}
-                    onChange={() => handleToggleSelect(job.id)}
-                    className="rounded border-slate-300"
-                  />
-                </td>
-                <td className="px-5 py-4">
-                  <p className="font-medium text-slate-800">{job.title}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{job.company}</p>
-                </td>
-                <td className="px-5 py-4">
-                  <Badge variant={job.source === 'manual' ? 'secondary' : 'outline'} className="rounded-full">
-                    {job.source}
-                  </Badge>
-                </td>
-                <td className="px-5 py-4">
-                  <div className="flex flex-wrap gap-1">
-                    <Badge variant={job.is_active ? 'success' : 'destructive'} className="rounded-full">
-                      {job.is_active ? 'Active' : 'Inactive'}
-                    </Badge>
-                    {job.is_featured && <Badge variant="warning" className="rounded-full">Featured</Badge>}
-                    {job.is_sponsored && <Badge variant="default" className="rounded-full">Sponsored</Badge>}
-                  </div>
-                </td>
-                <td className="px-5 py-4 text-xs text-slate-400">
-                  {formatDate(job.posted_at || job.created_at)}
-                </td>
-                <td className="px-5 py-4">
-                  <div className="flex gap-1">
-                    <Link href={`/admin/jobs/${job.id}/edit`}>
-                      <Button variant="ghost" size="sm">Edit</Button>
-                    </Link>
-                    {job.is_active ? (
-                      <Button variant="ghost" size="sm" onClick={() => handleDeactivate(job.id)}>
-                        Deactivate
-                      </Button>
-                    ) : (
-                      <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDelete(job.id)}>
-                        Delete
-                      </Button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Grid — desktop. Fixed 5-column template (checkbox / job / status /
+          posted / actions); see JOB_GRID_COLUMNS above for why there's no
+          separate Source track. */}
+      <div className="hidden md:block">
+        <GridRow header columnsClassName={JOB_GRID_COLUMNS}>
+          <div className="px-5 py-3 flex items-center">
+            <input
+              type="checkbox"
+              checked={selectedJobs.size === filteredJobs.length && filteredJobs.length > 0}
+              onChange={handleSelectAll}
+              className="rounded border-slate-300"
+            />
+          </div>
+          <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Job</div>
+          <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Status</div>
+          <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Posted</div>
+          <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Actions</div>
+        </GridRow>
+
+        {filteredJobs.map((job) => (
+          <GridRow key={job.id} columnsClassName={JOB_GRID_COLUMNS}>
+            <div className="px-5 py-4 flex items-center">
+              <input
+                type="checkbox"
+                checked={selectedJobs.has(job.id)}
+                onChange={() => handleToggleSelect(job.id)}
+                className="rounded border-slate-300"
+              />
+            </div>
+            <div className="min-w-0 px-5 py-4">
+              <div className="min-w-0">
+                <p className="font-medium text-slate-800 truncate">{job.title}</p>
+                <p className="text-xs text-slate-400 mt-0.5 truncate">{job.company}</p>
+              </div>
+            </div>
+            <div className="px-5 py-4">
+              <div className="flex flex-wrap gap-1">
+                <Badge variant={job.is_active ? 'success' : 'destructive'} className="rounded-full">
+                  {job.is_active ? 'Active' : 'Inactive'}
+                </Badge>
+                {job.is_featured && <Badge variant="warning" className="rounded-full">Featured</Badge>}
+                {job.is_sponsored && <Badge variant="default" className="rounded-full">Sponsored</Badge>}
+              </div>
+            </div>
+            <div className="px-5 py-4 flex items-center text-xs text-slate-400">
+              {formatDate(job.posted_at || job.created_at)}
+            </div>
+            <div className="py-4 flex items-center gap-1">
+              <Link href={`/admin/jobs/${job.id}/edit`}>
+                <Button variant="ghost" size="sm">Edit</Button>
+              </Link>
+              {job.is_active ? (
+                <Button variant="ghost" size="sm" onClick={() => handleDeactivate(job.id)}>
+                  Deactivate
+                </Button>
+              ) : (
+                <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDelete(job.id)}>
+                  Delete
+                </Button>
+              )}
+            </div>
+          </GridRow>
+        ))}
       </div>
 
       {/* Cards — mobile. Same data, same badge variants, same action logic
