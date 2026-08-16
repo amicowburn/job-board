@@ -1,3 +1,4 @@
+import { styleAudit } from './lib/scan'
 import { StyleGuideClient } from './style-guide-client'
 
 export const metadata = {
@@ -5,5 +6,7 @@ export const metadata = {
 }
 
 export default function StyleGuidePage() {
-  return <StyleGuideClient />
+  return (
+    <StyleGuideClient rawPalette={styleAudit.rawPalette} generatedAt={styleAudit.generatedAt} />
+  )
 }
