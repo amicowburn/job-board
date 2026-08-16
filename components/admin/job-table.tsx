@@ -5,11 +5,13 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Search } from 'lucide-react'
+import { CurrencyCircleDollarIcon } from '@phosphor-icons/react'
 import { Button, Badge, Input, useConfirmDialog } from '@/components/ui'
 import { Pagination } from '@/components/ui/pagination'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/shadcn/tooltip'
 import { GridRow } from './table'
 import { createClient } from '@/lib/supabase/client'
-import { formatDate } from '@/lib/utils'
+import { cn, formatDate } from '@/lib/utils'
 import { BulkImport } from './bulk-import'
 import type { AdminJobRow } from '@/lib/types'
 
@@ -285,20 +287,37 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
                 className="rounded border-slate-300"
               />
             </div>
-            <div className="min-w-0 px-5 py-4">
+            <div className={cn('min-w-0 px-5 py-4', !job.is_active && 'text-slate-400')}>
               <div className="min-w-0">
-                <p className="font-medium text-slate-800 truncate">{job.title}</p>
-                <p className="text-xs text-slate-400 mt-0.5 truncate">{job.company}</p>
+                <div className="flex items-center gap-1">
+                  <p className={cn('text-sm font-medium truncate', job.is_active && 'text-slate-800')}>
+                    {job.title}
+                  </p>
+                  {job.is_sponsored && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span
+                          role="img"
+                          aria-label="Sponsored"
+                          tabIndex={0}
+                          className={cn('shrink-0 inline-flex', job.is_active ? 'text-primary' : 'text-slate-400')}
+                        >
+                          <CurrencyCircleDollarIcon weight="fill" className="size-3.5" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>Sponsored</TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                  {[job.company, job.source].filter(Boolean).join(' · ')}
+                </p>
               </div>
             </div>
-            <div className="px-5 py-4">
-              <div className="flex flex-wrap gap-1">
-                <Badge variant={job.is_active ? 'success' : 'destructive'} className="rounded-full">
-                  {job.is_active ? 'Active' : 'Inactive'}
-                </Badge>
-                {job.is_featured && <Badge variant="warning" className="rounded-full">Featured</Badge>}
-                {job.is_sponsored && <Badge variant="default" className="rounded-full">Sponsored</Badge>}
-              </div>
+            <div className="px-5 py-4 flex items-center">
+              <Badge variant={job.is_active ? 'success' : 'destructive'} className="rounded-full">
+                {job.is_active ? 'Active' : 'Inactive'}
+              </Badge>
             </div>
             <div className="px-5 py-4 flex items-center text-xs text-slate-400">
               {formatDate(job.posted_at || job.created_at)}
@@ -348,9 +367,30 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
           <div key={job.id} className="rounded-xl border border-slate-100 p-3 space-y-2">
             {/* Title + company, checkbox aligned with the title's own line */}
             <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <p className="font-medium text-slate-800 leading-tight">{job.title}</p>
-                <p className="text-xs text-slate-400 mt-0.5">{job.company}</p>
+              <div className={cn('min-w-0', !job.is_active && 'text-slate-400')}>
+                <div className="flex items-center gap-1">
+                  <p className={cn('font-medium leading-tight truncate', job.is_active && 'text-slate-800')}>
+                    {job.title}
+                  </p>
+                  {job.is_sponsored && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span
+                          role="img"
+                          aria-label="Sponsored"
+                          tabIndex={0}
+                          className={cn('shrink-0 inline-flex', job.is_active ? 'text-primary' : 'text-slate-400')}
+                        >
+                          <CurrencyCircleDollarIcon weight="fill" className="size-3.5" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>Sponsored</TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                  {[job.company, job.source].filter(Boolean).join(' · ')}
+                </p>
               </div>
               <input
                 type="checkbox"
@@ -360,16 +400,11 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
               />
             </div>
 
-            {/* Source + status together, one row */}
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant={job.source === 'manual' ? 'secondary' : 'outline'} className="rounded-full">
-                {job.source}
-              </Badge>
+            {/* Status */}
+            <div className="flex items-center gap-2">
               <Badge variant={job.is_active ? 'success' : 'destructive'} className="rounded-full">
                 {job.is_active ? 'Active' : 'Inactive'}
               </Badge>
-              {job.is_featured && <Badge variant="warning" className="rounded-full">Featured</Badge>}
-              {job.is_sponsored && <Badge variant="default" className="rounded-full">Sponsored</Badge>}
             </div>
 
             {/* Date + actions, one row */}
