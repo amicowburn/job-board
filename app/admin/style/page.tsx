@@ -7,6 +7,10 @@ export const metadata = {
 
 export default function StyleGuidePage() {
   return (
-    <StyleGuideClient rawPalette={styleAudit.rawPalette} generatedAt={styleAudit.generatedAt} />
+    <StyleGuideClient
+      rawPalette={styleAudit.rawPalette}
+      generatedAt={styleAudit.generatedAt}
+      variantReports={styleAudit.variantUsage}
+    />
   )
 }
