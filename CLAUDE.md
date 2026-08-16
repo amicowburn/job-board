@@ -92,7 +92,7 @@ Optional (graceful fallback if missing): `GEMINI_API_KEY`, `RESEND_API_KEY`
 
 ## Styling
 
-Tailwind CSS. Brand colors defined as CSS variables in `app/globals.css` (`--mmss-primary: #3d1472`, `--mmss-secondary: #5b2d8e`). Fonts: Inter (body), Outfit (headers). Custom UI primitives in `components/ui/` — no external component library.
+Tailwind CSS. Brand colors defined as CSS variables in `app/globals.css` (`--mmss-primary: #3d1472`, `--mmss-secondary: #5b2d8e`). Single app font: Public Sans, loaded once in `app/layout.tsx` via `next/font/google` (`variable: '--font-public-sans'`) — both `--font-sans` and `--font-heading` resolve to it, so `font-sans`/`font-heading` are interchangeable today; `font-heading` is the one used at call sites that care about heading weight/tracking, so a future split back into two fonts only means repointing that one token. Custom UI primitives in `components/ui/` — no external component library.
 
 ## Known Issues
 

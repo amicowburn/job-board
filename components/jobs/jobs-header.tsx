@@ -43,7 +43,7 @@ export function JobsHeader({ totalJobs, lastUpdated, filters, onFilterChange, on
     <header className="px-4 sm:px-6 md:px-8 lg:px-12 pt-4 pb-2 max-w-[1200px] mx-auto w-full">
       {/* Title + Search + Last updated */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3">
-        <h1 className="text-lg sm:text-xl font-semibold text-slate-800 tracking-tight shrink-0" style={{ fontFamily: 'var(--font-outfit)' }}>
+        <h1 className="text-lg sm:text-xl font-semibold text-slate-800 tracking-tight shrink-0 font-heading">
           MMSS Job Board
         </h1>
         <div className="flex-1 flex items-center bg-white rounded-full border border-slate-200 overflow-hidden focus-within:border-slate-300 focus-within:ring-1 focus-within:ring-slate-200 transition-all shadow-sm">

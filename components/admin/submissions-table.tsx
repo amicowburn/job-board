@@ -185,12 +185,11 @@ export function SubmissionsTable({
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors capitalize ${
+              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium font-heading transition-colors capitalize ${
                 filter === f
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
-              style={{ fontFamily: 'var(--font-outfit)' }}
             >
               {f}
             </button>

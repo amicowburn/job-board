@@ -88,10 +88,9 @@ function Cell({
           // Emphasis is carried by the brand colour rather than the outlined
           // card it replaces: inside a divided strip a coloured border would
           // read as a boundary between cells, not as weight on one figure.
-          className={`text-[26px] leading-none font-bold ${
+          className={`text-[26px] leading-none font-bold font-heading ${
             emphasis ? 'text-primary' : 'text-slate-800'
           }`}
-          style={{ fontFamily: 'var(--font-outfit)' }}
         >
           {formatNumber(value)}
         </p>

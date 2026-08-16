@@ -38,10 +38,7 @@ export default async function AdminSubmissionsPage({ searchParams }: PageProps) 
   return (
     <div>
       <div className="mb-6">
-        <h1
-          className="text-[22px] font-bold text-slate-800"
-          style={{ fontFamily: 'var(--font-outfit)' }}
-        >
+        <h1 className="text-[22px] font-bold text-slate-800 font-heading">
           Job Submissions
         </h1>
         <p className="text-sm text-slate-500 mt-1">
