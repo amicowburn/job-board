@@ -9,7 +9,7 @@ import { CurrencyCircleDollarIcon } from '@phosphor-icons/react'
 import { Button, Badge, Input, useConfirmDialog } from '@/components/ui'
 import { Pagination } from '@/components/ui/pagination'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/shadcn/tooltip'
-import { GridRow } from './table'
+import { GridRow, StatusDot } from './table'
 import { createClient } from '@/lib/supabase/client'
 import { cn, formatDate } from '@/lib/utils'
 import { BulkImport } from './bulk-import'
@@ -314,12 +314,13 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
                 </p>
               </div>
             </div>
-            <div className="px-5 py-4 flex items-center">
-              <Badge variant={job.is_active ? 'success' : 'destructive'} className="rounded-full">
-                {job.is_active ? 'Active' : 'Inactive'}
-              </Badge>
+            <div className="px-5 py-4 flex items-center gap-1.5">
+              <StatusDot
+                role={job.is_active ? 'success' : 'muted'}
+                label={job.is_active ? 'Active' : 'Inactive'}
+              />
             </div>
-            <div className="px-5 py-4 flex items-center text-xs text-slate-400">
+            <div className="pr-4 py-4 flex items-center justify-end text-xs text-muted-foreground whitespace-nowrap">
               {formatDate(job.posted_at || job.created_at)}
             </div>
             <div className="py-4 flex items-center gap-1">
