@@ -65,12 +65,13 @@ export function useConfirmDialog() {
       description={pending.description}
       footer={
         <>
-          <Button variant="outline" size="sm" onClick={() => settle(false)}>
+          <Button variant="ghost" size="sm" className="rounded-full" onClick={() => settle(false)}>
             {pending.cancelLabel ?? 'Cancel'}
           </Button>
           <Button
             variant={pending.destructive ? 'destructive' : 'primary'}
             size="sm"
+            className="rounded-full"
             onClick={() => settle(true)}
           >
             {pending.confirmLabel ?? 'Confirm'}
@@ -82,7 +83,7 @@ export function useConfirmDialog() {
         <div className="space-y-1.5">
           <label
             htmlFor="confirm-dialog-note"
-            className="text-xs font-medium text-slate-600"
+            className="text-xs font-medium text-foreground"
           >
             {pending.note.label}
           </label>
@@ -95,15 +96,19 @@ export function useConfirmDialog() {
             className="text-sm"
           />
           {pending.note.helper && (
-            <p className="text-xs text-slate-400">{pending.note.helper}</p>
+            <p className="text-xs text-muted-foreground">{pending.note.helper}</p>
           )}
         </div>
       )}
 
+      {/* Uses the --warning token (app/globals.css) now, not raw amber-* —
+          only reachable by dialogs that still pass `warning` (e.g. job-table's
+          delete/bulk-action confirmations); the reject-submission dialog no
+          longer passes one, so this doesn't render there any more. */}
       {pending.warning && (
-        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5">
-          <p className="text-xs text-amber-900 leading-relaxed">
-            <span className="font-semibold">Heads up — </span>
+        <div className="mt-4 rounded-lg border border-warning/30 bg-warning/10 px-3 py-2.5">
+          <p className="text-xs leading-relaxed">
+            <span className="font-semibold text-warning">Heads up — </span>
             {pending.warning}
           </p>
         </div>

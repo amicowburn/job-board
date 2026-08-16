@@ -101,10 +101,7 @@ export function ApplyConfirmPrompt() {
         </svg>
       </button>
 
-      <p
-        className="text-sm font-semibold text-slate-800 pr-6"
-        style={{ fontFamily: 'var(--font-outfit)' }}
-      >
+      <p className="text-sm font-semibold text-slate-800 pr-6 font-heading">
         Did you finish applying?
       </p>
       <p className="text-xs text-slate-500 mt-1 leading-snug">

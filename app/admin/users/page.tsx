@@ -79,10 +79,7 @@ export default function AdminUsersPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1
-          className="text-[22px] font-bold text-slate-800"
-          style={{ fontFamily: 'var(--font-outfit)' }}
-        >
+        <h1 className="text-[22px] font-bold text-slate-800 font-heading">
           Admin Users
         </h1>
         <p className="text-sm text-slate-500 mt-1">Manage admin access to the dashboard</p>
@@ -90,7 +87,7 @@ export default function AdminUsersPage() {
 
       {/* Create new admin */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-6 max-w-md">
-        <h2 className="text-base font-semibold text-slate-700 mb-4" style={{ fontFamily: 'var(--font-outfit)' }}>
+        <h2 className="text-base font-semibold text-slate-700 mb-4 font-heading">
           Create Admin User
         </h2>
 

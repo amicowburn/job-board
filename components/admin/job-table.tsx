@@ -225,7 +225,7 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
       {/* Bulk Actions Panel */}
       {showBulkActions && (
         <div className="px-5 py-4 bg-slate-50 border-b border-slate-100 space-y-4">
-          <h3 className="text-sm font-semibold text-slate-700" style={{ fontFamily: 'var(--font-outfit)' }}>
+          <h3 className="text-sm font-semibold text-slate-700 font-heading">
             Bulk Actions
           </h3>
           <div className="flex flex-wrap gap-4">

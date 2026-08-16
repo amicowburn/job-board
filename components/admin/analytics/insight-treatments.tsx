@@ -92,10 +92,7 @@ export function InsightHeaderStat({ insight }: { insight: GrowthInsight }) {
     <div className="text-right shrink-0">
       <div className="flex items-center justify-end gap-1.5">
         <Icon className={`h-3.5 w-3.5 ${tone}`} aria-hidden />
-        <span
-          className="text-lg font-semibold text-slate-800 leading-none"
-          style={{ fontFamily: 'var(--font-outfit)' }}
-        >
+        <span className="text-lg font-semibold text-slate-800 leading-none font-heading">
           {formatDelta(insight)}
         </span>
       </div>
@@ -131,10 +128,7 @@ export function InsightSparkline({
     <div className="flex items-center gap-3">
       <div>
         <div className="flex items-baseline gap-1.5">
-          <span
-            className="text-xl font-semibold text-slate-800 leading-none"
-            style={{ fontFamily: 'var(--font-outfit)' }}
-          >
+          <span className="text-xl font-semibold text-slate-800 leading-none font-heading">
             {formatDelta(insight)}
           </span>
           <Icon className="h-3.5 w-3.5 text-slate-400" aria-hidden />

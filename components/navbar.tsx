@@ -42,12 +42,12 @@ export function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`px-2 py-[5px] text-[16px] tracking-[-0.01em] uppercase transition-colors rounded-md hover:bg-slate-100 ${
+                  className={`px-2 py-[5px] text-[16px] tracking-[-0.01em] uppercase transition-colors rounded-md hover:bg-slate-100 font-heading ${
                     isCurrentPage
                       ? 'text-slate-900 font-medium'
                       : 'text-slate-600'
                   }`}
-                  style={{ fontFamily: 'var(--font-outfit)', fontWeight: 475 }}
+                  style={{ fontWeight: 475 }}
                 >
                   {item.label}
                 </Link>
@@ -77,8 +77,8 @@ export function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="block px-5 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 uppercase tracking-wide transition-colors"
-                  style={{ fontFamily: 'var(--font-outfit)', fontWeight: 475 }}
+                  className="block px-5 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 uppercase tracking-wide transition-colors font-heading"
+                  style={{ fontWeight: 475 }}
                   onClick={() => setMenuOpen(false)}
                 >
                   {item.label}

@@ -81,10 +81,7 @@ export function Modal({
         )}
       >
         <div className="px-5 pt-5 pb-4">
-          <h2
-            className="text-[17px] font-bold text-slate-800"
-            style={{ fontFamily: 'var(--font-outfit)' }}
-          >
+          <h2 className="text-[17px] font-bold text-slate-800 font-heading">
             {title}
           </h2>
           {description && (
@@ -96,7 +93,7 @@ export function Modal({
         </div>
 
         {footer && (
-          <div className="px-5 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-2">
+          <div className="px-5 py-4 flex justify-end gap-2">
             {footer}
           </div>
         )}

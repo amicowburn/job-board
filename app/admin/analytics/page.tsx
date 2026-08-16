@@ -33,10 +33,7 @@ export default async function AdminAnalyticsPage({ searchParams }: PageProps) {
     <div>
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1
-            className="text-[22px] font-bold text-slate-800"
-            style={{ fontFamily: 'var(--font-outfit)' }}
-          >
+          <h1 className="text-[22px] font-bold text-slate-800 font-heading">
             User Analytics
           </h1>
           <p className="text-sm text-slate-500 mt-1">
@@ -68,10 +65,7 @@ export default async function AdminAnalyticsPage({ searchParams }: PageProps) {
 function EmptyState() {
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 text-center">
-      <h2
-        className="text-base font-semibold text-slate-800"
-        style={{ fontFamily: 'var(--font-outfit)' }}
-      >
+      <h2 className="text-base font-semibold text-slate-800 font-heading">
         No activity recorded yet
       </h2>
       <p className="text-sm text-slate-500 mt-2 max-w-md mx-auto">

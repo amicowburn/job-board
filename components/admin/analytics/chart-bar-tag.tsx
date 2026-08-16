@@ -110,8 +110,22 @@ export function ChartBarTag({
 const LABEL_FONT_SIZE = 12
 const VALUE_FONT_SIZE = 11
 
-/** Rough advance width of Inter at 12px. Only ever used to decide placement. */
-const CHAR_WIDTH = 6.4
+/**
+ * Rough advance width of Public Sans (the app font — see app/layout.tsx) at
+ * 12px, regular weight. Only ever used to decide placement, so an average
+ * rather than an exact per-string measurement is deliberate.
+ *
+ * Re-derive if the app font changes: canvas 2d context, font set to
+ * `12px "<family>"`, measureText() averaged across a representative sample
+ * of real label text (job/tag category names, mixed case, varying length)
+ * — not a generic pangram, since this only needs to be right for what this
+ * chart actually renders. Measured 5.99 across two dozen category-style
+ * labels; rounded up slightly rather than down, since underestimating width
+ * pushes a label just over a bar edge (visible clipping), while
+ * overestimating just pushes it outside the bar early (the fallback path
+ * this component already handles as the normal case for long-tail rows).
+ */
+const CHAR_WIDTH = 6.1
 
 /** Breathing room either side of a label sitting inside a bar. */
 const INSET = 8

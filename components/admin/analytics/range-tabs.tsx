@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 import { RANGES } from '@/lib/analytics/constants'
 import type { AnalyticsRange } from '@/lib/analytics/constants'
+import { segmentedTabsListClassName, segmentedTabsTriggerClassName } from '@/components/ui/segmented-tabs'
 
 /**
  * The page's only time-period control.
@@ -17,10 +18,7 @@ import type { AnalyticsRange } from '@/lib/analytics/constants'
  */
 export function RangeTabs({ current }: { current: AnalyticsRange }) {
   return (
-    <nav
-      aria-label="Reporting period"
-      className="inline-flex items-center gap-1 rounded-full bg-slate-100 p-1"
-    >
+    <nav aria-label="Reporting period" className={segmentedTabsListClassName}>
       {RANGES.map((range) => {
         const isActive = range.value === current
 
@@ -33,11 +31,7 @@ export function RangeTabs({ current }: { current: AnalyticsRange }) {
             // the page's whole context, and a screen reader gets no help from
             // a white background.
             aria-current={isActive ? 'page' : undefined}
-            className={`rounded-full px-4 py-1.5 text-sm transition-colors ${
-              isActive
-                ? 'bg-white font-medium text-slate-800 shadow-sm'
-                : 'text-slate-500 hover:text-slate-800'
-            }`}
+            className={segmentedTabsTriggerClassName(isActive, 'normal-case')}
           >
             {range.label}
           </Link>
