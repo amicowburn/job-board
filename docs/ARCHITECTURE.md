@@ -19,7 +19,7 @@ Last reviewed: 2026-08-17.
 | HR self-serve submission | ✅ Working | `app/submit/` → `POST /api/submit-job` |
 | Submitter edit-by-token | ✅ Working | `app/submit/edit/` → `PATCH /api/submit-job/[token]` |
 | Admin review queue (approve/reject + emails) | ✅ Working | `POST /api/admin/submissions/[id]/approve|reject` |
-| Admin job CRUD | ✅ Working | `components/admin/job-form.tsx`, `job-table.tsx` |
+| Admin job CRUD | ✅ Working, including one-click reactivation (added 2026-08-17 — `JobActionsMenu`'s dropdown now offers Activate on an inactive row, no confirm dialog since reversing a deactivation is lower-stakes than the actions that already have one) | `components/admin/job-form.tsx`, `job-table.tsx` |
 | Admin bulk Excel import | ✅ Working — single-sheet template, rebuilt 2026-08-17 to match the real file admins use (see [Removed capabilities](#removed-capabilities-historical-record)) | `components/admin/bulk-import.tsx`, `lib/excel-template.ts` |
 | Admin auth + route protection | ✅ Working | `middleware.ts` → `lib/supabase/middleware.ts` |
 | Admin password reset | ✅ Working | `app/admin/reset-password/` |
@@ -60,24 +60,6 @@ filter state, drifted independently (the homepage's page-reset effect is
 missing `filters.sponsored` in its dependency array; `/jobs` has it). This
 is the highest-value refactor candidate: unify into one shared component
 before adding more listing features, or the drift will keep compounding.
-
-### Queued follow-ups
-
-Found during `redesign/admin-jobs-table` (2026-08-17), deliberately not
-built there — that branch is presentation-only. Not yet started.
-
-- **Reactivating a deactivated job has no path except direct DB access.**
-  `JobActionsMenu` (`components/admin/job-table.tsx`) only ever offers
-  Deactivate (active job) or Delete (inactive job) — there's no mutation
-  that flips `is_active` back to `true`. Small, scoped fix once someone's
-  ready to touch mutations on this table: a write path mirroring
-  `handleDeactivate`'s existing `supabase.from('jobs').update(...)` call,
-  a third dropdown branch so an inactive row offers both Activate and
-  Delete, and an `'activate'` case added to `job-table.tsx`'s optimistic
-  `JobAction` type (currently `'delete' | 'deactivate'` only). Probably
-  doesn't need a confirm dialog — reversing a deactivation is lower-stakes
-  than the actions that already have one — but worth deciding deliberately
-  rather than copying Deactivate's confirm() by default.
 
 ### Deliberately dormant
 

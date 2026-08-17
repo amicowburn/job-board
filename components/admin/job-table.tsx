@@ -13,6 +13,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/shadcn/dropdown-menu'
 import { GridRow, StatusDot, IconActionButton } from './table'
@@ -37,6 +38,7 @@ interface JobTableProps {
 type JobAction =
   | { type: 'delete'; ids: string[] }
   | { type: 'deactivate'; ids: string[] }
+  | { type: 'activate'; ids: string[] }
 
 function applyJobAction(rows: AdminJobRow[], action: JobAction): AdminJobRow[] {
   const ids = new Set(action.ids)
@@ -45,8 +47,9 @@ function applyJobAction(rows: AdminJobRow[], action: JobAction): AdminJobRow[] {
     return rows.filter((job) => !ids.has(job.id))
   }
 
+  const isActive = action.type === 'activate'
   return rows.map((job) =>
-    ids.has(job.id) ? { ...job, is_active: false } : job
+    ids.has(job.id) ? { ...job, is_active: isActive } : job
   )
 }
 
@@ -104,6 +107,26 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
       }
 
       toast.success('Job deactivated')
+      router.refresh()
+    })
+  }
+
+  // No confirm() here, unlike Deactivate/Delete — reversing a deactivation
+  // is lower-stakes than either of those, and the job stays reachable via
+  // Deactivate again immediately after if this was a mistake.
+  const handleActivate = async (jobId: string) => {
+    startTransition(async () => {
+      applyOptimistic({ type: 'activate', ids: [jobId] })
+
+      const supabase = createClient()
+      const { error } = await supabase.from('jobs').update({ is_active: true }).eq('id', jobId)
+
+      if (error) {
+        toast.error('Failed to activate job', { description: error.message })
+        return
+      }
+
+      toast.success('Job activated')
       router.refresh()
     })
   }
@@ -333,7 +356,7 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
               {formatDate(job.posted_at || job.created_at)}
             </div>
             <div className="py-4 flex items-center justify-end">
-              <JobActionsMenu job={job} onDeactivate={handleDeactivate} onDelete={handleDelete} />
+              <JobActionsMenu job={job} onDeactivate={handleDeactivate} onActivate={handleActivate} onDelete={handleDelete} />
             </div>
           </GridRow>
         ))}
@@ -411,7 +434,7 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
               <span className="text-xs text-slate-400">
                 {formatDate(job.posted_at || job.created_at)}
               </span>
-              <JobActionsMenu job={job} onDeactivate={handleDeactivate} onDelete={handleDelete} />
+              <JobActionsMenu job={job} onDeactivate={handleDeactivate} onActivate={handleActivate} onDelete={handleDelete} />
             </div>
           </div>
         ))}
@@ -439,24 +462,29 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
 /**
  * Edit (pencil, labelled) + an overflow ellipsis, shared by the desktop grid
  * and mobile cards — same pairing every row, active or inactive, so the
- * actions column renders at a fixed width regardless of which single item
- * the menu holds. Unlike the submissions table's actions menu, there's no
- * conditional 1-vs-3-button case here to keep aligned: Edit + ellipsis is
- * the whole set, always.
+ * actions column renders at a fixed width regardless of which single or
+ * double item the menu holds. Unlike the submissions table's actions menu,
+ * there's no conditional 1-vs-3-button case here to keep aligned: Edit +
+ * ellipsis is the whole set, always — the branching lives inside the menu,
+ * not in which buttons render.
  *
- * The menu itself still branches: Deactivate for an active job, Delete
- * (destructive) for an inactive one — carried over unchanged from the
- * table's pre-redesign behavior, confirmation flow included. There's no
- * "reactivate" mutation to wire an Activate item to; adding one would be a
- * mutation change, out of scope for a presentation-only pass.
+ * The menu itself branches on is_active: Deactivate alone for an active
+ * job; Activate + Delete for an inactive one, in that order (the
+ * reversible, non-destructive action first) with a separator ahead of
+ * Delete so it doesn't read as equally casual. Activate has no confirm() —
+ * see handleActivate's own comment for why — Deactivate and Delete both
+ * keep theirs, carried over unchanged from the table's pre-redesign
+ * behavior.
  */
 function JobActionsMenu({
   job,
   onDeactivate,
+  onActivate,
   onDelete,
 }: {
   job: AdminJobRow
   onDeactivate: (id: string) => void
+  onActivate: (id: string) => void
   onDelete: (id: string) => void
 }) {
   return (
@@ -477,9 +505,13 @@ function JobActionsMenu({
           {job.is_active ? (
             <DropdownMenuItem onClick={() => onDeactivate(job.id)}>Deactivate</DropdownMenuItem>
           ) : (
-            <DropdownMenuItem variant="destructive" onClick={() => onDelete(job.id)}>
-              Delete
-            </DropdownMenuItem>
+            <>
+              <DropdownMenuItem onClick={() => onActivate(job.id)}>Activate</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onClick={() => onDelete(job.id)}>
+                Delete
+              </DropdownMenuItem>
+            </>
           )}
         </DropdownMenuContent>
       </DropdownMenu>
