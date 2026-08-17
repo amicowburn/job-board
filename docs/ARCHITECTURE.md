@@ -6,7 +6,7 @@ whenever a capability's status changes — it's the thing that lets a new
 session (human or AI) answer "is this real, is it finished, is it safe to
 build on" without re-deriving it from the code.
 
-Last reviewed: 2026-08-09.
+Last reviewed: 2026-08-17.
 
 ---
 
@@ -20,12 +20,37 @@ Last reviewed: 2026-08-09.
 | Submitter edit-by-token | ✅ Working | `app/submit/edit/` → `PATCH /api/submit-job/[token]` |
 | Admin review queue (approve/reject + emails) | ✅ Working | `POST /api/admin/submissions/[id]/approve|reject` |
 | Admin job CRUD | ✅ Working | `components/admin/job-form.tsx`, `job-table.tsx` |
-| Admin bulk Excel import | ✅ Working | `components/admin/bulk-import.tsx` |
+| Admin bulk Excel import | ✅ Working — single-sheet template, rebuilt 2026-08-17 to match the real file admins use (see [Removed capabilities](#removed-capabilities-historical-record)) | `components/admin/bulk-import.tsx`, `lib/excel-template.ts` |
 | Admin auth + route protection | ✅ Working | `middleware.ts` → `lib/supabase/middleware.ts` |
 | Admin password reset | ✅ Working | `app/admin/reset-password/` |
 | Admin user management | ✅ Working (fixed 2026-08-09). A second admin account was granted access via direct SQL the same day rather than through this UI — not because the UI didn't work, but because doing it via `/admin/users` requires an already-authenticated admin driving a browser, which wasn't available in that session. Prefer `/admin/users` for granting access going forward; it's the audited path (server-side, logged, self-removal-guarded). | `app/api/admin/users/`, `app/api/admin/users/[id]/` |
 | AI-assisted job prefill | ✅ Working (switched to Gemini 2.5 Flash 2026-08-09); AI tier fires if `GEMINI_API_KEY` is set | `app/api/prefill-job/route.ts` |
 | External job sync (cron) | ❌ Removed 2026-08-09 — was never functional | — |
+
+### Production data state
+
+`jobs.monashmss.com` currently shows "No jobs found." Checked 2026-08-17 by
+reading the production REST calls the public page itself makes — both
+returned `200` with zero rows, not an error: `0` jobs with `is_active =
+true`. Production has 6 total job rows (1 of which had `is_featured = true`
+before the migration below dropped that column) but none currently active.
+This is a data state, not a bug — noted here so it isn't mistaken for one
+and re-investigated from scratch.
+
+**Unrelated fix, same day:** the local check above required working past a
+separate bug first — no migration ever granted `anon`/`authenticated`/
+`service_role` base `SELECT`/`INSERT`/`UPDATE`/`DELETE` on `jobs`,
+`job_submissions`, or `admin_users` (only `analytics_events`, in 0006, had
+explicit grants — same root cause, same fix, already applied there).
+RLS policies existed and were correct, but were unreachable without the
+underlying grant. Fixed via
+`supabase/migrations/0013_grant_base_table_privileges.sql`, applied to
+local. **Not yet applied to production** — production's own REST calls
+returned clean `200`s during the check above, so its grants are already
+fine (likely applied once, outside of any tracked migration, when the
+hosted project was first bootstrapped); this migration exists so a fresh
+`db reset` — local or a future re-provision — doesn't silently reintroduce
+the gap.
 
 ### Known duplication
 
@@ -40,36 +65,6 @@ before adding more listing features, or the drift will keep compounding.
 
 Found during `redesign/admin-jobs-table` (2026-08-17), deliberately not
 built there — that branch is presentation-only. Not yet started.
-
-- **`is_featured` — needs a direction decision, not a delete.** The admin
-  jobs table redesign dropped Featured from the admin list's job cell (an
-  explicit call: "Featured is gone from the product" was the working
-  assumption going in) and no longer shows it anywhere in `/admin/jobs`.
-  Checked before assuming that meant the column was dead — it isn't:
-  - `components/admin/job-form.tsx` still has a live "Featured job
-    (highlighted on homepage)" checkbox, reading and writing `is_featured`
-    on every job create/edit.
-  - `app/jobs/[id]/page.tsx` still renders a `Featured` badge on the
-    **public** job detail page when `is_featured` is true.
-  - `lib/excel-template.ts` / `components/admin/bulk-import.tsx` still
-    have a `Featured` column in the bulk-import template that writes
-    straight to `is_featured`.
-  - The local DB has a real row with `is_featured = true` right now (the
-    BMW "Marketing Communications Graduate" job) — set via the form
-    checkbox, not stale seed data.
-  - One genuinely dead thread: `components/jobs/jobs-sidebar.tsx`'s
-    "Featured Jobs" link (`/?featured=true`) — neither `app/page.tsx` nor
-    `app/jobs/page.tsx` reads that query param, so the link goes nowhere.
-
-  So the actual decision is direction, not cleanup: either (a) Featured
-  stays a real feature — fix the dead sidebar link, and decide how/whether
-  it should resurface in the redesigned admin jobs list now that the row
-  no longer shows it at a glance — or (b) Featured is fully deprecated —
-  remove the form checkbox, the public badge, the bulk-import column, and
-  the `is_featured` column/type themselves. Half-removing it (as it
-  stands after the table redesign: settable and publicly visible, but
-  invisible to the admin managing jobs) is the one option that isn't
-  actually safe to leave as-is.
 
 - **Reactivating a deactivated job has no path except direct DB access.**
   `JobActionsMenu` (`components/admin/job-table.tsx`) only ever offers
@@ -115,6 +110,21 @@ built there — that branch is presentation-only. Not yet started.
   mistaken for the main route's AI key. Its Gemini-calling logic was ported
   into `/api/prefill-job` (replacing the Anthropic tier) and the standalone
   function was deleted, along with its `supabase/config.toml` registration.
+
+- **Featured job flag (`is_featured`)**: deprecated 2026-08-17, column
+  dropped via `supabase/migrations/0012_drop_is_featured.sql`. Never grew
+  past its initial scaffolding — present since the very first commit
+  (2026-03-10) as a schema column, a job-form checkbox, and a badge on the
+  public job detail page, but the checkbox's own promise ("highlighted on
+  homepage") was never built in any commit since, and the sidebar's
+  "Featured Jobs" link (`/?featured=true`) pointed at a query param
+  nothing ever read. `is_sponsored` is this app's sole working promotion
+  mechanism — it actually pins jobs on the public listing, which Featured
+  never did. Every reference (form checkbox, public badge, admin list
+  query, bulk-import column, types) was removed in the same pass as the
+  migration; the bulk-import Excel template was also rebuilt in this pass
+  to match the real file admins use — single `"Job Data"` sheet, no
+  Featured column (see the Capabilities table above).
 
 ---
 

@@ -23,7 +23,6 @@ export interface Job {
   posted_at: string | null
   closing_at: string | null
   is_active: boolean
-  is_featured: boolean
   is_sponsored: boolean
   created_at: string
   updated_at: string
@@ -53,7 +52,6 @@ export interface JobInsert {
   posted_at?: string | null
   closing_at?: string | null
   is_active?: boolean
-  is_featured?: boolean
   is_sponsored?: boolean
 }
 
@@ -74,7 +72,6 @@ export interface JobUpdate {
   posted_at?: string | null
   closing_at?: string | null
   is_active?: boolean
-  is_featured?: boolean
   is_sponsored?: boolean
 }
 
@@ -212,18 +209,6 @@ export interface ActionCountRow {
 /** `ActionCountRow` densified so every action is present. */
 export type ActionCounts = Record<AnalyticsEventType, Omit<ActionCountRow, 'action'>>
 
-// Query filter types
-export interface JobFilters {
-  search?: string
-  job_type?: JobType | JobType[]
-  work_mode?: WorkMode | WorkMode[]
-  source?: JobSource
-  tags?: string[]
-  is_active?: boolean
-  is_featured?: boolean
-  is_sponsored?: boolean
-}
-
 export interface PaginationParams {
   page: number
   pageSize: number
@@ -316,7 +301,6 @@ export type AdminJobRow = Pick<
   | 'company'
   | 'source'
   | 'is_active'
-  | 'is_featured'
   | 'is_sponsored'
   | 'posted_at'
   | 'created_at'

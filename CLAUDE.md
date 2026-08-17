@@ -74,7 +74,7 @@ Middleware (`middleware.ts` → `lib/supabase/middleware.ts`) refreshes auth tok
 
 Main tables: `jobs`, `job_submissions` (pending HR queue), `admin_users` (FK to `auth.users`).
 
-`jobs` key fields: `title`, `company`, `url`, `description` (HTML), `tags` (TEXT[]), `work_mode` (remote|hybrid|onsite), `job_type` (internship|graduate|part-time|full-time|casual|contract), `is_active`, `is_featured`, `is_sponsored`, `source` (manual|external_api|submission), `external_id`.
+`jobs` key fields: `title`, `company`, `url`, `description` (HTML), `tags` (TEXT[]), `work_mode` (remote|hybrid|onsite), `job_type` (internship|graduate|part-time|full-time|casual|contract), `is_active`, `is_sponsored`, `source` (manual|external_api|submission), `external_id`.
 
 GIN index on `tags[]`. Unique constraint on `(source, external_id)` for deduplication.
 

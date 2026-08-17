@@ -9,22 +9,22 @@ const BODY_COPY =
 const FONT_CHECKS: { context: string; className?: string; style?: React.CSSProperties; note: string }[] = [
   {
     context: 'Inherited default (this page\'s <body>)',
-    note: 'RootLayout applies Inter to <body> directly via className, not through a theme token.',
+    note: 'RootLayout applies font-sans to <html>, not to <body> directly — <body> has no font className of its own and inherits Public Sans from there.',
   },
   {
     context: '`font-sans` utility',
     className: 'font-sans',
-    note: 'Resolves through --font-sans, which is set to the Roboto font variable on <html> — not Inter.',
+    note: 'Resolves through --font-sans, which is set to Public Sans — the single app font loaded via next/font in app/layout.tsx. Neither Inter nor Roboto exist in this codebase any more.',
   },
   {
     context: '`font-heading` utility',
     className: 'font-heading',
-    note: 'globals.css maps --font-heading to var(--font-sans) — i.e. Roboto, the same as the line above. Outfit is not wired to this token despite CLAUDE.md documenting Outfit as the header font.',
+    note: 'globals.css defines --font-heading as its own var(--font-public-sans) — independently of --font-sans, not chained to it, though both resolve to the same Public Sans. Outfit is not wired to this token.',
   },
   {
     context: '`var(--font-outfit)` directly',
     style: { fontFamily: 'var(--font-outfit)' },
-    note: 'Outfit is loaded (next/font) and reachable — components/ui/modal.tsx is the only place that references it, via an inline style rather than a Tailwind class.',
+    note: 'Outfit is loaded (next/font) and reachable via inline style at the nav link call sites in components/navbar.tsx and components/admin/admin-nav.tsx — not through this token, and not via components/ui/modal.tsx, which uses font-heading (Public Sans) instead.',
   },
 ]
 

@@ -1,53 +1,7 @@
 {
-  "generatedAt": "2026-08-16T01:21:04.055Z",
+  "generatedAt": "2026-08-17T10:10:54.343Z",
   "rawPalette": {
     "files": [
-      {
-        "file": "components/admin/submissions-table.tsx",
-        "classes": [
-          {
-            "className": "text-slate-500",
-            "count": 9
-          },
-          {
-            "className": "text-slate-400",
-            "count": 9
-          },
-          {
-            "className": "border-slate-100",
-            "count": 5
-          },
-          {
-            "className": "text-slate-800",
-            "count": 4
-          },
-          {
-            "className": "bg-slate-50",
-            "count": 2
-          },
-          {
-            "className": "bg-slate-100",
-            "count": 1
-          },
-          {
-            "className": "text-slate-600",
-            "count": 1
-          },
-          {
-            "className": "bg-slate-200",
-            "count": 1
-          },
-          {
-            "className": "divide-slate-50",
-            "count": 1
-          },
-          {
-            "className": "text-slate-700",
-            "count": 1
-          }
-        ],
-        "total": 34
-      },
       {
         "file": "components/jobs/job-detail-panel.tsx",
         "classes": [
@@ -115,23 +69,19 @@
         "classes": [
           {
             "className": "text-slate-500",
-            "count": 8
+            "count": 7
           },
           {
             "className": "text-slate-400",
-            "count": 6
+            "count": 7
           },
           {
             "className": "border-slate-100",
-            "count": 5
+            "count": 4
           },
           {
             "className": "border-slate-300",
             "count": 4
-          },
-          {
-            "className": "bg-slate-50",
-            "count": 3
           },
           {
             "className": "text-slate-700",
@@ -142,15 +92,57 @@
             "count": 2
           },
           {
-            "className": "border-slate-200",
+            "className": "bg-slate-50",
             "count": 1
           },
           {
-            "className": "divide-slate-50",
+            "className": "border-slate-200",
             "count": 1
           }
         ],
-        "total": 32
+        "total": 28
+      },
+      {
+        "file": "components/admin/submissions-table.tsx",
+        "classes": [
+          {
+            "className": "text-slate-500",
+            "count": 5
+          },
+          {
+            "className": "text-slate-400",
+            "count": 5
+          },
+          {
+            "className": "border-slate-100",
+            "count": 4
+          },
+          {
+            "className": "text-slate-800",
+            "count": 3
+          },
+          {
+            "className": "text-slate-600",
+            "count": 2
+          },
+          {
+            "className": "bg-slate-100",
+            "count": 2
+          },
+          {
+            "className": "bg-slate-200",
+            "count": 1
+          },
+          {
+            "className": "bg-slate-50",
+            "count": 1
+          },
+          {
+            "className": "text-slate-700",
+            "count": 1
+          }
+        ],
+        "total": 24
       },
       {
         "file": "app/page.tsx",
@@ -703,30 +695,26 @@
         "total": 6
       },
       {
-        "file": "components/ui/modal.tsx",
+        "file": "components/navbar.tsx",
         "classes": [
           {
-            "className": "bg-slate-900",
+            "className": "text-slate-600",
+            "count": 2
+          },
+          {
+            "className": "bg-slate-100",
             "count": 1
           },
           {
-            "className": "border-slate-200",
+            "className": "text-slate-900",
             "count": 1
           },
           {
-            "className": "text-slate-800",
-            "count": 1
-          },
-          {
-            "className": "text-slate-500",
+            "className": "ring-slate-200",
             "count": 1
           },
           {
             "className": "bg-slate-50",
-            "count": 1
-          },
-          {
-            "className": "border-slate-100",
             "count": 1
           }
         ],
@@ -803,12 +791,48 @@
         "total": 5
       },
       {
-        "file": "components/navbar.tsx",
+        "file": "components/admin/table/grid-row.tsx",
         "classes": [
           {
-            "className": "text-slate-600",
+            "className": "bg-slate-50",
             "count": 2
           },
+          {
+            "className": "border-slate-100",
+            "count": 1
+          },
+          {
+            "className": "border-slate-50",
+            "count": 1
+          }
+        ],
+        "total": 4
+      },
+      {
+        "file": "components/ui/modal.tsx",
+        "classes": [
+          {
+            "className": "bg-slate-900",
+            "count": 1
+          },
+          {
+            "className": "border-slate-200",
+            "count": 1
+          },
+          {
+            "className": "text-slate-800",
+            "count": 1
+          },
+          {
+            "className": "text-slate-500",
+            "count": 1
+          }
+        ],
+        "total": 4
+      },
+      {
+        "file": "components/ui/segmented-tabs.tsx",
+        "classes": [
           {
             "className": "bg-slate-100",
             "count": 1
@@ -818,51 +842,11 @@
             "count": 1
           },
           {
-            "className": "bg-slate-50",
-            "count": 1
-          }
-        ],
-        "total": 5
-      },
-      {
-        "file": "components/ui/confirm-dialog.tsx",
-        "classes": [
-          {
-            "className": "text-slate-600",
+            "className": "text-slate-500",
             "count": 1
           },
-          {
-            "className": "text-slate-400",
-            "count": 1
-          },
-          {
-            "className": "border-amber-200",
-            "count": 1
-          },
-          {
-            "className": "bg-amber-50",
-            "count": 1
-          },
-          {
-            "className": "text-amber-900",
-            "count": 1
-          }
-        ],
-        "total": 5
-      },
-      {
-        "file": "components/admin/analytics/range-tabs.tsx",
-        "classes": [
           {
             "className": "text-slate-800",
-            "count": 2
-          },
-          {
-            "className": "bg-slate-100",
-            "count": 1
-          },
-          {
-            "className": "text-slate-500",
             "count": 1
           }
         ],
@@ -1009,12 +993,12 @@
         "total": 1
       }
     ],
-    "totalInstances": 396,
+    "totalInstances": 380,
     "totalFiles": 37,
     "byFamily": [
       {
         "family": "slate",
-        "count": 371
+        "count": 358
       },
       {
         "family": "purple",
@@ -1023,10 +1007,6 @@
       {
         "family": "green",
         "count": 5
-      },
-      {
-        "family": "amber",
-        "count": 4
       },
       {
         "family": "emerald",
@@ -1038,6 +1018,10 @@
       },
       {
         "family": "red",
+        "count": 1
+      },
+      {
+        "family": "amber",
         "count": 1
       },
       {
@@ -1063,12 +1047,12 @@
         },
         {
           "value": "outline",
-          "count": 10,
+          "count": 9,
           "isDefault": false
         },
         {
           "value": "ghost",
-          "count": 13,
+          "count": 3,
           "isDefault": false
         },
         {
@@ -1089,7 +1073,7 @@
       "values": [
         {
           "value": "sm",
-          "count": 18,
+          "count": 6,
           "isDefault": false
         },
         {
@@ -1104,7 +1088,7 @@
         },
         {
           "value": "icon",
-          "count": 0,
+          "count": 1,
           "isDefault": false
         }
       ]
@@ -1115,7 +1099,7 @@
       "values": [
         {
           "value": "default",
-          "count": 8,
+          "count": 2,
           "isDefault": true
         },
         {
@@ -1135,7 +1119,7 @@
         },
         {
           "value": "warning",
-          "count": 3,
+          "count": 0,
           "isDefault": false
         },
         {

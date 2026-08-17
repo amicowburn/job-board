@@ -3,7 +3,7 @@
 -- Run this after migration to add sample data for development
 
 -- Insert sample jobs
-INSERT INTO jobs (title, company, location, work_mode, job_type, url, description, tags, posted_at, closing_at, is_active, is_featured, source) VALUES
+INSERT INTO jobs (title, company, location, work_mode, job_type, url, description, tags, posted_at, closing_at, is_active, source) VALUES
 (
   'Marketing Intern',
   'Tech Startup Co',
@@ -27,7 +27,6 @@ Requirements:
   ARRAY['social media', 'content creation', 'analytics', 'digital marketing'],
   NOW() - INTERVAL '3 days',
   NOW() + INTERVAL '30 days',
-  TRUE,
   TRUE,
   'manual'
 ),
@@ -55,7 +54,6 @@ What we''re looking for:
   NOW() - INTERVAL '7 days',
   NOW() + INTERVAL '21 days',
   TRUE,
-  TRUE,
   'manual'
 ),
 (
@@ -82,7 +80,6 @@ Requirements:
   NOW() - INTERVAL '5 days',
   NOW() + INTERVAL '14 days',
   TRUE,
-  FALSE,
   'manual'
 ),
 (
@@ -97,7 +94,6 @@ Requirements:
   NOW() - INTERVAL '2 days',
   NULL,
   TRUE,
-  FALSE,
   'manual'
 ),
 (
@@ -112,7 +108,6 @@ Requirements:
   NOW() - INTERVAL '10 days',
   NOW() + INTERVAL '5 days',
   TRUE,
-  FALSE,
   'manual'
 ),
 (
@@ -127,7 +122,6 @@ Requirements:
   NOW() - INTERVAL '1 day',
   NOW() + INTERVAL '45 days',
   TRUE,
-  FALSE,
   'manual'
 );
 

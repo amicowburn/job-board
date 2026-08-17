@@ -56,7 +56,6 @@ export function JobForm({ job, isEditing = false }: JobFormProps) {
     tags: job?.tags?.join(', ') || '',
     posted_at: job?.posted_at ? job.posted_at.split('T')[0] : '',
     closing_at: job?.closing_at ? job.closing_at.split('T')[0] : '',
-    is_featured: job?.is_featured || false,
     is_active: job?.is_active ?? true,
     is_sponsored: job?.is_sponsored || false,
   })
@@ -97,7 +96,6 @@ export function JobForm({ job, isEditing = false }: JobFormProps) {
         tags: tags.length > 0 ? tags : null,
         posted_at: formData.posted_at ? new Date(formData.posted_at).toISOString() : null,
         closing_at: formData.closing_at ? new Date(formData.closing_at).toISOString() : null,
-        is_featured: formData.is_featured,
         is_active: formData.is_active,
         is_sponsored: formData.is_sponsored,
       }
@@ -321,17 +319,6 @@ export function JobForm({ job, isEditing = false }: JobFormProps) {
       </div>
 
       <div className="flex flex-col gap-3 border-t pt-6">
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            name="is_featured"
-            checked={formData.is_featured}
-            onChange={handleChange}
-            className="rounded border-border"
-          />
-          <span className="text-sm">Featured job (highlighted on homepage)</span>
-        </label>
-
         <label className="flex items-center gap-2">
           <input
             type="checkbox"
