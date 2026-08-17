@@ -42,12 +42,10 @@ export function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`px-2 py-[5px] text-[16px] tracking-[-0.01em] uppercase transition-colors rounded-md hover:bg-slate-100 font-heading ${
-                    isCurrentPage
-                      ? 'text-slate-900 font-medium'
-                      : 'text-slate-600'
+                  className={`px-2 py-[5px] text-[16px] tracking-[-0.01em] uppercase transition-colors rounded-md hover:bg-slate-100 ${
+                    isCurrentPage ? 'text-slate-900' : 'text-slate-600'
                   }`}
-                  style={{ fontWeight: 475 }}
+                  style={{ fontWeight: 475, fontFamily: 'var(--font-outfit)' }}
                 >
                   {item.label}
                 </Link>
@@ -57,7 +55,7 @@ export function Navbar() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-3 -mr-2"
+            className="md:hidden p-3 -mr-2 rounded-md border-0 bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-slate-200"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Toggle menu"
           >
@@ -77,8 +75,8 @@ export function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="block px-5 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 uppercase tracking-wide transition-colors font-heading"
-                  style={{ fontWeight: 475 }}
+                  className="block px-5 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 uppercase tracking-wide transition-colors"
+                  style={{ fontWeight: 475, fontFamily: 'var(--font-outfit)' }}
                   onClick={() => setMenuOpen(false)}
                 >
                   {item.label}

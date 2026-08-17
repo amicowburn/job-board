@@ -38,9 +38,9 @@ export function AdminNavDesktop({ pendingSubmissions = 0 }: AdminNavProps) {
         <Link
           key={item.href}
           href={item.href}
-          style={{ fontWeight: 475 }}
+          style={{ fontWeight: 475, fontFamily: 'var(--font-outfit)' }}
           className={cn(
-            'px-2 py-[5px] rounded-md text-[16px] uppercase tracking-[-0.01em] transition-colors inline-flex items-center gap-1.5 whitespace-nowrap hover:bg-slate-100 font-heading',
+            'px-2 py-[5px] rounded-md text-[16px] uppercase tracking-[-0.01em] transition-colors inline-flex items-center gap-1.5 whitespace-nowrap hover:bg-slate-100',
             pathname.startsWith(item.href) ? 'text-slate-900' : 'text-slate-600'
           )}
         >
@@ -58,8 +58,8 @@ export function AdminNavDesktop({ pendingSubmissions = 0 }: AdminNavProps) {
       <Link
         href="/"
         target="_blank"
-        style={{ fontWeight: 475 }}
-        className="px-2 py-[5px] rounded-md text-[16px] uppercase tracking-[-0.01em] text-slate-500 border border-slate-200 hover:bg-slate-50 transition-colors whitespace-nowrap ml-1 inline-flex items-center gap-1 font-heading"
+        style={{ fontWeight: 475, fontFamily: 'var(--font-outfit)' }}
+        className="px-2 py-[5px] rounded-md text-[16px] uppercase tracking-[-0.01em] text-slate-500 border border-slate-200 hover:bg-slate-50 transition-colors whitespace-nowrap ml-1 inline-flex items-center gap-1"
       >
         View Site
         <ArrowUpRight className="size-3.5" />
@@ -112,8 +112,8 @@ export function AdminNavMobile({ pendingSubmissions = 0 }: AdminNavProps) {
                 key={item.href}
                 href={item.href}
                 onClick={() => setMenuOpen(false)}
-                style={{ fontWeight: 475 }}
-                className="flex items-center justify-between px-5 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 uppercase tracking-wide transition-colors font-heading"
+                style={{ fontWeight: 475, fontFamily: 'var(--font-outfit)' }}
+                className="flex items-center justify-between px-5 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 uppercase tracking-wide transition-colors"
               >
                 {item.label}
                 {item.badge != null && item.badge > 0 && (
@@ -127,8 +127,8 @@ export function AdminNavMobile({ pendingSubmissions = 0 }: AdminNavProps) {
               href="/"
               target="_blank"
               onClick={() => setMenuOpen(false)}
-              style={{ fontWeight: 475 }}
-              className="flex items-center gap-1 px-5 py-3 text-sm font-medium text-slate-500 hover:bg-slate-50 uppercase tracking-wide transition-colors font-heading"
+              style={{ fontWeight: 475, fontFamily: 'var(--font-outfit)' }}
+              className="flex items-center gap-1 px-5 py-3 text-sm font-medium text-slate-500 hover:bg-slate-50 uppercase tracking-wide transition-colors"
             >
               View Site
               <ArrowUpRight className="size-3.5" />

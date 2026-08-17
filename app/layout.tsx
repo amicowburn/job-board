@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Public_Sans } from 'next/font/google'
+import { Public_Sans, Outfit } from 'next/font/google'
 import { Navbar } from '@/components/navbar'
 import { SiteMain } from '@/components/site-main'
 import { Footer } from '@/components/footer'
@@ -16,6 +16,14 @@ import { cn } from "@/lib/utils";
 // included.
 const publicSans = Public_Sans({ subsets: ['latin'], variable: '--font-public-sans' })
 
+// Nav-only. --font-outfit is consumed directly via inline
+// style={{ fontFamily: 'var(--font-outfit)' }} at the nav link call sites
+// (components/navbar.tsx, components/admin/admin-nav.tsx) rather than
+// through a font-heading/font-sans token, so reintroducing it here doesn't
+// touch the rest of the app — every other font-heading consumer still
+// resolves to Public Sans.
+const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit', display: 'swap' })
+
 export const metadata: Metadata = {
   title: 'MMSS Job Board | Monash Marketing Students\' Society',
   description: 'Find marketing internships, graduate roles, and career opportunities curated for Monash marketing students.',
@@ -28,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={cn("font-sans", publicSans.variable)}>
+    <html lang="en" className={cn("font-sans", publicSans.variable, outfit.variable)}>
       <body>
         <SmoothScroll />
         <Navbar />
