@@ -5,12 +5,26 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Search } from 'lucide-react'
+import { CurrencyCircleDollarIcon, PencilSimpleIcon, DotsThreeVerticalIcon, PlusIcon } from '@phosphor-icons/react'
 import { Button, Badge, Input, useConfirmDialog } from '@/components/ui'
 import { Pagination } from '@/components/ui/pagination'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/shadcn/tooltip'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/shadcn/dropdown-menu'
+import { GridRow, StatusDot, IconActionButton } from './table'
 import { createClient } from '@/lib/supabase/client'
-import { formatDate } from '@/lib/utils'
+import { cn, formatDate } from '@/lib/utils'
 import { BulkImport } from './bulk-import'
 import type { AdminJobRow } from '@/lib/types'
+
+/** Literal so Tailwind's JIT scanner can see it — see components/admin/table/grid-row.tsx.
+ *  checkbox / job / status / posted / actions. No Source track: Phase 3 folds source into
+ *  the job cell's secondary line instead of giving it its own column. */
+const JOB_GRID_COLUMNS = 'grid-cols-[22px_minmax(0,1fr)_96px_84px_76px]'
 
 interface JobTableProps {
   jobs: AdminJobRow[]
@@ -217,7 +231,10 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
             Bulk Actions
           </Button>
           <Link href="/admin/jobs/new">
-            <Button variant="primary" size="sm">Add Job</Button>
+            <Button variant="primary" size="sm" className="gap-1.5">
+              <PlusIcon weight="bold" className="size-3.5" />
+              Add Job
+            </Button>
           </Link>
         </div>
       </div>
@@ -250,78 +267,76 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
         </div>
       )}
 
-      {/* Table — desktop */}
-      <div className="hidden md:block overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-slate-50 border-b border-slate-100">
-              <th className="px-5 py-3 text-left w-10">
-                <input
-                  type="checkbox"
-                  checked={selectedJobs.size === filteredJobs.length && filteredJobs.length > 0}
-                  onChange={handleSelectAll}
-                  className="rounded border-slate-300"
-                />
-              </th>
-              <th className="px-5 py-3 text-left text-[11px] uppercase tracking-wide text-slate-500 font-medium">Job</th>
-              <th className="px-5 py-3 text-left text-[11px] uppercase tracking-wide text-slate-500 font-medium">Source</th>
-              <th className="px-5 py-3 text-left text-[11px] uppercase tracking-wide text-slate-500 font-medium">Status</th>
-              <th className="px-5 py-3 text-left text-[11px] uppercase tracking-wide text-slate-500 font-medium">Posted</th>
-              <th className="px-5 py-3 text-left text-[11px] uppercase tracking-wide text-slate-500 font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-50">
-            {filteredJobs.map((job) => (
-              <tr key={job.id} className="hover:bg-slate-50/60 transition-colors">
-                <td className="px-5 py-4">
-                  <input
-                    type="checkbox"
-                    checked={selectedJobs.has(job.id)}
-                    onChange={() => handleToggleSelect(job.id)}
-                    className="rounded border-slate-300"
-                  />
-                </td>
-                <td className="px-5 py-4">
-                  <p className="font-medium text-slate-800">{job.title}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{job.company}</p>
-                </td>
-                <td className="px-5 py-4">
-                  <Badge variant={job.source === 'manual' ? 'secondary' : 'outline'} className="rounded-full">
-                    {job.source}
-                  </Badge>
-                </td>
-                <td className="px-5 py-4">
-                  <div className="flex flex-wrap gap-1">
-                    <Badge variant={job.is_active ? 'success' : 'destructive'} className="rounded-full">
-                      {job.is_active ? 'Active' : 'Inactive'}
-                    </Badge>
-                    {job.is_featured && <Badge variant="warning" className="rounded-full">Featured</Badge>}
-                    {job.is_sponsored && <Badge variant="default" className="rounded-full">Sponsored</Badge>}
-                  </div>
-                </td>
-                <td className="px-5 py-4 text-xs text-slate-400">
-                  {formatDate(job.posted_at || job.created_at)}
-                </td>
-                <td className="px-5 py-4">
-                  <div className="flex gap-1">
-                    <Link href={`/admin/jobs/${job.id}/edit`}>
-                      <Button variant="ghost" size="sm">Edit</Button>
-                    </Link>
-                    {job.is_active ? (
-                      <Button variant="ghost" size="sm" onClick={() => handleDeactivate(job.id)}>
-                        Deactivate
-                      </Button>
-                    ) : (
-                      <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDelete(job.id)}>
-                        Delete
-                      </Button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Grid — desktop. Fixed 5-column template (checkbox / job / status /
+          posted / actions); see JOB_GRID_COLUMNS above for why there's no
+          separate Source track. */}
+      <div className="hidden md:block">
+        <GridRow header columnsClassName={JOB_GRID_COLUMNS}>
+          <div className="px-5 py-3 flex items-center">
+            <input
+              type="checkbox"
+              checked={selectedJobs.size === filteredJobs.length && filteredJobs.length > 0}
+              onChange={handleSelectAll}
+              className="rounded border-slate-300"
+            />
+          </div>
+          <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Job</div>
+          <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Status</div>
+          <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Posted</div>
+          <div className="px-5 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Actions</div>
+        </GridRow>
+
+        {filteredJobs.map((job) => (
+          <GridRow key={job.id} columnsClassName={JOB_GRID_COLUMNS}>
+            <div className="px-5 py-4 flex items-center">
+              <input
+                type="checkbox"
+                checked={selectedJobs.has(job.id)}
+                onChange={() => handleToggleSelect(job.id)}
+                className="rounded border-slate-300"
+              />
+            </div>
+            <div className={cn('min-w-0 px-5 py-4', !job.is_active && 'text-slate-400')}>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1">
+                  <p className={cn('text-sm font-medium truncate', job.is_active && 'text-slate-800')}>
+                    {job.title}
+                  </p>
+                  {job.is_sponsored && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span
+                          role="img"
+                          aria-label="Sponsored"
+                          tabIndex={0}
+                          className={cn('shrink-0 inline-flex', job.is_active ? 'text-primary' : 'text-slate-400')}
+                        >
+                          <CurrencyCircleDollarIcon weight="fill" className="size-3.5" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>Sponsored</TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                  {[job.company, job.source].filter(Boolean).join(' · ')}
+                </p>
+              </div>
+            </div>
+            <div className="px-5 py-4 flex items-center gap-1.5">
+              <StatusDot
+                role={job.is_active ? 'success' : 'muted'}
+                label={job.is_active ? 'Active' : 'Inactive'}
+              />
+            </div>
+            <div className="pr-4 py-4 flex items-center justify-end text-xs text-muted-foreground whitespace-nowrap">
+              {formatDate(job.posted_at || job.created_at)}
+            </div>
+            <div className="py-4 flex items-center justify-end">
+              <JobActionsMenu job={job} onDeactivate={handleDeactivate} onDelete={handleDelete} />
+            </div>
+          </GridRow>
+        ))}
       </div>
 
       {/* Cards — mobile. Same data, same badge variants, same action logic
@@ -351,9 +366,30 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
           <div key={job.id} className="rounded-xl border border-slate-100 p-3 space-y-2">
             {/* Title + company, checkbox aligned with the title's own line */}
             <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <p className="font-medium text-slate-800 leading-tight">{job.title}</p>
-                <p className="text-xs text-slate-400 mt-0.5">{job.company}</p>
+              <div className={cn('min-w-0', !job.is_active && 'text-slate-400')}>
+                <div className="flex items-center gap-1">
+                  <p className={cn('font-medium leading-tight truncate', job.is_active && 'text-slate-800')}>
+                    {job.title}
+                  </p>
+                  {job.is_sponsored && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span
+                          role="img"
+                          aria-label="Sponsored"
+                          tabIndex={0}
+                          className={cn('shrink-0 inline-flex', job.is_active ? 'text-primary' : 'text-slate-400')}
+                        >
+                          <CurrencyCircleDollarIcon weight="fill" className="size-3.5" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>Sponsored</TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                  {[job.company, job.source].filter(Boolean).join(' · ')}
+                </p>
               </div>
               <input
                 type="checkbox"
@@ -363,16 +399,11 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
               />
             </div>
 
-            {/* Source + status together, one row */}
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant={job.source === 'manual' ? 'secondary' : 'outline'} className="rounded-full">
-                {job.source}
-              </Badge>
+            {/* Status */}
+            <div className="flex items-center gap-2">
               <Badge variant={job.is_active ? 'success' : 'destructive'} className="rounded-full">
                 {job.is_active ? 'Active' : 'Inactive'}
               </Badge>
-              {job.is_featured && <Badge variant="warning" className="rounded-full">Featured</Badge>}
-              {job.is_sponsored && <Badge variant="default" className="rounded-full">Sponsored</Badge>}
             </div>
 
             {/* Date + actions, one row */}
@@ -380,20 +411,7 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
               <span className="text-xs text-slate-400">
                 {formatDate(job.posted_at || job.created_at)}
               </span>
-              <div className="flex gap-1">
-                <Link href={`/admin/jobs/${job.id}/edit`}>
-                  <Button variant="ghost" size="sm">Edit</Button>
-                </Link>
-                {job.is_active ? (
-                  <Button variant="ghost" size="sm" onClick={() => handleDeactivate(job.id)}>
-                    Deactivate
-                  </Button>
-                ) : (
-                  <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDelete(job.id)}>
-                    Delete
-                  </Button>
-                )}
-              </div>
+              <JobActionsMenu job={job} onDeactivate={handleDeactivate} onDelete={handleDelete} />
             </div>
           </div>
         ))}
@@ -415,5 +433,56 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
 
       {dialog}
     </>
+  )
+}
+
+/**
+ * Edit (pencil, labelled) + an overflow ellipsis, shared by the desktop grid
+ * and mobile cards — same pairing every row, active or inactive, so the
+ * actions column renders at a fixed width regardless of which single item
+ * the menu holds. Unlike the submissions table's actions menu, there's no
+ * conditional 1-vs-3-button case here to keep aligned: Edit + ellipsis is
+ * the whole set, always.
+ *
+ * The menu itself still branches: Deactivate for an active job, Delete
+ * (destructive) for an inactive one — carried over unchanged from the
+ * table's pre-redesign behavior, confirmation flow included. There's no
+ * "reactivate" mutation to wire an Activate item to; adding one would be a
+ * mutation change, out of scope for a presentation-only pass.
+ */
+function JobActionsMenu({
+  job,
+  onDeactivate,
+  onDelete,
+}: {
+  job: AdminJobRow
+  onDeactivate: (id: string) => void
+  onDelete: (id: string) => void
+}) {
+  return (
+    <div className="flex items-center justify-end gap-1">
+      <Link href={`/admin/jobs/${job.id}/edit`}>
+        <IconActionButton label="Edit">
+          <PencilSimpleIcon className="size-4" />
+        </IconActionButton>
+      </Link>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <IconActionButton label="More options" tooltip={false} className="text-muted-foreground">
+            <DotsThreeVerticalIcon weight="bold" className="size-4" />
+          </IconActionButton>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {job.is_active ? (
+            <DropdownMenuItem onClick={() => onDeactivate(job.id)}>Deactivate</DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem variant="destructive" onClick={() => onDelete(job.id)}>
+              Delete
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   )
 }
