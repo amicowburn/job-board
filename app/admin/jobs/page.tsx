@@ -24,7 +24,7 @@ export default async function AdminJobsPage({ searchParams }: PageProps) {
   const { data: jobs, count } = await supabase
     .from('jobs')
     .select(
-      'id, title, company, source, is_active, is_featured, is_sponsored, posted_at, created_at',
+      'id, title, company, source, is_active, is_sponsored, posted_at, created_at',
       { count: 'exact' }
     )
     .order('created_at', { ascending: false })

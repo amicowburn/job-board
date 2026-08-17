@@ -75,9 +75,6 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                {job.is_featured && (
-                  <Badge variant="warning">Featured</Badge>
-                )}
                 {expired && (
                   <Badge variant="destructive">Closed</Badge>
                 )}

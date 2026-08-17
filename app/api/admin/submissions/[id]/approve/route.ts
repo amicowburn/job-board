@@ -49,7 +49,6 @@ export async function POST(
     posted_at: new Date().toISOString(),
     closing_at: submission.closing_at,
     is_active: true,
-    is_featured: false,
     is_sponsored: false,
   })
 
