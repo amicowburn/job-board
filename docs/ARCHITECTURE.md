@@ -36,6 +36,54 @@ missing `filters.sponsored` in its dependency array; `/jobs` has it). This
 is the highest-value refactor candidate: unify into one shared component
 before adding more listing features, or the drift will keep compounding.
 
+### Queued follow-ups
+
+Found during `redesign/admin-jobs-table` (2026-08-17), deliberately not
+built there — that branch is presentation-only. Not yet started.
+
+- **`is_featured` — needs a direction decision, not a delete.** The admin
+  jobs table redesign dropped Featured from the admin list's job cell (an
+  explicit call: "Featured is gone from the product" was the working
+  assumption going in) and no longer shows it anywhere in `/admin/jobs`.
+  Checked before assuming that meant the column was dead — it isn't:
+  - `components/admin/job-form.tsx` still has a live "Featured job
+    (highlighted on homepage)" checkbox, reading and writing `is_featured`
+    on every job create/edit.
+  - `app/jobs/[id]/page.tsx` still renders a `Featured` badge on the
+    **public** job detail page when `is_featured` is true.
+  - `lib/excel-template.ts` / `components/admin/bulk-import.tsx` still
+    have a `Featured` column in the bulk-import template that writes
+    straight to `is_featured`.
+  - The local DB has a real row with `is_featured = true` right now (the
+    BMW "Marketing Communications Graduate" job) — set via the form
+    checkbox, not stale seed data.
+  - One genuinely dead thread: `components/jobs/jobs-sidebar.tsx`'s
+    "Featured Jobs" link (`/?featured=true`) — neither `app/page.tsx` nor
+    `app/jobs/page.tsx` reads that query param, so the link goes nowhere.
+
+  So the actual decision is direction, not cleanup: either (a) Featured
+  stays a real feature — fix the dead sidebar link, and decide how/whether
+  it should resurface in the redesigned admin jobs list now that the row
+  no longer shows it at a glance — or (b) Featured is fully deprecated —
+  remove the form checkbox, the public badge, the bulk-import column, and
+  the `is_featured` column/type themselves. Half-removing it (as it
+  stands after the table redesign: settable and publicly visible, but
+  invisible to the admin managing jobs) is the one option that isn't
+  actually safe to leave as-is.
+
+- **Reactivating a deactivated job has no path except direct DB access.**
+  `JobActionsMenu` (`components/admin/job-table.tsx`) only ever offers
+  Deactivate (active job) or Delete (inactive job) — there's no mutation
+  that flips `is_active` back to `true`. Small, scoped fix once someone's
+  ready to touch mutations on this table: a write path mirroring
+  `handleDeactivate`'s existing `supabase.from('jobs').update(...)` call,
+  a third dropdown branch so an inactive row offers both Activate and
+  Delete, and an `'activate'` case added to `job-table.tsx`'s optimistic
+  `JobAction` type (currently `'delete' | 'deactivate'` only). Probably
+  doesn't need a confirm dialog — reversing a deactivation is lower-stakes
+  than the actions that already have one — but worth deciding deliberately
+  rather than copying Deactivate's confirm() by default.
+
 ### Deliberately dormant
 
 - **AI prefill tier** (`extractWithAI` in `app/api/prefill-job/route.ts`,
