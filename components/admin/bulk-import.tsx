@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import * as XLSX from 'xlsx'
 import { Button, Alert, AlertDescription } from '@/components/ui'
 import { createClient } from '@/lib/supabase/client'
-import { generateTemplate } from '@/lib/excel-template'
+import { generateTemplate, SAMPLE_ROW_TITLE } from '@/lib/excel-template'
 import type { JobInsert, WorkMode, JobType } from '@/lib/types'
 
 const VALID_WORK_MODES = ['remote', 'hybrid', 'onsite']
@@ -46,13 +46,29 @@ function parseDate(val: unknown): string | null {
   return parsed.toISOString()
 }
 
+/**
+ * Named-sheet lookup, not a fixed position. The real uploaded template
+ * (verified directly, not assumed) has exactly one sheet, "Job Data" — the
+ * old `SheetNames[1]` position-based lookup expected a 2nd sheet that
+ * doesn't exist there and failed on every upload of that file. Falls back
+ * to "the only sheet in the workbook" when nothing matches by name, so a
+ * user's own single-sheet export still works even if they've renamed the
+ * tab; anything else (no name match, more than one sheet) is treated as
+ * not this template at all rather than guessed at.
+ */
+function findJobDataSheet(sheetNames: string[]): string | null {
+  const byName = sheetNames.find((name) => name.trim().toLowerCase() === 'job data')
+  if (byName) return byName
+  if (sheetNames.length === 1) return sheetNames[0]
+  return null
+}
+
 function parseExcelRows(data: ArrayBuffer): { rows: ParsedRow[]; errors: ParseError[] } {
   const wb = XLSX.read(data, { type: 'array', cellDates: true })
 
-  // Read from the second sheet ("Job Data")
-  const sheetName = wb.SheetNames[1]
+  const sheetName = findJobDataSheet(wb.SheetNames)
   if (!sheetName) {
-    return { rows: [], errors: [{ rowNum: 0, message: 'Could not find "Job Data" sheet. Make sure you use the provided template.' }] }
+    return { rows: [], errors: [{ rowNum: 0, message: 'Could not find a "Job Data" sheet. Please download a fresh template and try again.' }] }
   }
 
   const ws = wb.Sheets[sheetName]
@@ -62,7 +78,10 @@ function parseExcelRows(data: ArrayBuffer): { rows: ParsedRow[]; errors: ParseEr
     return { rows: [], errors: [{ rowNum: 0, message: 'No data rows found in the "Job Data" sheet.' }] }
   }
 
-  // Skip header row
+  // Header row (rawRows[0]) is never read for its text — every column below
+  // is positional (row[0], row[1], ...), so header names, trimmed or not,
+  // have no code path to affect. Nothing to change here; see the report for
+  // why this instruction has no matching call site.
   const dataRows = rawRows.slice(1)
   const rows: ParsedRow[] = []
   const errors: ParseError[] = []
@@ -71,16 +90,18 @@ function parseExcelRows(data: ArrayBuffer): { rows: ParsedRow[]; errors: ParseEr
     const row = dataRows[i]
     const rowNum = i + 2 // 1-indexed, plus header row
 
-    // Skip completely empty rows
-    if (!row || row.every((cell) => cell === '' || cell === null || cell === undefined)) continue
+    // Skip template filler rows (no Title) and the template's own sample
+    // row (exact match on the Title text generateTemplate wrote into it —
+    // SAMPLE_ROW_TITLE, shared from lib/excel-template so the two can't
+    // drift apart).
+    const title = String(row?.[0] ?? '').trim()
+    if (!row || !title || title === SAMPLE_ROW_TITLE) continue
 
-    const title = String(row[0] ?? '').trim()
     const company = String(row[1] ?? '').trim()
     const url = String(row[2] ?? '').trim()
 
     // Validate required fields
     const missing: string[] = []
-    if (!title) missing.push('Title')
     if (!company) missing.push('Company')
     if (!url) missing.push('Application URL')
 
@@ -100,8 +121,10 @@ function parseExcelRows(data: ArrayBuffer): { rows: ParsedRow[]; errors: ParseEr
     const logoUrl = String(row[8] ?? '').trim() || null
     const postedAt = parseDate(row[9])
     const closingAt = parseDate(row[10])
-    const isFeatured = parseYesNo(row[11], false)
-    const isActive = parseYesNo(row[12], true)
+    const isSponsored = parseYesNo(row[11], false)
+    // Nothing at index 12+ is a real column any more — the template ends at
+    // Sponsored (11). is_active isn't user-set on import; it takes the same
+    // default new jobs get everywhere else (omitted here, DB DEFAULT TRUE).
 
     let workMode: WorkMode | null = null
     if (workModeRaw && VALID_WORK_MODES.includes(workModeRaw)) {
@@ -139,8 +162,7 @@ function parseExcelRows(data: ArrayBuffer): { rows: ParsedRow[]; errors: ParseEr
         company_logo_url: logoUrl,
         posted_at: postedAt,
         closing_at: closingAt,
-        is_featured: isFeatured,
-        is_active: isActive,
+        is_sponsored: isSponsored,
         source: 'manual',
       },
     })

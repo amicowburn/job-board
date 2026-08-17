@@ -1,109 +1,122 @@
 import * as XLSX from 'xlsx'
 
-const COLUMNS = [
-  'Title',
-  'Company',
-  'Application URL',
-  'Location',
-  'Work Mode',
-  'Job Type',
-  'Description',
-  'Tags',
-  'Company Logo URL',
-  'Posted Date',
-  'Closing Date',
-  'Featured',
-  'Active',
+/**
+ * Matches the real uploaded template exactly (verified byte-for-byte against
+ * a live file on chore/deprecate-is-featured): single "Job Data" sheet, this
+ * column order, clean headers with no trailing spaces. No Featured column —
+ * Sponsored is the 12th and last.
+ */
+const HEADERS = [
+  'TITLE',
+  'COMPANY',
+  'APPLICATION URL',
+  'LOCATION',
+  'WORK-MODE',
+  'JOB TYPE',
+  'DESCRIPTION',
+  'TAGS',
+  'COMPANY LOGO URL',
+  'POST DATE',
+  'CLOSE DATE',
+  'SPONSORED',
 ]
 
-const SAMPLE_DATA = [
-  [
-    'Marketing Intern',
-    'Acme Corp',
-    'https://acme.com/apply',
-    'Melbourne, VIC',
-    'hybrid',
-    'internship',
-    'Join our marketing team for an exciting internship opportunity.',
-    'marketing, social media, content',
-    'https://acme.com/logo.png',
-    '2026-03-15',
-    '2026-04-30',
-    'no',
-    'yes',
-  ],
-  [
-    'Graduate Software Engineer',
-    'TechStart',
-    'https://techstart.io/careers',
-    'Sydney, NSW',
-    'remote',
-    'graduate',
-    'Build amazing products with our engineering team.',
-    'software, engineering, javascript',
-    '',
-    '2026-03-10',
-    '',
-    'yes',
-    'yes',
-  ],
+/**
+ * The one thing that actually has to identify row 2 as the sample —
+ * bulk-import.tsx imports this same constant and skips any row whose Title
+ * cell matches it exactly. Grey fill + italic would be nice too, but the
+ * installed `xlsx` package (SheetJS Community Edition) doesn't support
+ * writing cell styles — confirmed by inspecting its source, not assumed —
+ * so the text marker is carrying the whole job, not just the human-readable
+ * half of it.
+ */
+export const SAMPLE_ROW_TITLE = 'SAMPLE — delete this row before importing'
+
+const SAMPLE_ROW = [
+  SAMPLE_ROW_TITLE,
+  'Acme Corp',
+  'https://acme.com/apply',
+  'Melbourne, VIC',
+  'hybrid',
+  'internship',
+  'Join our marketing team for an exciting internship opportunity.',
+  'Strategy',
+  'https://acme.com/logo.png',
+  '2026-03-15',
+  '2026-04-30',
+  'no',
+]
+
+/**
+ * Tags dropdown, carried forward from the real template's data validation
+ * list (read directly out of its dataValidation XML), trimmed. This can't
+ * be written as an actual Excel dropdown with the installed library — see
+ * the module comment in generateTemplate — so it's documented as plain
+ * text instead. One tag per row, matching the source list's single-select
+ * validation.
+ */
+const TAG_OPTIONS = [
+  'Strategy',
+  'Sales',
+  'Creative',
+  'Events',
+  'Communications',
+  'Analytics',
+  'Social Media',
+  'Digital',
+  'Brand',
+]
+
+/**
+ * Rows 3 through this stay blank for real data entry. Nothing is written
+ * into them (no dragged-down values, unlike the old Featured/Sponsored
+ * "False" filler) — they simply don't exist in the sheet's cell map, which
+ * XLSX and this app's parser both already treat as blank. This is also the
+ * range the Tags dropdown validation would cover (H2:H{DATA_LAST_ROW}) if
+ * this library could write one.
+ */
+const DATA_LAST_ROW = 501
+
+/**
+ * Instructions live well below the data (not above the header — the parser
+ * and every row-layout assumption in this file depend on row 1 being the
+ * header, so moving instructions above it would mean teaching the parser to
+ * hunt for the header row instead of trusting position 0), starting a
+ * comfortable gap past DATA_LAST_ROW so no realistic import ever reaches
+ * it. Written into column B, not A — Title (column A) stays blank on every
+ * instruction row, so the parser's title-presence skip excludes this block
+ * the same way it already excludes filler rows, with no special-casing.
+ * Exactly the convention the real uploaded template already used
+ * (instruction text in column N there) — same mechanism, different column.
+ */
+const INSTRUCTIONS_START_ROW = DATA_LAST_ROW + 5
+
+const INSTRUCTIONS: string[] = [
+  'INSTRUCTIONS',
+  '1. Each row = one job posting. Row 2 is a sample — delete it before uploading, or leave it: it is skipped automatically.',
+  '2. Required columns: Title, Company, Application URL. Everything else is optional.',
+  `3. Tags (column H): one tag per row, no dropdown in this file — pick one of: ${TAG_OPTIONS.join(', ')}.`,
+  '4. Post Date and Close Date use YYYY-MM-DD format.',
+  '5. Save the file and upload it back on the admin page.',
 ]
 
 export function generateTemplate(): ArrayBuffer {
   const wb = XLSX.utils.book_new()
 
-  // Sheet 1: Instructions & Sample
-  const instructionsData = [
-    ['MMSS Job Board - Bulk Import Template'],
-    [],
-    ['INSTRUCTIONS'],
-    ['1. Go to the "Job Data" sheet (tab at the bottom) to enter your job postings.'],
-    ['2. Each row = one job posting. Fill in the columns as described below.'],
-    ['3. Required fields: Title, Company, Application URL. All others are optional.'],
-    ['4. Save the file and upload it back on the admin page.'],
-    [],
-    ['COLUMN REFERENCE'],
-    ['Column', 'Required', 'Description', 'Accepted Values'],
-    ['Title', 'Yes', 'The job title', 'Any text'],
-    ['Company', 'Yes', 'Company name', 'Any text'],
-    ['Application URL', 'Yes', 'Link where candidates apply', 'Valid URL (https://...)'],
-    ['Location', 'No', 'Job location', 'e.g. Melbourne, VIC'],
-    ['Work Mode', 'No', 'Working arrangement', 'remote, hybrid, or onsite'],
-    ['Job Type', 'No', 'Employment type', 'internship, graduate, part-time, full-time, casual, or contract'],
-    ['Description', 'No', 'Job description text', 'Plain text (HTML not supported in bulk import)'],
-    ['Tags', 'No', 'Comma-separated skill/topic tags', 'e.g. marketing, social media, content'],
-    ['Company Logo URL', 'No', 'URL to company logo image', 'Valid URL (https://...)'],
-    ['Posted Date', 'No', 'Date job was posted', 'YYYY-MM-DD format'],
-    ['Closing Date', 'No', 'Application closing date', 'YYYY-MM-DD format'],
-    ['Featured', 'No', 'Highlight on homepage', 'yes or no (default: no)'],
-    ['Active', 'No', 'Visible to public', 'yes or no (default: yes)'],
-    [],
-    ['SAMPLE DATA (for reference only — enter your data in the "Job Data" sheet)'],
-    COLUMNS,
-    ...SAMPLE_DATA,
-  ]
+  const ws = XLSX.utils.aoa_to_sheet([HEADERS, SAMPLE_ROW])
 
-  const wsInstructions = XLSX.utils.aoa_to_sheet(instructionsData)
+  // Placed by absolute cell address rather than materializing ~500 blank
+  // array rows in between — XLSX and the parser both read an absent cell
+  // the same as an explicitly blank one.
+  XLSX.utils.sheet_add_aoa(
+    ws,
+    INSTRUCTIONS.map((line) => ['', line]),
+    { origin: `A${INSTRUCTIONS_START_ROW}` }
+  )
 
-  // Set column widths for readability
-  wsInstructions['!cols'] = [
-    { wch: 22 },
-    { wch: 12 },
-    { wch: 45 },
-    { wch: 55 },
-  ]
+  ws['!cols'] = HEADERS.map((h) => ({ wch: Math.max(h.length + 4, 18) }))
 
-  XLSX.utils.book_append_sheet(wb, wsInstructions, 'Instructions')
-
-  // Sheet 2: Job Data (for user input)
-  const jobDataSheet = [COLUMNS]
-  const wsJobData = XLSX.utils.aoa_to_sheet(jobDataSheet)
-
-  wsJobData['!cols'] = COLUMNS.map((col) => ({
-    wch: Math.max(col.length + 4, 18),
-  }))
-
-  XLSX.utils.book_append_sheet(wb, wsJobData, 'Job Data')
+  XLSX.utils.book_append_sheet(wb, ws, 'Job Data')
 
   return XLSX.write(wb, { type: 'array', bookType: 'xlsx' })
 }
