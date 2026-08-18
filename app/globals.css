@@ -5,8 +5,14 @@
 
 @plugin '@tailwindcss/typography';
 
-/* shadcn components opt into dark styling via a `.dark` ancestor. */
-@custom-variant dark (&:is(.dark *));
+/* shadcn components opt into dark styling via a `.dark` ancestor — self-
+   inclusive (`.dark` itself, not just its descendants) so a component can
+   carry `className="dark"` on its own root and have its own `dark:`
+   utilities apply, not only its children's. Nothing in the app applies a
+   literal `.dark` class anywhere today except the two scoped instances
+   documented in docs/ARCHITECTURE.md ("Deliberately dormant"), so widening
+   this from descendant-only is a no-op everywhere else. */
+@custom-variant dark (&:is(.dark, .dark *));
 
 /*
  * Shorthand state variants the imported component set is written against.

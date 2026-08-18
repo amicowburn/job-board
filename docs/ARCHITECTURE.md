@@ -63,6 +63,34 @@ before adding more listing features, or the drift will keep compounding.
 
 ### Deliberately dormant
 
+- **`.dark` theme tokens** (`app/globals.css`) ship with the shadcn template
+  and were never activated — nothing toggles a `.dark` class anywhere in
+  the app, so `--background`/`--popover`/`--foreground`/etc. always
+  resolve to their light values everywhere except two places: the row
+  overflow menus in `components/admin/job-table.tsx` (`JobActionsMenu`)
+  and `components/admin/submissions-table.tsx` (`SubmissionActionsMenu`),
+  each of which carries a literal `className="dark"` on its
+  `DropdownMenuContent`. This is a scoped, deliberate reuse of the
+  already-dormant dark palette for those two components specifically — the
+  shared shadcn `DropdownMenuContent`/`DropdownMenuItem` were already
+  dark-mode-aware out of the box (translucent dark popover fill, an
+  inset `bg-foreground/10` highlight on the hovered/keyboard-highlighted
+  item, `dark:`-refined destructive-item contrast), so this just switches
+  which token values those two instances resolve against, via the normal
+  `--token` cascade — no new colors were introduced, and no other
+  component opts into `.dark`. It is **not** the start of app-wide dark
+  mode; if a third instance of `.dark` shows up anywhere else, that's
+  either a deliberate expansion of this pattern or a mistake, not an
+  extension of it by default.
+
+  One related infra change: `@custom-variant dark` (top of `globals.css`)
+  was widened from `&:is(.dark *)` (descendants only) to
+  `&:is(.dark, .dark *)` (self-inclusive) so a component can carry
+  `className="dark"` on its own root and have its own `dark:`-prefixed
+  utilities apply, not only its children's. This was a no-op everywhere
+  else at the time it was made, since nothing applied a literal `.dark`
+  class anywhere in the app before these two instances.
+
 - **AI prefill tier** (`extractWithAI` in `app/api/prefill-job/route.ts`,
   Gemini 2.5 Flash) only runs when `GEMINI_API_KEY` is set and the
   JSON-LD/embedded-state tiers came up empty. Absence of the key is not a
