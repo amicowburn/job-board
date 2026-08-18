@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Search } from 'lucide-react'
-import { CurrencyCircleDollarIcon, PencilSimpleIcon, DotsThreeVerticalIcon, PlusIcon } from '@phosphor-icons/react'
+import { CurrencyCircleDollarIcon, DotsThreeVerticalIcon, PlusIcon } from '@phosphor-icons/react'
 import { Button, Badge, Input, useConfirmDialog } from '@/components/ui'
 import { Pagination } from '@/components/ui/pagination'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/shadcn/tooltip'
@@ -460,21 +460,28 @@ export function JobTable({ jobs, totalJobs, currentPage, totalPages }: JobTableP
 }
 
 /**
- * Edit (pencil, labelled) + an overflow ellipsis, shared by the desktop grid
- * and mobile cards — same pairing every row, active or inactive, so the
- * actions column renders at a fixed width regardless of which single or
- * double item the menu holds. Unlike the submissions table's actions menu,
- * there's no conditional 1-vs-3-button case here to keep aligned: Edit +
- * ellipsis is the whole set, always — the branching lives inside the menu,
- * not in which buttons render.
+ * A single overflow ellipsis, shared by the desktop grid and mobile cards —
+ * same trigger every row, active or inactive, so the actions column renders
+ * at a fixed width regardless of how many items the menu holds. Edit lives
+ * inside the menu now rather than as its own button beside the ellipsis;
+ * all the branching (Edit vs. Deactivate/Activate/Delete) happens inside
+ * the one dropdown instead of in which buttons render.
  *
- * The menu itself branches on is_active: Deactivate alone for an active
- * job; Activate + Delete for an inactive one, in that order (the
- * reversible, non-destructive action first) with a separator ahead of
- * Delete so it doesn't read as equally casual. Activate has no confirm() —
- * see handleActivate's own comment for why — Deactivate and Delete both
- * keep theirs, carried over unchanged from the table's pre-redesign
- * behavior.
+ * Edit comes first (the common case, and non-destructive) with a separator
+ * ahead of the is_active branch: Deactivate alone for an active job;
+ * Activate + Delete for an inactive one, in that order (the reversible,
+ * non-destructive action first) with its own separator ahead of Delete so
+ * it doesn't read as equally casual. Activate has no confirm() — see
+ * handleActivate's own comment for why — Deactivate and Delete both keep
+ * theirs, carried over unchanged from the table's pre-redesign behavior.
+ *
+ * `dark` on DropdownMenuContent is a deliberate, scoped reuse of the app's
+ * existing (otherwise-dormant) dark palette — not app-wide dark mode. See
+ * docs/ARCHITECTURE.md ("Deliberately dormant"). The shared shadcn
+ * DropdownMenuContent/DropdownMenuItem were already dark-mode-aware out of
+ * the box; this just opts this one instance in via the token cascade
+ * (--popover/--foreground/etc. flip under `.dark`), same as
+ * submissions-table.tsx's row menu — no new colors introduced here.
  */
 function JobActionsMenu({
   job,
@@ -488,33 +495,29 @@ function JobActionsMenu({
   onDelete: (id: string) => void
 }) {
   return (
-    <div className="flex items-center justify-end gap-1">
-      <Link href={`/admin/jobs/${job.id}/edit`}>
-        <IconActionButton label="Edit">
-          <PencilSimpleIcon className="size-4" />
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <IconActionButton label="More options" tooltip={false} className="text-muted-foreground">
+          <DotsThreeVerticalIcon weight="bold" className="size-4" />
         </IconActionButton>
-      </Link>
-
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <IconActionButton label="More options" tooltip={false} className="text-muted-foreground">
-            <DotsThreeVerticalIcon weight="bold" className="size-4" />
-          </IconActionButton>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {job.is_active ? (
-            <DropdownMenuItem onClick={() => onDeactivate(job.id)}>Deactivate</DropdownMenuItem>
-          ) : (
-            <>
-              <DropdownMenuItem onClick={() => onActivate(job.id)}>Activate</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive" onClick={() => onDelete(job.id)}>
-                Delete
-              </DropdownMenuItem>
-            </>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="dark w-40">
+        <DropdownMenuItem asChild>
+          <Link href={`/admin/jobs/${job.id}/edit`}>Edit</Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        {job.is_active ? (
+          <DropdownMenuItem onClick={() => onDeactivate(job.id)}>Deactivate</DropdownMenuItem>
+        ) : (
+          <>
+            <DropdownMenuItem onClick={() => onActivate(job.id)}>Activate</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive" onClick={() => onDelete(job.id)}>
+              Delete
+            </DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

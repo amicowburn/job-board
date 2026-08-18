@@ -563,7 +563,11 @@ function SubmissionActionsMenu({
             <DotsThreeVerticalIcon weight="bold" className="size-4" />
           </IconActionButton>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-64">
+        {/* `dark` here is a deliberate, scoped reuse of the app's existing
+            dark palette — not app-wide dark mode. Same treatment as
+            job-table.tsx's JobActionsMenu; see that component's comment
+            and docs/ARCHITECTURE.md ("Deliberately dormant") for why. */}
+        <DropdownMenuContent align="end" className="dark w-64">
           <DropdownMenuItem onClick={() => onArchive(submission.id)}>
             {showArchived ? 'Restore' : 'Archive'}
           </DropdownMenuItem>
